@@ -1,0 +1,521 @@
+<!DOCTYPE html><html class="dark" lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"primary-container":"#00a3ff","on-secondary-container":"#c7d4ff","error":"#ffb4ab","surface-bright":"#2f3951","primary-fixed":"#cfe5ff","on-primary-fixed":"#001d33","on-primary-container":"#00375a","inverse-primary":"#00629d","on-error-container":"#ffdad6","on-background":"#d9e2ff","secondary-fixed":"#dae2ff","on-secondary-fixed":"#001848","secondary-fixed-dim":"#b2c5ff","surface":"#081329","on-surface":"#d9e2ff","tertiary-container":"#00b27b","surface-container-lowest":"#030d23","on-primary-fixed-variant":"#004a77","on-tertiary-container":"#003c27","surface-tint":"#98cbff","on-tertiary-fixed-variant":"#005236","surface-container-low":"#111b31","on-tertiary-fixed":"#002113","secondary-container":"#0453cd","on-primary":"#003354","secondary":"#b2c5ff","inverse-surface":"#d9e2ff","background":"#081329","on-secondary":"#002b73","surface-container-high":"#1f2a41","outline-variant":"#3f4852","on-tertiary":"#003824","tertiary":"#4edea3","outline":"#88919d","on-surface-variant":"#bec7d4","surface-container-highest":"#2a344c","surface-container":"#151f36","tertiary-fixed":"#6ffbbe","inverse-on-surface":"#263047","on-secondary-fixed-variant":"#0040a2","primary":"#98cbff","on-error":"#690005","surface-variant":"#2a344c","tertiary-fixed-dim":"#4edea3","primary-fixed-dim":"#98cbff","error-container":"#93000a","surface-dim":"#081329"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xl":"2rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","margin-desktop":"2.5rem","margin":"1rem","gutter":"1rem","margin-tablet":"1.5rem","space-sm":"0.5rem","space-lg":"1.5rem","space-md":"1rem"},"fontFamily":{"score-display-mobile":["Space Grotesk"],"label-sm":["Chivo"],"score-display":["Space Grotesk"],"headline-md":["Space Grotesk"],"headline-lg":["Space Grotesk"],"tabular-stats":["Chivo"],"display-lg-mobile":["Space Grotesk"],"body-md":["Chivo"],"display-lg":["Space Grotesk"],"label-md":["Chivo"],"body-lg":["Chivo"],"headline-lg-mobile":["Space Grotesk"]},"fontSize":{"score-display-mobile":["28px",{"lineHeight":"32px","letterSpacing":"0.01em","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"score-display":["36px",{"lineHeight":"40px","letterSpacing":"0.02em","fontWeight":"700"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"tabular-stats":["13px",{"lineHeight":"18px","fontWeight":"500"}],"display-lg-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"display-lg":["48px",{"lineHeight":"56px","letterSpacing":"-0.03em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.05em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"><aside class="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low/90 backdrop-blur-xl z-50 flex-col py-6 px-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-3 px-3 mb-8"><div class="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-sm border border-outline-variant/30 shrink-0"><svg viewBox="0 0 40 40" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="10" fill="#081329"></rect><circle cx="20" cy="20" r="10" stroke="#4edea3" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="31.4"></circle><circle cx="20" cy="20" r="10" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"></circle><line x1="20" y1="5" x2="20" y2="35" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"></line><circle cx="20" cy="20" r="2.5" fill="#4edea3"></circle></svg></div><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-headline-md text-headline-md tracking-tight text-on-surface lowercase font-bold leading-none">pitchline</span><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span></div><span class="font-label-sm text-label-sm uppercase text-tertiary tracking-wider font-semibold text-[10px]">UCL Predict &amp; AI</span></div></div><div class="px-3 mb-6"><div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">event_available</span><span class="font-label-md text-label-md text-on-surface">Fase Liga</span></div><span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-bold">J8 / 8</span></div></div><nav class="flex-1 space-y-1.5 px-1" data-active-classes="bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-[0_0_16px_rgba(0,163,255,0.2)]"><a aria-current="page" class="flex items-center gap-3.5 px-3 py-2.5 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-[0_0_16px_rgba(0,163,255,0.2)]" data-path="marcadores-en-vivo" href="#"><span class="material-symbols-outlined text-[20px]">sports_soccer</span><span class="">Marcadores en Vivo</span></a><a class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="tabla-y-clasificacion" href="#"><span class="material-symbols-outlined text-[20px]">leaderboard</span><span class="">Tabla y Clasificación</span></a><a class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="arma-tu-champions" href="#"><span class="material-symbols-outlined text-[20px]">account_tree</span><span class="">Arma tu Champions</span></a><a class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="noticias-exclusivas" href="#"><span class="material-symbols-outlined text-[20px]">newspaper</span><span class="">Noticias Exclusivas</span></a><a class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="asistente-ia" href="#"><span class="material-symbols-outlined text-tertiary text-[20px]">neurology</span><span class="text-tertiary font-medium">Asistente IA</span></a></nav><div class="mt-auto pt-4 px-2"><div class="p-3 rounded-xl bg-surface-container flex items-center justify-between"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Analista Pitchline</span><span class="font-label-sm text-label-sm text-tertiary truncate">Supabase Auth</span></div></div><button aria-label="Opciones de sesión" class="text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">settings</span></button></div></div></aside><div class="lg:pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-4 lg:px-8 flex items-center justify-between gap-4"><div class="flex items-center gap-3 lg:hidden"><div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shadow-sm shrink-0"><svg viewBox="0 0 40 40" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" rx="8" fill="#081329"></rect><circle cx="20" cy="20" r="10" stroke="#4edea3" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="31.4"></circle><circle cx="20" cy="20" r="10" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"></circle><line x1="20" y1="5" x2="20" y2="35" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"></line><circle cx="20" cy="20" r="2.5" fill="#4edea3"></circle></svg></div><div class="flex items-center gap-2"><span class="font-headline-md text-headline-md tracking-tight text-on-surface lowercase font-bold">pitchline</span><span class="font-label-sm text-label-sm uppercase text-tertiary font-bold px-1.5 py-0.5 rounded bg-surface-container text-[9px]">UCL AI</span></div></div><div class="hidden md:flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full"><span class="material-symbols-outlined text-primary text-[18px]">calendar_month</span><span class="font-label-md text-label-md text-on-surface-variant">Jornada:</span><span class="font-label-md text-label-md text-primary font-bold">8 de 8 (Partidos de Vuelta)</span></div><div class="flex items-center gap-3 ml-auto"><button aria-label="Buscar equipos o estadísticas" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors"><span class="material-symbols-outlined text-[18px] text-on-surface-variant">search</span><span class="hidden sm:inline font-label-md text-label-md text-on-surface-variant">Buscar club, xG, tabla...</span></button><div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div><span class="hidden sm:inline font-label-sm text-label-sm text-tertiary uppercase font-bold">En Directo</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 pt-16 pb-20 lg:pb-8 w-full px-4 lg:px-8 bg-surface"><div class="flex flex-col w-full space-y-6">
+<!-- Sub-header de Telemetría & Navegación de Jornada -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl bg-surface-container shadow-sm">
+<div class="flex flex-wrap items-center gap-3">
+<!-- Selector de Jornada -->
+<div class="flex items-center bg-surface-container-low px-2 py-1 rounded-lg">
+<button aria-label="Jornada anterior" class="p-1 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<div class="px-3 flex flex-col text-center">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary">Fase de Liga</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Jornada 7 de 8</span>
+</div>
+<button aria-label="Jornada siguiente" class="p-1 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Filtros de Partido -->
+<div class="flex items-center gap-1.5 overflow-x-auto py-1">
+<button class="px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold whitespace-nowrap shadow-sm">
+          Todos (18)
+        </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md whitespace-nowrap flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+<span class="">En Vivo (3)</span>
+</button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md whitespace-nowrap">
+          Finalizados (6)
+        </button>
+<button class="px-3 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md whitespace-nowrap">
+          Mis Pronósticos (4)
+        </button>
+</div>
+</div>
+<!-- Status WebSocket / Telemetría -->
+<div class="flex items-center justify-between lg:justify-end gap-3 self-stretch lg:self-auto">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
+</span>
+<span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">Supabase Realtime</span>
+<span class="text-outline-variant font-label-sm text-label-sm">•</span>
+<span class="font-tabular-stats text-tabular-stats text-on-surface-variant">ping 18ms</span>
+</div>
+<div class="text-right hidden sm:block">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Actualizado al segundo</span>
+</div>
+</div>
+</div>
+<!-- PARTIDO DE LA NOCHE (Epic Live Spotlight Card) -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl">
+<!-- Luz ambiental sutil de fondo -->
+<div class="absolute -top-32 -left-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-32 -right-20 w-96 h-96 bg-tertiary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col p-5 lg:p-8 space-y-6">
+<!-- Top Meta Bar -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold tracking-wider">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+            En Vivo
+          </span>
+<span class="text-on-surface-variant font-label-md text-label-md hidden sm:inline">Estadio Santiago Bernabéu, Madrid</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">sports</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Árbitro: F. Letexier (FRA)</span>
+</div>
+</div>
+<!-- Live Match Scoreboard Hub -->
+<div class="grid grid-cols-1 md:grid-cols-11 items-center gap-6 py-2">
+<!-- Local: Real Madrid -->
+<div class="md:col-span-4 flex items-center justify-start md:justify-end gap-4 order-1">
+<div class="flex flex-col text-left md:text-right">
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Real Madrid</span>
+<span class="font-label-md text-label-md text-on-surface-variant">2° Lugar • 16 pts (+11)</span>
+</div>
+<div class="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2.5 shadow-md shrink-0">
+<img class="w-full h-full object-contain" data-alt="High quality crest of Real Madrid football club on a dark deep midnight blue background with glossy stadium lighting reflections" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6e19YjxN6IP1qWzHyxhFCGx-7PlvnxixJlfqPoyJ4VEKnRppZIDdJYaf8rqrsuxxCOEC05YcvbgEKedVLJft7nFZnDWhQxHxiV5mwRntlRzci6x9JMY6fMj1mSJuTBNNlCDIdg-8d1BYthA1bj9qdFntncLTouN4jZzBkoYxzZfuzDbt7Q8OM0m7GaMxUo4H87IcYLLgEML2FO8N-Rn8opv7NMg3saXBkvO5uBChK1BaG01BmQ2Q">
+</div>
+</div>
+<!-- Centro: Marcador y Minuto -->
+<div class="md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3 px-4 rounded-xl shadow-inner">
+<div class="flex items-center gap-3">
+<span class="font-score-display text-score-display text-primary tracking-tight">2</span>
+<span class="font-headline-lg text-headline-lg text-outline-variant">-</span>
+<span class="font-score-display text-score-display text-primary tracking-tight">2</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-score-display-mobile text-score-display-mobile text-tertiary">68'</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">2° Tiempo</span>
+</div>
+<!-- Barra de Posesión en Vivo -->
+<div class="w-full mt-3 space-y-1">
+<div class="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant">
+<span class="text-primary font-bold">48%</span>
+<span class="font-label-sm text-label-sm uppercase">Posesión</span>
+<span class="text-tertiary font-bold">52%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 48%"></div>
+<div class="h-full bg-tertiary" style="width: 52%"></div>
+</div>
+</div>
+</div>
+<!-- Visitante: Man City -->
+<div class="md:col-span-4 flex items-center justify-end md:justify-start gap-4 order-3">
+<div class="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2.5 shadow-md shrink-0">
+<img class="w-full h-full object-contain" data-alt="Emblem of Manchester City football club isolated on dark nocturnal sports aesthetic with sharp cyan floodlight gradients" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9l2LbYezgxLj6WtOB-yiZGfatr8x2YDE48-vzR-Od_podK5JO6Hz4D1BaVuGmDAGq80HWAjaBO_cFBb100ruFM8NeIoVc4O3phjYS5jL_nBYkxZsPaiSEo31-P5RQl5Aczeu1p3pr2xwM5jcdLYA9wjAsq1XZSIEm--F24gScqfBpe9VRkPzcdgMQs6p0-8VxT4VsvQGYJ7vBx-TZ2Wx9yM8ZIRMHaRfeuTwyrdY8ENCGWVrajXM">
+</div>
+<div class="flex flex-col text-left">
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Manchester City</span>
+<span class="font-label-md text-label-md text-on-surface-variant">3° Lugar • 15 pts (+14)</span>
+</div>
+</div>
+</div>
+<!-- Línea de Tiempo de Incidencias Clave -->
+<div class="bg-surface-container rounded-xl p-4 space-y-3">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">timeline</span>
+            Incidencias Clave del Encuentro
+          </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">xG Acumulado: 1.84 vs 1.92</span>
+</div>
+<!-- Timeline horizontal scrollable -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+<div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px] text-tertiary">sports_soccer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface truncate font-bold">Vinícius Jr (24')</span>
+<span class="font-tabular-stats text-tabular-stats text-on-surface-variant">Asist. Bellingham</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px] text-tertiary">sports_soccer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface truncate font-bold">E. Haaland (38')</span>
+<span class="font-tabular-stats text-tabular-stats text-on-surface-variant">Gol de cabeza</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px] text-tertiary">sports_soccer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface truncate font-bold">J. Bellingham (55')</span>
+<span class="font-tabular-stats text-tabular-stats text-on-surface-variant">Disparo raso xG 0.42</span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[16px] text-tertiary">sports_soccer</span>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface truncate font-bold">K. De Bruyne (62')</span>
+<span class="font-tabular-stats text-tabular-stats text-on-surface-variant">Tiro libre directo</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Motor de Pronósticos Predictivo (Mathematical Model Specification) -->
+<div class="bg-surface-container-high rounded-xl p-5 space-y-4 shadow-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">psychology</span>
+<span class="font-headline-md text-headline-md text-on-surface">Algoritmo Predictivo • Distribución Poisson</span>
+</div>
+<span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-bold self-start sm:self-auto">
+            100,000 Simulaciones Monte Carlo
+          </span>
+</div>
+<!-- 3-Way Poisson Probability Bar -->
+<div class="space-y-2">
+<div class="flex justify-between items-end font-tabular-stats text-tabular-stats">
+<div>
+<span class="text-primary font-bold text-headline-md">38%</span>
+<span class="text-on-surface-variant ml-1 font-label-md text-label-md">Gana R. Madrid</span>
+</div>
+<div>
+<span class="text-secondary font-bold text-headline-md">26%</span>
+<span class="text-on-surface-variant ml-1 font-label-md text-label-md">Empate</span>
+</div>
+<div class="text-right">
+<span class="text-tertiary font-bold text-headline-md">36%</span>
+<span class="text-on-surface-variant ml-1 font-label-md text-label-md">Gana Man City</span>
+</div>
+</div>
+<div class="h-3 w-full bg-surface-container-lowest rounded-full overflow-hidden flex gap-0.5 p-0.5">
+<div class="h-full bg-primary rounded-l-full transition-all duration-500" style="width: 38%"></div>
+<div class="h-full bg-secondary-container transition-all duration-500" style="width: 26%"></div>
+<div class="h-full bg-tertiary rounded-r-full transition-all duration-500" style="width: 36%"></div>
+</div>
+</div>
+<!-- Ponderación Matemática de Factores del Modelo -->
+<div class="pt-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-3">
+            Ponderación de Variables del Modelo Analítico
+          </span>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Rendimiento Reciente</span>
+<span class="text-primary font-bold font-tabular-stats">30%</span>
+</div>
+<div class="h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 30%"></div>
+</div>
+<span class="text-on-surface-variant text-label-sm block truncate">Últimos 10 partidos oficiales</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Estadísticas xG &amp; Tiros</span>
+<span class="text-primary font-bold font-tabular-stats">30%</span>
+</div>
+<div class="h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 30%"></div>
+</div>
+<span class="text-on-surface-variant text-label-sm block truncate">Peligro ofensivo / concedido</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Jerarquía UEFA / Elo</span>
+<span class="text-secondary font-bold font-tabular-stats">25%</span>
+</div>
+<div class="h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 25%"></div>
+</div>
+<span class="text-on-surface-variant text-label-sm block truncate">Coeficiente 5 años &amp; títulos</span>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">H2H &amp; Factor Localía</span>
+<span class="text-tertiary font-bold font-tabular-stats">15%</span>
+</div>
+<div class="h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 15%"></div>
+</div>
+<span class="text-on-surface-variant text-label-sm block truncate">Historial directo &amp; Bernabéu</span>
+</div>
+</div>
+</div>
+<!-- Botones de Acción de Pronóstico -->
+<div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface transition-colors font-label-md text-label-md flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">query_stats</span>
+<span class="">Ver Detalles Tácticos</span>
+</button>
+<button class="px-5 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold shadow-md hover:bg-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+<span class="">Hacer Mi Pronóstico (2 - 2 Activo)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECCIÓN DUAL: GRID DE OTROS PARTIDOS + ASISTENTE GEMINI RAG -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<!-- Grid de Otros Partidos de la Jornada (8 Cols on XL) -->
+<div class="xl:col-span-8 flex flex-col space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Otros Partidos de la Jornada</h2>
+<a class="font-label-md text-label-md text-primary hover:underline flex items-center gap-1" href="#">
+          Ver fixture completo (18)
+          <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Partido 1: Bayern Munich vs PSG (Finalizado) -->
+<div class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm flex flex-col justify-between space-y-4">
+<div class="flex items-center justify-between">
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
+              Finalizado
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Allianz Arena</span>
+</div>
+<!-- Scoreboard Compacto -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Bayern Munich club logo icon on a deep midnight dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVq1k7KneZpQvNngpmsbyoWJsWSXFu5Hoqvzx0SznYkgKSvpoPUAaY2PKYbTSnB3nNe33kQup9-7naAsHsRHsA_J5jlqMbXiYCBTHaLJ0Vo8A8I7-8Ni2pWji47FBFP2OSQWsS3i1_wCBrQLyG7k_OZ60b67KkBHXg_Tm2X09dqx00lrtiEiLGzOTkC4NJfRNIIe0RqEG9CL7rXVH1GzWXho7r33yIWUhksPjY-yka5uIk9Vhfj1Q">
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface truncate">Bayern München</span>
+</div>
+<span class="font-score-display-mobile text-score-display-mobile text-primary font-tabular-stats">1</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Paris Saint Germain PSG club logo icon on sports tech dark blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn_26Zzt6cF7BO_UxBZHffqtc7GoNwvYSzNZ3bMGJOM4kpZYoXSdW5nmR6zfb3NAC3Npz0iT81F-0nB_oEkBo0pd4hAbLBEmzSQZtnSCjsiWwxjlFq-InLzyYPf8EonNY9DxWMogCgRatjgY04qi6zr8Ae0XoJ9ZbiLWajfwWRVJRU8UgnLtizlhl8M79h8X9aKXVNhBo3bz_1Ayf-n4ps2u01is16MXbXXvP0MFWUQlm3_s92s98">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface-variant truncate">Paris Saint-Germain</span>
+</div>
+<span class="font-score-display-mobile text-score-display-mobile text-on-surface-variant font-tabular-stats">0</span>
+</div>
+</div>
+<!-- xG & Resumen -->
+<div class="pt-2 bg-surface-container rounded-lg p-2.5 flex items-center justify-between font-tabular-stats text-tabular-stats">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant">xG Match:</span>
+<span class="text-primary font-bold">2.14</span>
+<span class="text-outline-variant">vs</span>
+<span class="text-on-surface-variant">0.86</span>
+</div>
+<span class="text-tertiary font-label-sm text-label-sm font-medium">Gol: H. Kane (74')</span>
+</div>
+</div>
+<!-- Partido 2: Arsenal vs Inter de Milán (En Vivo) -->
+<div class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm flex flex-col justify-between space-y-4">
+<div class="flex items-center justify-between">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>
+              42' 1T
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Emirates Stadium</span>
+</div>
+<!-- Scoreboard Compacto -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Arsenal FC football club crest on midnight navy blue surface background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBjQUNgcYeiWrTkp2voUu14Qh5WsorrJTeN_MSuLCqVOvgW5IASes9-dk8y6GvjfqbJnS2RkG7imo5D2mSOLhoPPkMWDOBJvYaeFrkJMym8d9JwtU1dXVCFWFhPTnzSYFKNcdeK4zk8E9YjWr7-rIRwvipHbcbJamQ_kAhVG3uj20LccZlmMESDdpDqhDff0fYDx4-rKQZP--VB8tOomoGi18UgyrxC8MzgUvPUfu326gJyCjxke8">
+</div>
+<span class="font-label-md text-label-md font-bold text-on-surface truncate">Arsenal FC</span>
+</div>
+<span class="font-score-display-mobile text-score-display-mobile text-primary font-tabular-stats">1</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Inter Milan football club crest minimal icon with dark sports lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7-DMj7TtS3-6nvDsjp8NpEhWeKOAoFT76KUns6ZHYBHSX6p7ikLmJRG3pJW-W0IFS1o92ueG8OcOsTOHtJCmLskixsa38CSZWq_-101ij5kgktdGE777bFCmH2izM0KuJi99zoieG4jNg9XYRd60AaSpo74B4C1QoTo_Bg6A_5ra2SuPcg5uUOdUkwUtjHMo3ATYgqEDZxBypzpL22WWH11Ud1vqxw6v1rtt8s3JP_8DnnnTtw98">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface-variant truncate">Inter de Milán</span>
+</div>
+<span class="font-score-display-mobile text-score-display-mobile text-on-surface-variant font-tabular-stats">0</span>
+</div>
+</div>
+<!-- Posición del Algoritmo en vivo -->
+<div class="pt-2 bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[16px]">insights</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pronóstico Vivo:</span>
+</div>
+<div class="flex items-center gap-2 font-tabular-stats text-tabular-stats">
+<span class="text-primary font-bold">1 (64%)</span>
+<span class="text-secondary font-bold">X (24%)</span>
+<span class="text-on-surface-variant">2 (12%)</span>
+</div>
+</div>
+</div>
+<!-- Partido 3: Barcelona vs Borussia Dortmund (Próximo) -->
+<div class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm flex flex-col justify-between space-y-4">
+<div class="flex items-center justify-between">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
+              Hoy • 21:00 CET
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Estadi Olímpic Lluís Companys</span>
+</div>
+<!-- Scoreboard Compacto -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="FC Barcelona crest vector emblem isolated on deep dark stadium shadow background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAatefDXKQ_Oli9kMcZU5qlsUA7_fSmFT5HWRbmLK79KMLusnksRiNhGceXMUQDxKKCHDZ_muok7CJqfrYziHAL61h24JmpQzRAuLJy86iiHguREQgfz7z4BbjvTSdbDTDNkctu4cNL2xfWoMWk6YOs-fazPAPOdeEaa8ZChwIkqryuTaR3lZAaD3Ts_Lnxd4XCrxmmJwfC35KUKwth7FELprKWOxqdFL6ISA6QHb1uF5qmjdVxCo">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface truncate">FC Barcelona</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant font-bold font-tabular-stats">1.82 (Cuota)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Borussia Dortmund BVB crest badge with yellow accents on dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkqT6ibFPp5EvXzN21pzPAmjpgQJkYkW_SgYMQmcjltAOlOIBc7pV-vacmMOpbM_vbtqvbvS_eocrPe44bGnc4RtzPgpPQ8KdwbfySsK8d4u9Ez5aB2vHELLBT1lz-P4iOzfn_tczqG0spFAWEWPoZRjftQYnNPFiRGv0_qJawJZAs-Jt8QKxDwkZlt6wjpkOBv47dDZvFm2_4lwXENY07PW69dULkjRkL91gLZyYe3711aZETNHM">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface truncate">Borussia Dortmund</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant font-bold font-tabular-stats">3.95 (Cuota)</span>
+</div>
+</div>
+<!-- Probabilidad Poisson Pre-match -->
+<div class="pt-2 bg-surface-container rounded-lg p-2.5 space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-primary font-bold">Local 51%</span>
+<span class="text-secondary font-bold">Empate 23%</span>
+<span class="text-tertiary font-bold">Visita 26%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 51%"></div>
+<div class="h-full bg-secondary-container" style="width: 23%"></div>
+<div class="h-full bg-tertiary" style="width: 26%"></div>
+</div>
+</div>
+</div>
+<!-- Partido 4: Liverpool vs Bayer Leverkusen (Próximo) -->
+<div class="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm flex flex-col justify-between space-y-4">
+<div class="flex items-center justify-between">
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
+              Hoy • 21:00 CET
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Anfield, Liverpool</span>
+</div>
+<!-- Scoreboard Compacto -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Liverpool FC club crest icon on dark mood sports background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2ERe6aMgN1-SYI2McWB7OwQj0bh6eWRuUHeB4s0L_1mZwyZlMTkOd8tkiXKPmdfLBknvG3SLJ-Cov-e99X7pAmn0rxx0V5nrClkK7c98dwTgmRL1m8GexdMyRChLmkv1kaznbpDqZQI_PBe0XHmQ9TpMn17rnLjxr8cetL9p6QYv2krD1TE0k1GHqr_8eqvwkZavTaGVN9-0TvqRfy6iSAzlsOyhmHbXjEz_ERObiqYNnAC_-qNg">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface truncate">Liverpool FC</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant font-bold font-tabular-stats">1.65 (Cuota)</span>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3 min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+<img class="w-full h-full object-contain" data-alt="Bayer Leverkusen club crest icon on dark navy futuristic background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgPDknhfrYIhqZAnZc2ZhwmMN5lZ4Aho3extpX8F3myGKjbEHhOnRHq4Ti0Iy_aV8RL9V6E5iLC8Zbng-BV2JhNhKzQ7U7_RCUohrB50hrAgzVwOR8tYtR7LhKrdDiLYR6I9zxhY-H-VByF67xwo15XDhMtofMRBrkbAYoy7lA1Y2mjZBJgyfN60AJ6OxPcNorKNUC_df4VivrI4vir2E0Y-P4Ip6JZQcACfYj65Kx43cBr1Musp4">
+</div>
+<span class="font-label-md text-label-md font-medium text-on-surface truncate">Bayer Leverkusen</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant font-bold font-tabular-stats">4.70 (Cuota)</span>
+</div>
+</div>
+<!-- Probabilidad Poisson Pre-match -->
+<div class="pt-2 bg-surface-container rounded-lg p-2.5 space-y-1.5">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-primary font-bold">Local 58%</span>
+<span class="text-secondary font-bold">Empate 22%</span>
+<span class="text-tertiary font-bold">Visita 20%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 58%"></div>
+<div class="h-full bg-secondary-container" style="width: 22%"></div>
+<div class="h-full bg-tertiary" style="width: 20%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Panel Integrado: Chatbot IA (Google Gemini RAG) (4 Cols on XL) -->
+<div class="xl:col-span-4 flex flex-col space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[22px]">neurology</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Asistente Táctico Gemini</h2>
+</div>
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+</div>
+<!-- Card Central Asistente RAG -->
+<div class="rounded-xl bg-surface-container-low p-4 flex-1 flex flex-col justify-between space-y-4 shadow-xl">
+<!-- Header Info del Modelo -->
+<div class="flex items-center justify-between pb-3 bg-surface-container rounded-lg p-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Gemini 1.5 Pro • RAG</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">API-Football Online</span>
+</div>
+<!-- Chat Stream Preview -->
+<div class="space-y-3 overflow-y-auto max-h-80 pr-1">
+<!-- Bot Greeting -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded-full bg-tertiary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[15px] text-on-tertiary-container">smart_toy</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container text-body-md font-body-md text-on-surface space-y-1 shadow-sm">
+<p class="">Hola Analista. Monitorizo 18 encuentros de UCL en tiempo real y el motor de Poisson. ¿Qué deseas consultar?</p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Hace 1 min</span>
+</div>
+</div>
+<!-- User Query Preview -->
+<div class="flex gap-2.5 items-start justify-end">
+<div class="p-3 rounded-xl bg-secondary-container text-body-md font-body-md text-on-secondary-container space-y-1 shadow-sm max-w-[85%]">
+<p class="">¿Quién va ganando hoy y quiénes metieron los goles?</p>
+<span class="font-label-sm text-label-sm text-on-secondary-container/70 block text-right">Hace 30s</span>
+</div>
+<div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[15px] text-on-primary">person</span>
+</div>
+</div>
+<!-- AI Response Preview -->
+<div class="flex gap-2.5 items-start">
+<div class="w-7 h-7 rounded-full bg-tertiary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[15px] text-on-tertiary-container">smart_toy</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container text-body-md font-body-md text-on-surface space-y-1.5 shadow-sm">
+<p class="">
+                En el Santiago Bernabéu empatan <strong class="text-primary font-bold">2-2</strong> Real Madrid (Vinícius 24', Bellingham 55') y Man City (Haaland 38', De Bruyne 62'). 
+                En Londres, <strong class="text-tertiary font-bold">Arsenal 1-0</strong> Inter (Saka 19'). Bayern derrotó 1-0 a PSG.
+              </p>
+<span class="font-label-sm text-label-sm text-on-surface-variant block">Ahora mismo</span>
+</div>
+</div>
+</div>
+<!-- Preguntas Rápidas Sugeridas -->
+<div class="space-y-1.5 pt-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Consultas Rápidas Sugeridas</span>
+<div class="flex flex-col gap-1.5">
+<button class="w-full text-left p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface font-label-md text-label-md flex items-center justify-between group">
+<span class="truncate">¿Cuánto tiempo estará de baja Mbappé por su sobrecarga?</span>
+<span class="material-symbols-outlined text-[16px] text-primary group-hover:translate-x-0.5 transition-transform shrink-0">arrow_outward</span>
+</button>
+<button class="w-full text-left p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface font-label-md text-label-md flex items-center justify-between group">
+<span class="truncate">¿Qué equipo tiene mayor probabilidad de liderar la Fase Liga?</span>
+<span class="material-symbols-outlined text-[16px] text-primary group-hover:translate-x-0.5 transition-transform shrink-0">arrow_outward</span>
+</button>
+</div>
+</div>
+<!-- Input Box Interactivo -->
+<div class="pt-2">
+<div class="relative flex items-center bg-surface-container rounded-xl p-1 shadow-inner">
+<input class="w-full bg-transparent px-3 py-2 text-on-surface placeholder:text-on-surface-variant focus:outline-none font-body-md text-body-md" placeholder="Pregunta a Gemini 1.5 Pro sobre tácticas, xG..." type="text">
+<button aria-label="Enviar pregunta" class="p-2 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary transition-colors flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div><nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] flex items-center justify-around py-2 px-1" data-active-classes="text-primary font-bold"><a aria-current="page" class="flex flex-col items-center gap-1 py-1 px-2 transition-colors text-primary font-bold" data-path="marcadores-en-vivo" href="#"><span class="material-symbols-outlined text-[22px]">sports_soccer</span><span class="font-label-sm text-label-sm">En Vivo</span></a><a class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors" data-path="tabla-y-clasificacion" href="#"><span class="material-symbols-outlined text-[22px]">leaderboard</span><span class="font-label-sm text-label-sm">Tabla 36</span></a><a class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors" data-path="arma-tu-champions" href="#"><span class="material-symbols-outlined text-[22px]">account_tree</span><span class="font-label-sm text-label-sm">Simulador</span></a><a class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors" data-path="noticias-exclusivas" href="#"><span class="material-symbols-outlined text-[22px]">newspaper</span><span class="font-label-sm text-label-sm">Noticias</span></a><a class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors" data-path="asistente-ia" href="#"><span class="material-symbols-outlined text-[22px] text-tertiary">neurology</span><span class="font-label-sm text-label-sm text-tertiary">Gemini IA</span></a></nav>
+
+</body></html>
