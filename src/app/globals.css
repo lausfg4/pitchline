@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-navy: #0A1124;
+  --brand-mint: #19D392;
+  --brand-ice: #EEF2F8;
+  --brand-white: #FFFFFF;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Official Pitchline Brand Tokens (AGENTS.md) */
+  --color-brand-navy: #0A1124;
+  --color-brand-mint: #19D392;
+  --color-brand-ice: #EEF2F8;
+  --color-brand-white: #FFFFFF;
+
+  /* Google Stitch Design Tokens (tab2_partidos.html) */
+  --color-primary-container: #00a3ff;
+  --color-on-secondary-container: #c7d4ff;
+  --color-error: #ffb4ab;
+  --color-surface-bright: #2f3951;
+  --color-primary-fixed: #cfe5ff;
+  --color-on-primary-fixed: #001d33;
+  --color-on-primary-container: #00375a;
+  --color-inverse-primary: #00629d;
+  --color-on-error-container: #ffdad6;
+  --color-on-background: #d9e2ff;
+  --color-secondary-fixed: #dae2ff;
+  --color-on-secondary-fixed: #001848;
+  --color-secondary-fixed-dim: #b2c5ff;
+  --color-surface: #0A1124;
+  --color-on-surface: #d9e2ff;
+  --color-tertiary-container: #00b27b;
+  --color-surface-container-lowest: #030d23;
+  --color-on-primary-fixed-variant: #004a77;
+  --color-on-tertiary-container: #003c27;
+  --color-surface-tint: #98cbff;
+  --color-on-tertiary-fixed-variant: #005236;
+  --color-surface-container-low: #111b31;
+  --color-on-tertiary-fixed: #002113;
+  --color-secondary-container: #0453cd;
+  --color-on-primary: #003354;
+  --color-secondary: #b2c5ff;
+  --color-inverse-surface: #d9e2ff;
+  --color-background: #0A1124;
+  --color-on-secondary: #002b73;
+  --color-surface-container-high: #1f2a41;
+  --color-outline-variant: #3f4852;
+  --color-on-tertiary: #003824;
+  --color-tertiary: #19D392;
+  --color-outline: #88919d;
+  --color-on-surface-variant: #bec7d4;
+  --color-surface-container-highest: #2a344c;
+  --color-surface-container: #151f36;
+  --color-tertiary-fixed: #6ffbbe;
+  --color-inverse-on-surface: #263047;
+  --color-on-secondary-fixed-variant: #0040a2;
+  --color-primary: #98cbff;
+  --color-on-error: #690005;
+  --color-surface-variant: #2a344c;
+  --color-tertiary-fixed-dim: #19D392;
+  --color-primary-fixed-dim: #98cbff;
+  --color-error-container: #93000a;
+  --color-surface-dim: #081329;
+
+  /* Font Families */
+  --font-score-display: var(--font-space-grotesk), sans-serif;
+  --font-score-display-mobile: var(--font-space-grotesk), sans-serif;
+  --font-headline-lg: var(--font-space-grotesk), sans-serif;
+  --font-headline-md: var(--font-space-grotesk), sans-serif;
+  --font-display-lg: var(--font-space-grotesk), sans-serif;
+  --font-body-md: var(--font-chivo), sans-serif;
+  --font-body-lg: var(--font-chivo), sans-serif;
+  --font-label-md: var(--font-chivo), sans-serif;
+  --font-label-sm: var(--font-chivo), sans-serif;
+  --font-tabular-stats: var(--font-chivo), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer utilities {
+  .text-score-display {
+    font-size: 36px;
+    line-height: 40px;
+    letter-spacing: 0.02em;
+    font-weight: 700;
+  }
+  .text-score-display-mobile {
+    font-size: 28px;
+    line-height: 32px;
+    letter-spacing: 0.01em;
+    font-weight: 700;
+  }
+  .text-headline-lg {
+    font-size: 28px;
+    line-height: 36px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+  .text-headline-md {
+    font-size: 20px;
+    line-height: 28px;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
+  .text-body-md {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .text-label-md {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .text-label-sm {
+    font-size: 11px;
+    line-height: 14px;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+  }
+  .text-tabular-stats {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
   }
 }
 
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #0A1124;
+  color: #d9e2ff;
+  overscroll-behavior: none;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #081329;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2a41;
+  border-radius: 9999px;
 }
