@@ -1,0 +1,55 @@
+name: Pitchline — Automated UEFA Champions League Sync
+
+on:
+  schedule:
+    # Sincronización intensiva cada 15 minutos en horario de partidos UCL (Martes, Miércoles y Jueves 16:00-23:59 UTC)
+    - cron: "*/15 16-23 * * 2,3,4"
+    # Sincronización periódica general cada 6 horas (Clasificación, Pronósticos Poisson, Lesionados y Noticias RSS)
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      force_live:
+        description: "Forzar consulta de marcadores en vivo (/fixtures?live=all&league=2)"
+        required: false
+        default: "true"
+
+jobs:
+  sync-ucl-data:
+    name: Sincronizar Standings, Partidos, Poisson, Bajas y Noticias
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      APP_URL: ${{ secrets.PITCHLINE_APP_URL || vars.PITCHLINE_APP_URL || 'http://localhost:3000' }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+    steps:
+      - name: 1. Sincronizar Datos UEFA Champions League (/api/sync/champions)
+        run: |
+          echo "Disparando sincronización de standings, matches, match_events, predictions (Poisson) y player_injuries..."
+          HTTP_STATUS=$(curl -sS -o /tmp/champions_sync.json -w "%{http_code}" \
+            -X POST "${APP_URL}/api/sync/champions" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json")
+          cat /tmp/champions_sync.json
+          echo ""
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Error HTTP $HTTP_STATUS al sincronizar /api/sync/champions"
+            exit 1
+          fi
+
+      - name: 2. Sincronizar Feed RSS Oficial UEFA (/api/sync/news)
+        run: |
+          echo "Disparando sincronización de noticias exclusivas UCL en public.news_articles..."
+          HTTP_STATUS=$(curl -sS -o /tmp/news_sync.json -w "%{http_code}" \
+            -X POST "${APP_URL}/api/sync/news" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "x-cron-secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json")
+          cat /tmp/news_sync.json
+          echo ""
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            echo "Error HTTP $HTTP_STATUS al sincronizar /api/sync/news"
+            exit 1
+          fi

@@ -97,3 +97,102 @@ export interface MatchWithDetails extends MatchRow {
   prediction?: PredictionRow | null;
   events?: MatchEventRow[];
 }
+
+export type KnockoutStageKey = "R16" | "QF" | "SF" | "FINAL";
+
+export interface KnockoutTeamSlot {
+  team_id: number;
+  team_name: string;
+  team_short: string;
+  team_crest: string;
+  seed: number;
+}
+
+export interface KnockoutTieNode {
+  slot: string; // e.g. "R16-1", "QF-1", "SF-1", "FINAL"
+  stage: KnockoutStageKey;
+  routeLabel: string; // e.g. "Octavo 1 • Ruta A"
+  dateLabel: string;
+  venueLabel?: string;
+  status: MatchStatus;
+  elapsed_minute?: number | null;
+  homeTeam: KnockoutTeamSlot | null;
+  awayTeam: KnockoutTeamSlot | null;
+  homeLeg1Score: number | null;
+  awayLeg1Score: number | null;
+  homeLeg2Score: number | null;
+  awayLeg2Score: number | null;
+  homeAggregate: number | null;
+  awayAggregate: number | null;
+  winnerTeamId: number | null;
+}
+
+export interface UserBracketData {
+  r16: Record<string, number>;
+  qf: Record<string, number>;
+  sf: Record<string, number>;
+  final: number | null;
+  customScores?: Record<string, { home: number; away: number }>;
+}
+
+export interface UserBracketRow {
+  id: string;
+  user_id: string;
+  season: number;
+  bracket_name: string;
+  bracket_data: UserBracketData;
+  champion_team_id: number | null;
+  champion_team_name: string | null;
+  updated_at: string;
+  created_at?: string;
+}
+
+export interface NewsArticleRow {
+  id: string;
+  title: string;
+  summary: string | null;
+  url: string;
+  image_url: string | null;
+  source_name: string;
+  category: string | null;
+  club_tag: string | null;
+  published_at: string;
+  created_at?: string;
+}
+
+export interface PlayerInjuryRow {
+  id: string;
+  player_name: string;
+  team_id: number | null;
+  team_name: string;
+  team_short_name?: string | null;
+  team_crest_url?: string | null;
+  injury_type: string;
+  status: "OUT" | "DOUBTFUL" | "QUESTIONABLE" | string;
+  estimated_return: string;
+  expected_return_date: string | null;
+  detail: string | null;
+  updated_at: string;
+}
+
+export interface ChatMessageRow {
+  id: string;
+  user_id: string;
+  role: "user" | "assistant";
+  content: string;
+  sources_used?: string[] | null;
+  created_at: string;
+}
+
+export interface ProfileRow {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  favorite_team_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+
+

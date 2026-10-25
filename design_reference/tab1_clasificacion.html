@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <meta content="web_dashboard" name="shell-type" />
+  <title>Pitchline — Tabla de Clasificación (36 Clubes) y Eliminatorias UEFA Champions League</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0A1124;
+        color: #d9e2ff;
+        overscroll-behavior: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #081329;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2a41;
+      border-radius: 9999px;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "brand-navy": "#0A1124",
+            "brand-mint": "#19D392",
+            "brand-ice": "#EEF2F8",
+            "brand-white": "#FFFFFF",
+            "primary-container": "#00a3ff",
+            "on-secondary-container": "#c7d4ff",
+            "error": "#ffb4ab",
+            "surface-bright": "#2f3951",
+            "primary-fixed": "#cfe5ff",
+            "on-primary-fixed": "#001d33",
+            "on-primary-container": "#00375a",
+            "inverse-primary": "#00629d",
+            "on-error-container": "#ffdad6",
+            "on-background": "#d9e2ff",
+            "secondary-fixed": "#dae2ff",
+            "on-secondary-fixed": "#001848",
+            "secondary-fixed-dim": "#b2c5ff",
+            "surface": "#0A1124",
+            "on-surface": "#d9e2ff",
+            "tertiary-container": "#00b27b",
+            "surface-container-lowest": "#030d23",
+            "on-primary-fixed-variant": "#004a77",
+            "on-tertiary-container": "#003c27",
+            "surface-tint": "#98cbff",
+            "on-tertiary-fixed-variant": "#005236",
+            "surface-container-low": "#111b31",
+            "on-tertiary-fixed": "#002113",
+            "secondary-container": "#0453cd",
+            "on-primary": "#003354",
+            "secondary": "#b2c5ff",
+            "inverse-surface": "#d9e2ff",
+            "background": "#0A1124",
+            "on-secondary": "#002b73",
+            "surface-container-high": "#1f2a41",
+            "outline-variant": "#3f4852",
+            "on-tertiary": "#003824",
+            "tertiary": "#19D392",
+            "outline": "#88919d",
+            "on-surface-variant": "#bec7d4",
+            "surface-container-highest": "#2a344c",
+            "surface-container": "#151f36",
+            "tertiary-fixed": "#6ffbbe",
+            "inverse-on-surface": "#263047",
+            "on-secondary-fixed-variant": "#0040a2",
+            "primary": "#98cbff",
+            "on-error": "#690005",
+            "surface-variant": "#2a344c",
+            "tertiary-fixed-dim": "#19D392",
+            "primary-fixed-dim": "#98cbff",
+            "error-container": "#93000a",
+            "surface-dim": "#081329"
+          },
+          fontFamily: {
+            "score-display": ["Space Grotesk", "sans-serif"],
+            "score-display-mobile": ["Space Grotesk", "sans-serif"],
+            "headline-lg": ["Space Grotesk", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "display-lg": ["Space Grotesk", "sans-serif"],
+            "body-md": ["Chivo", "sans-serif"],
+            "body-lg": ["Chivo", "sans-serif"],
+            "label-md": ["Chivo", "sans-serif"],
+            "label-sm": ["Chivo", "sans-serif"],
+            "tabular-stats": ["Chivo", "monospace"]
+          },
+          fontSize: {
+            "score-display": ["36px", { lineHeight: "40px", letterSpacing: "0.02em", fontWeight: "700" }],
+            "score-display-mobile": ["28px", { lineHeight: "32px", letterSpacing: "0.01em", fontWeight: "700" }],
+            "headline-lg": ["28px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "headline-md": ["20px", { lineHeight: "28px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.04em", fontWeight: "600" }],
+            "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.06em", fontWeight: "700" }],
+            "tabular-stats": ["13px", { lineHeight: "18px", fontWeight: "500" }]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-brand-navy font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+  <!-- Desktop Sidebar (Unificado con PitchlineShell y /clasificacion) -->
+  <aside class="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low/90 backdrop-blur-xl z-50 flex-col py-6 px-4 shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-r border-outline-variant/15">
+    <div class="flex items-center gap-3 px-3 mb-8">
+      <div class="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-sm border border-outline-variant/30 shrink-0">
+        <svg viewBox="0 0 40 40" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo de Pitchline">
+          <rect width="40" height="40" rx="10" fill="#0A1124"></rect>
+          <circle cx="20" cy="20" r="10" stroke="#19D392" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="31.4"></circle>
+          <circle cx="20" cy="20" r="10" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"></circle>
+          <line x1="20" y1="5" x2="20" y2="35" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"></line>
+          <circle cx="20" cy="20" r="2.5" fill="#19D392"></circle>
+        </svg>
+      </div>
+      <div class="flex flex-col">
+        <div class="flex items-center gap-1.5">
+          <span class="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold leading-none">pitchline</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-brand-mint"></span>
+        </div>
+        <span class="font-label-sm text-label-sm uppercase text-brand-mint tracking-wider font-semibold text-[10px]">UCL Predict &amp; AI</span>
+      </div>
+    </div>
+
+    <div class="px-3 mb-6">
+      <div class="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[18px]">event_available</span>
+          <span class="font-label-md text-label-md text-on-surface">Fase Liga</span>
+        </div>
+        <span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-bold">J8 / 8</span>
+      </div>
+    </div>
+
+    <nav class="flex-1 space-y-1.5 px-1">
+      <a href="/partidos" class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md">
+        <span class="material-symbols-outlined text-[20px]">sports_soccer</span>
+        <span>Marcadores en Vivo</span>
+      </a>
+      <a aria-current="page" href="/clasificacion" class="flex items-center gap-3.5 px-3 py-2.5 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-[0_0_16px_rgba(0,163,255,0.2)]">
+        <span class="material-symbols-outlined text-[20px]">leaderboard</span>
+        <span>Tabla y Clasificación</span>
+      </a>
+      <a href="/simulador" class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md">
+        <span class="material-symbols-outlined text-[20px]">account_tree</span>
+        <span>Arma tu Champions</span>
+      </a>
+      <a href="/noticias" class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md">
+        <span class="material-symbols-outlined text-[20px]">newspaper</span>
+        <span>Noticias Exclusivas</span>
+      </a>
+      <a href="/chatbot" class="flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md">
+        <span class="material-symbols-outlined text-brand-mint text-[20px]">neurology</span>
+        <span class="text-brand-mint font-medium">Asistente IA</span>
+      </a>
+    </nav>
+
+    <div class="mt-auto pt-4 px-2">
+      <div class="p-3 rounded-xl bg-surface-container flex items-center justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="font-label-md text-label-md text-on-surface truncate">Analista Pitchline</span>
+            <span class="font-label-sm text-label-sm text-brand-mint truncate">Supabase Auth</span>
+          </div>
+        </div>
+        <button aria-label="Opciones de sesión" class="text-on-surface-variant hover:text-on-surface transition-colors">
+          <span class="material-symbols-outlined text-[20px]">settings</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="lg:pl-64 flex flex-col min-h-screen">
+    <!-- Top Header -->
+    <header class="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-brand-navy/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-b border-outline-variant/10">
+      <div class="h-16 w-full px-4 lg:px-8 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 lg:hidden">
+          <div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shadow-sm shrink-0">
+            <svg viewBox="0 0 40 40" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="40" height="40" rx="8" fill="#0A1124"></rect>
+              <circle cx="20" cy="20" r="10" stroke="#19D392" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="31.4"></circle>
+              <circle cx="20" cy="20" r="10" stroke="#FFFFFF" stroke-width="2.5" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"></circle>
+              <line x1="20" y1="5" x2="20" y2="35" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"></line>
+              <circle cx="20" cy="20" r="2.5" fill="#19D392"></circle>
+            </svg>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold">pitchline</span>
+            <span class="font-label-sm text-label-sm uppercase text-brand-mint font-bold px-1.5 py-0.5 rounded bg-surface-container text-[9px]">UCL AI</span>
+          </div>
+        </div>
+
+        <div class="hidden md:flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full">
+          <span class="material-symbols-outlined text-primary text-[18px]">calendar_month</span>
+          <span class="font-label-md text-label-md text-on-surface-variant">Jornada:</span>
+          <span class="font-label-md text-label-md text-primary font-bold">8 de 8 (Fase de Liga)</span>
+        </div>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <div class="relative flex items-center rounded-full bg-surface-container hover:bg-surface-container-high transition-colors px-3 py-1.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant mr-1.5">search</span>
+            <input
+              id="header-search-input"
+              onkeyup="filterStandingsTable(this.value)"
+              type="text"
+              placeholder="Buscar clubes, llaves o jugadores..."
+              class="bg-transparent text-on-surface placeholder:text-on-surface-variant font-label-md text-label-md focus:outline-none w-28 sm:w-48"
+            />
+          </div>
+
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-mint/10 border border-brand-mint/25">
+            <div class="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></div>
+            <span class="hidden sm:inline font-label-sm text-label-sm text-brand-mint uppercase font-bold">En Directo</span>
+          </div>
+
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Main Container -->
+    <main class="flex-1 pt-20 pb-24 lg:pb-10 w-full px-4 lg:px-8 bg-brand-navy">
+      <div class="flex flex-col w-full space-y-5">
+        <!-- Top Command Ribbon & Sub-Tab Phase Switcher -->
+        <section class="p-4 rounded-xl bg-surface-container shadow-sm border border-outline-variant/15 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div role="tablist" aria-label="Fases de la UEFA Champions League" class="flex items-center gap-1.5 bg-surface-container-low p-1.5 rounded-full overflow-x-auto max-w-full border border-outline-variant/10">
+            <button id="tab-LIGA" onclick="switchSubTab('LIGA')" class="flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer bg-brand-mint text-brand-navy font-bold shadow-[0_0_16px_rgba(25,211,146,0.35)]">
+              <span class="material-symbols-outlined text-[16px]">view_timeline</span>
+              <span>Fase de Liga</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-brand-navy/20 text-brand-navy">36</span>
+            </button>
+            <button id="tab-R16" onclick="switchSubTab('R16')" class="flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high">
+              <span class="material-symbols-outlined text-[16px]">account_tree</span>
+              <span>Octavos</span>
+            </button>
+            <button id="tab-QF" onclick="switchSubTab('QF')" class="flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high">
+              <span class="material-symbols-outlined text-[16px]">hub</span>
+              <span>Cuartos</span>
+            </button>
+            <button id="tab-SF" onclick="switchSubTab('SF')" class="flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high">
+              <span class="material-symbols-outlined text-[16px]">mediation</span>
+              <span>Semifinales</span>
+            </button>
+            <button id="tab-FINAL" onclick="switchSubTab('FINAL')" class="flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high">
+              <span class="material-symbols-outlined text-[16px] text-brand-mint">emoji_events</span>
+              <span>Final</span>
+            </button>
+          </div>
+
+          <!-- Tournament Meta Pills & Realtime Telemetry -->
+          <div class="flex items-center gap-2 flex-wrap justify-between xl:justify-end">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low border border-brand-mint/20">
+              <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-mint"></span>
+              </span>
+              <span class="font-label-sm text-label-sm text-brand-mint uppercase font-bold tracking-wider">Supabase Realtime</span>
+              <span class="text-outline-variant font-label-sm text-label-sm">•</span>
+              <span class="font-tabular-stats text-tabular-stats text-on-surface-variant">WS Activo</span>
+            </div>
+            <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface">
+              <span class="material-symbols-outlined text-brand-mint text-[15px]">military_tech</span>
+              <span class="font-label-sm text-label-sm uppercase text-brand-mint font-bold">Temporada 2024/25</span>
+            </div>
+            <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant">
+              <span class="material-symbols-outlined text-primary text-[15px]">all_inclusive</span>
+              <span class="font-label-sm text-label-sm uppercase tracking-wider">Formato Suizo (36)</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Key Metrics Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+            <div class="p-2.5 rounded-lg bg-surface-container-high text-brand-mint shrink-0">
+              <span class="material-symbols-outlined text-[20px]">sports_soccer</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Goles Marcados</span>
+              <span class="font-headline-md text-headline-md text-brand-white font-bold">428 <span class="font-label-sm text-label-sm text-brand-mint font-normal">(2.97 / p)</span></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+            <div class="p-2.5 rounded-lg bg-surface-container-high text-primary shrink-0">
+              <span class="material-symbols-outlined text-[20px]">bolt</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Líder Goleador</span>
+              <span class="font-headline-md text-headline-md text-brand-white font-bold truncate">R. Lewandowski <span class="font-label-sm text-label-sm text-primary font-normal">(9G)</span></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+            <div class="p-2.5 rounded-lg bg-surface-container-high text-brand-mint shrink-0">
+              <span class="material-symbols-outlined text-[20px]">verified</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Pase Directo (1-8)</span>
+              <span class="font-headline-md text-headline-md text-brand-mint font-bold">8 Clubes Sellados</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+            <div class="p-2.5 rounded-lg bg-surface-container-high text-error shrink-0">
+              <span class="material-symbols-outlined text-[20px]">local_fire_department</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Ronda Play-Off (9-24)</span>
+              <span class="font-headline-md text-headline-md text-brand-white font-bold">16 Clasificados</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Primary Workspace: Split Layout (36-Team Standings Table + Live Knockout Bracket) -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+          <!-- LEFT COLUMN: 36-TEAM SINGLE TABLE CLASSIFICATION (7 COLS XL) -->
+          <section id="section-standings" class="xl:col-span-7 flex flex-col gap-3">
+            <!-- Classification Zone Legend Pill Bar -->
+            <div class="p-3 bg-surface-container rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-sm border border-outline-variant/15">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-label-sm text-label-sm uppercase text-on-surface-variant font-bold">Zonas:</span>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#19D392] shadow-[0_0_8px_rgba(25,211,146,0.7)]"></span>
+                  <span class="font-label-sm text-xs font-medium">1-8 Octavos Directo</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface-variant">
+                  <span class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(152,203,255,0.6)]"></span>
+                  <span class="font-label-sm text-xs">9-24 Playoffs</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-high text-on-surface-variant">
+                  <span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+                  <span class="font-label-sm text-xs">25-36 Eliminados</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 ml-auto">
+                <input
+                  id="team-filter-input"
+                  onkeyup="filterStandingsTable(this.value)"
+                  type="text"
+                  placeholder="Filtrar club..."
+                  class="bg-surface-container-low text-on-surface text-xs px-3 py-1.5 rounded-lg placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-brand-mint w-36 sm:w-44 border border-outline-variant/20"
+                />
+                <span class="font-label-sm text-label-sm text-brand-mint bg-surface-container-low px-2.5 py-1.5 rounded-lg uppercase font-bold border border-brand-mint/20">36 Clubes</span>
+              </div>
+            </div>
+
+            <!-- Table Container Card -->
+            <div class="bg-surface-container-low rounded-xl overflow-hidden shadow-xl border border-outline-variant/15 flex flex-col">
+              <div class="overflow-x-auto">
+                <div class="min-w-[660px]">
+                  <!-- Standings Header Row (PJ, V, E, D, GF, GC, DG, Pts, Racha) -->
+                  <div class="grid grid-cols-12 px-3 py-2.5 bg-surface-container-high text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider items-center select-none border-b border-outline-variant/20">
+                    <div class="col-span-1 text-center font-bold">#</div>
+                    <div class="col-span-3 pl-1">Club</div>
+                    <div class="col-span-6 grid grid-cols-8 text-center items-center">
+                      <span>PJ</span>
+                      <span>V</span>
+                      <span>E</span>
+                      <span>D</span>
+                      <span>GF</span>
+                      <span>GC</span>
+                      <span class="font-bold">DG</span>
+                      <span class="text-brand-mint font-bold">Pts</span>
+                    </div>
+                    <div class="col-span-2 text-right pr-2">Racha (5)</div>
+                  </div>
+
+                  <!-- Table Body Rows Container (Renderizado dinámico de los 36 Clubes) -->
+                  <div id="standings-body" class="divide-y divide-surface-container-high/60 max-h-[820px] overflow-y-auto"></div>
+                </div>
+              </div>
+
+              <!-- Table Footer Status Bar -->
+              <div class="px-4 py-2.5 bg-surface-container flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/15">
+                <span id="standings-count-label" class="text-on-surface-variant font-tabular-stats text-xs">Mostrando 36 de 36 clubes cargados</span>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="setSlice('1-16')" class="px-2.5 py-1 rounded text-xs font-label-sm bg-surface-container-high text-on-surface-variant hover:text-on-surface">1-16</button>
+                  <button onclick="setSlice('17-36')" class="px-2.5 py-1 rounded text-xs font-label-sm bg-surface-container-high text-on-surface-variant hover:text-on-surface">17-36</button>
+                  <button onclick="setSlice('ALL')" class="px-2.5 py-1 rounded text-xs font-label-sm bg-brand-mint text-brand-navy font-bold">Ver Todos (36)</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT COLUMN: TOURNAMENT KNOCKOUT BRACKET & ROAD TO MUNICH (5 COLS XL) -->
+          <section id="section-bracket" class="xl:col-span-5 flex flex-col gap-3">
+            <div class="p-3.5 bg-surface-container rounded-xl flex items-center justify-between shadow-sm border border-outline-variant/15">
+              <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-brand-mint text-[22px]">account_tree</span>
+                <div>
+                  <h2 class="font-headline-md text-body-md font-bold text-brand-white leading-tight">Cuadro Eliminatorio (Bracket UEFA)</h2>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant font-normal">Cruces Oficiales en Vivo con Ida &amp; Vuelta</p>
+                </div>
+              </div>
+              <span class="font-label-sm text-label-sm uppercase bg-brand-mint text-brand-navy font-bold px-2.5 py-1 rounded-md shadow-[0_0_12px_rgba(25,211,146,0.3)]">Allianz Arena</span>
+            </div>
+
+            <!-- Munich Trophy Showcase Card -->
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-high p-5 shadow-lg flex items-center justify-between border border-outline-variant/15">
+              <div class="flex flex-col z-10 max-w-[68%]">
+                <div class="flex items-center gap-1.5 text-brand-mint mb-1">
+                  <span class="material-symbols-outlined text-[16px]">stars</span>
+                  <span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">31 Mayo 2025 • Múnich</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md text-brand-white font-bold leading-tight">La Gran Final</h3>
+                <p class="font-body-md text-label-md text-on-surface-variant mt-1 font-normal">El nuevo monarca continental se coronará en la capital bávara tras superar el camino directo.</p>
+              </div>
+              <div class="relative flex items-center justify-center p-3.5 rounded-full bg-brand-mint/10 shadow-[0_0_30px_rgba(25,211,146,0.2)] border border-brand-mint/20">
+                <span class="material-symbols-outlined text-brand-mint text-[48px] select-none">emoji_events</span>
+              </div>
+            </div>
+
+            <!-- Visual Bracket Arena -->
+            <div class="bg-surface-container-low rounded-xl p-3.5 shadow-inner border border-outline-variant/15 flex flex-col gap-3.5">
+              <!-- Octavo 1 -->
+              <div class="flex flex-col gap-1.5">
+                <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-bold">Octavo 1 • Ruta Plata</span>
+                <div class="grid grid-cols-12 gap-2 items-center">
+                  <div class="col-span-7 bg-surface-container rounded-lg p-2.5 shadow hover:bg-surface-container-high transition-all border border-outline-variant/10">
+                    <div class="flex items-center justify-between py-0.5">
+                      <div class="flex items-center gap-2">
+                        <span class="w-1 h-3.5 rounded bg-brand-mint"></span>
+                        <span class="font-label-md text-body-md font-bold text-brand-white">Liverpool FC</span>
+                      </div>
+                      <span class="font-tabular-stats text-body-md font-bold text-brand-mint">3</span>
+                    </div>
+                    <div class="h-px bg-surface-container-highest my-1"></div>
+                    <div class="flex items-center justify-between py-0.5">
+                      <div class="flex items-center gap-2">
+                        <span class="w-1 h-3.5 rounded bg-surface-bright"></span>
+                        <span class="font-label-md text-body-md text-on-surface-variant">Borussia Dortmund</span>
+                      </div>
+                      <span class="font-tabular-stats text-body-md font-bold text-on-surface-variant">1</span>
+                    </div>
+                  </div>
+                  <div class="col-span-5 flex flex-col items-center justify-center bg-surface-container-high/70 rounded-lg p-2.5 text-center border border-outline-variant/10 h-full">
+                    <span class="font-label-sm text-label-sm text-brand-mint uppercase font-bold">AGG: 4 - 2</span>
+                    <span class="font-label-sm text-[11px] text-on-surface-variant font-normal mt-0.5">Liverpool a Cuartos</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Octavo 2 -->
+              <div class="flex flex-col gap-1.5">
+                <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider font-bold">Octavo 2 • Ruta Plata</span>
+                <div class="grid grid-cols-12 gap-2 items-center">
+                  <div class="col-span-7 bg-surface-container rounded-lg p-2.5 shadow hover:bg-surface-container-high transition-all border border-outline-variant/10">
+                    <div class="flex items-center justify-between py-0.5">
+                      <div class="flex items-center gap-2">
+                        <span class="w-1 h-3.5 rounded bg-brand-mint"></span>
+                        <span class="font-label-md text-body-md font-bold text-brand-white">Real Madrid CF</span>
+                      </div>
+                      <span class="font-tabular-stats text-body-md font-bold text-brand-mint">2</span>
+                    </div>
+                    <div class="h-px bg-surface-container-highest my-1"></div>
+                    <div class="flex items-center justify-between py-0.5">
+                      <div class="flex items-center gap-2">
+                        <span class="w-1 h-3.5 rounded bg-surface-bright"></span>
+                        <span class="font-label-md text-body-md text-on-surface-variant">Juventus FC</span>
+                      </div>
+                      <span class="font-tabular-stats text-body-md font-bold text-on-surface-variant">1</span>
+                    </div>
+                  </div>
+                  <div class="col-span-5 flex flex-col items-center justify-center bg-surface-container-high/70 rounded-lg p-2.5 text-center border border-outline-variant/10 h-full">
+                    <span class="font-label-sm text-label-sm text-brand-mint uppercase font-bold">AGG: 3 - 2</span>
+                    <span class="font-label-sm text-[11px] text-on-surface-variant font-normal mt-0.5">Real Madrid a Cuartos</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Projected Quarter Final Clash -->
+              <div class="p-3 rounded-lg bg-surface-container-highest/80 flex flex-col gap-2 border border-outline-variant/20">
+                <div class="flex items-center justify-between">
+                  <span class="font-label-sm text-label-sm text-brand-mint uppercase tracking-wider font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">flash_on</span> Cruce Proyectado • Cuartos de Final
+                  </span>
+                  <span class="font-tabular-stats text-label-sm text-on-surface-variant">Abril 2025</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="p-2 rounded bg-surface-container flex items-center justify-between">
+                    <span class="font-label-md text-label-md font-bold text-brand-white">Liverpool FC</span>
+                    <span class="font-label-sm text-[10px] text-brand-mint uppercase font-bold">Sembrado 1</span>
+                  </div>
+                  <div class="p-2 rounded bg-surface-container flex items-center justify-between">
+                    <span class="font-label-md text-label-md font-bold text-brand-white">Real Madrid</span>
+                    <span class="font-label-sm text-[10px] text-primary uppercase font-bold">Sembrado 6</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bracket Stage Progression Visual Bar -->
+              <div class="p-3 bg-surface-container rounded-lg flex flex-col gap-2 border border-outline-variant/10">
+                <div class="flex justify-between items-center font-tabular-stats text-label-md">
+                  <span class="text-on-surface-variant font-medium">Probabilidad de Campeón (Algoritmo IA)</span>
+                  <span class="text-brand-mint font-bold">Liverpool 26.4%</span>
+                </div>
+                <div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden flex">
+                  <div class="h-full bg-brand-mint" style="width: 26.4%"></div>
+                  <div class="h-full bg-primary" style="width: 21.8%"></div>
+                  <div class="h-full bg-error" style="width: 18.2%"></div>
+                  <div class="h-full bg-surface-bright" style="width: 33.6%"></div>
+                </div>
+                <div class="flex justify-between text-[11px] font-label-sm text-on-surface-variant uppercase">
+                  <span class="text-brand-mint font-bold">LIV 26%</span>
+                  <span class="text-primary font-bold">RMA 22%</span>
+                  <span class="text-error font-bold">FCB 18%</span>
+                  <span>Otros 34%</span>
+                </div>
+              </div>
+            </div>
+
+            <a href="/simulador" class="w-full py-3 px-4 rounded-xl bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-body-md font-bold transition-all duration-200 shadow-[0_0_20px_rgba(25,211,146,0.25)] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[20px]">tune</span>
+              <span>Arma tu Champions (Simulador)</span>
+            </a>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar (5 Official Tabs) -->
+  <nav aria-label="Navegación principal móvil" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-outline-variant/15 flex items-center justify-around py-2 px-1">
+    <a href="/partidos" class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors">
+      <span class="material-symbols-outlined text-[22px]">sports_soccer</span>
+      <span class="font-label-sm text-label-sm">En Vivo</span>
+    </a>
+    <a aria-current="page" href="/clasificacion" class="flex flex-col items-center gap-1 py-1 px-2 text-brand-mint font-bold transition-colors">
+      <span class="material-symbols-outlined text-[22px]">leaderboard</span>
+      <span class="font-label-sm text-label-sm">Tabla 36</span>
+    </a>
+    <a href="/simulador" class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors">
+      <span class="material-symbols-outlined text-[22px]">account_tree</span>
+      <span class="font-label-sm text-label-sm">Simulador</span>
+    </a>
+    <a href="/noticias" class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors">
+      <span class="material-symbols-outlined text-[22px]">newspaper</span>
+      <span class="font-label-sm text-label-sm">Noticias</span>
+    </a>
+    <a href="/chatbot" class="flex flex-col items-center gap-1 py-1 px-2 text-on-surface-variant hover:text-on-surface transition-colors">
+      <span class="material-symbols-outlined text-[22px] text-brand-mint">neurology</span>
+      <span class="font-label-sm text-label-sm text-brand-mint">Gemini IA</span>
+    </a>
+  </nav>
+
+  <script>
+    const CLUBS_36 = [
+      { rank: 1, short: "LIV", name: "Liverpool FC", pj: 8, v: 7, e: 1, d: 0, gf: 20, gc: 6, dg: "+14", pts: 22, form: ["V","V","V","E","V"] },
+      { rank: 2, short: "FCB", name: "FC Barcelona", pj: 8, v: 6, e: 1, d: 1, gf: 26, gc: 10, dg: "+16", pts: 19, form: ["V","V","D","V","V"] },
+      { rank: 3, short: "ARS", name: "Arsenal FC", pj: 8, v: 6, e: 1, d: 1, gf: 18, gc: 6, dg: "+12", pts: 19, form: ["V","E","V","V","V"] },
+      { rank: 4, short: "INT", name: "Inter de Milán", pj: 8, v: 6, e: 1, d: 1, gf: 13, gc: 3, dg: "+10", pts: 19, form: ["V","V","V","E","D"] },
+      { rank: 5, short: "B04", name: "Bayer Leverkusen", pj: 8, v: 5, e: 3, d: 0, gf: 16, gc: 7, dg: "+9", pts: 18, form: ["V","E","V","V","E"] },
+      { rank: 6, short: "RMA", name: "Real Madrid CF", pj: 8, v: 6, e: 0, d: 2, gf: 19, gc: 11, dg: "+8", pts: 18, form: ["D","V","V","V","V"] },
+      { rank: 7, short: "ATA", name: "Atalanta BC", pj: 8, v: 5, e: 2, d: 1, gf: 18, gc: 7, dg: "+11", pts: 17, form: ["V","V","E","V","V"] },
+      { rank: 8, short: "AVL", name: "Aston Villa", pj: 8, v: 5, e: 1, d: 2, gf: 14, gc: 7, dg: "+7", pts: 16, form: ["V","D","E","V","V"] },
+      { rank: 9, short: "BVB", name: "Borussia Dortmund", pj: 8, v: 5, e: 1, d: 2, gf: 20, gc: 12, dg: "+8", pts: 16, form: ["V","D","V","V","D"] },
+      { rank: 10, short: "BAY", name: "FC Bayern München", pj: 8, v: 5, e: 0, d: 3, gf: 19, gc: 13, dg: "+6", pts: 15, form: ["V","V","V","D","V"] },
+      { rank: 11, short: "JUV", name: "Juventus FC", pj: 8, v: 4, e: 3, d: 1, gf: 13, gc: 9, dg: "+4", pts: 15, form: ["E","V","E","V","E"] },
+      { rank: 12, short: "ATM", name: "Atlético de Madrid", pj: 8, v: 5, e: 0, d: 3, gf: 16, gc: 13, dg: "+3", pts: 15, form: ["V","V","V","D","V"] },
+      { rank: 13, short: "MIL", name: "AC Milan", pj: 8, v: 5, e: 0, d: 3, gf: 14, gc: 12, dg: "+2", pts: 15, form: ["V","V","D","V","V"] },
+      { rank: 14, short: "MCI", name: "Manchester City", pj: 8, v: 4, e: 2, d: 2, gf: 17, gc: 12, dg: "+5", pts: 14, form: ["D","E","V","D","V"] },
+      { rank: 15, short: "BEN", name: "SL Benfica", pj: 8, v: 4, e: 2, d: 2, gf: 15, gc: 11, dg: "+4", pts: 14, form: ["V","E","D","V","E"] },
+      { rank: 16, short: "MON", name: "AS Monaco", pj: 8, v: 4, e: 1, d: 3, gf: 14, gc: 11, dg: "+3", pts: 13, form: ["V","V","D","D","V"] },
+      { rank: 17, short: "SCP", name: "Sporting CP", pj: 8, v: 4, e: 1, d: 3, gf: 15, gc: 13, dg: "+2", pts: 13, form: ["V","V","D","D","E"] },
+      { rank: 18, short: "FEY", name: "Feyenoord", pj: 8, v: 4, e: 1, d: 3, gf: 16, gc: 15, dg: "+1", pts: 13, form: ["D","V","E","V","V"] },
+      { rank: 19, short: "LIL", name: "LOSC Lille", pj: 8, v: 4, e: 1, d: 3, gf: 12, gc: 11, dg: "+1", pts: 13, form: ["V","V","E","D","V"] },
+      { rank: 20, short: "SB29", name: "Stade Brestois 29", pj: 8, v: 4, e: 1, d: 3, gf: 11, gc: 11, dg: "0", pts: 13, form: ["V","E","D","V","D"] },
+      { rank: 21, short: "CEL", name: "Celtic FC", pj: 8, v: 3, e: 3, d: 2, gf: 13, gc: 13, dg: "0", pts: 12, form: ["E","V","E","E","D"] },
+      { rank: 22, short: "PSV", name: "PSV Eindhoven", pj: 8, v: 3, e: 2, d: 3, gf: 13, gc: 12, dg: "+1", pts: 11, form: ["E","V","V","D","D"] },
+      { rank: 23, short: "BRU", name: "Club Brugge", pj: 8, v: 3, e: 2, d: 3, gf: 9, gc: 11, dg: "-2", pts: 11, form: ["D","V","E","V","E"] },
+      { rank: 24, short: "DIN", name: "GNK Dinamo Zagreb", pj: 8, v: 3, e: 2, d: 3, gf: 12, gc: 17, dg: "-5", pts: 11, form: ["V","V","D","E","V"] },
+      { rank: 25, short: "PSG", name: "Paris Saint-Germain", pj: 8, v: 2, e: 1, d: 5, gf: 8, gc: 12, dg: "-4", pts: 7, form: ["D","D","V","D","E"] },
+      { rank: 26, short: "VFB", name: "VfB Stuttgart", pj: 8, v: 2, e: 1, d: 5, gf: 9, gc: 15, dg: "-6", pts: 7, form: ["D","V","D","D","E"] },
+      { rank: 27, short: "SHA", name: "Shakhtar Donetsk", pj: 8, v: 2, e: 1, d: 5, gf: 7, gc: 14, dg: "-7", pts: 7, form: ["D","V","D","V","D"] },
+      { rank: 28, short: "SPA", name: "Sparta Praha", pj: 8, v: 1, e: 1, d: 6, gf: 7, gc: 19, dg: "-12", pts: 4, form: ["E","D","D","D","D"] },
+      { rank: 29, short: "RBL", name: "RB Leipzig", pj: 8, v: 1, e: 1, d: 6, gf: 8, gc: 16, dg: "-8", pts: 4, form: ["D","D","D","D","V"] },
+      { rank: 30, short: "GIR", name: "Girona FC", pj: 8, v: 1, e: 0, d: 7, gf: 5, gc: 14, dg: "-9", pts: 3, form: ["D","V","D","D","D"] },
+      { rank: 31, short: "RBS", name: "Red Bull Salzburg", pj: 8, v: 1, e: 0, d: 7, gf: 4, gc: 22, dg: "-18", pts: 3, form: ["D","D","V","D","D"] },
+      { rank: 32, short: "BOL", name: "Bologna FC 1909", pj: 8, v: 0, e: 3, d: 5, gf: 4, gc: 11, dg: "-7", pts: 3, form: ["E","D","D","E","E"] },
+      { rank: 33, short: "CZV", name: "Crvena Zvezda", pj: 8, v: 1, e: 0, d: 7, gf: 9, gc: 22, dg: "-13", pts: 3, form: ["D","D","D","V","D"] },
+      { rank: 34, short: "STU", name: "SK Sturm Graz", pj: 8, v: 1, e: 0, d: 7, gf: 4, gc: 15, dg: "-11", pts: 3, form: ["D","D","D","V","D"] },
+      { rank: 35, short: "YB", name: "BSC Young Boys", pj: 8, v: 0, e: 0, d: 8, gf: 3, gc: 24, dg: "-21", pts: 0, form: ["D","D","D","D","D"] },
+      { rank: 36, short: "SLO", name: "ŠK Slovan Bratislava", pj: 8, v: 0, e: 0, d: 8, gf: 6, gc: 27, dg: "-21", pts: 0, form: ["D","D","D","D","D"] }
+    ];
+
+    let currentSlice = "ALL";
+    let currentFilter = "";
+
+    function renderStandings() {
+      const container = document.getElementById("standings-body");
+      const countLabel = document.getElementById("standings-count-label");
+      if (!container) return;
+
+      const filtered = CLUBS_36.filter(c => {
+        if (currentSlice === "1-16" && c.rank > 16) return false;
+        if (currentSlice === "17-36" && c.rank < 17) return false;
+        if (currentFilter && !c.name.toLowerCase().includes(currentFilter.toLowerCase()) && !c.short.toLowerCase().includes(currentFilter.toLowerCase())) {
+          return false;
+        }
+        return true;
+      });
+
+      if (countLabel) {
+        countLabel.textContent = `Mostrando ${filtered.length} de 36 clubes cargados`;
+      }
+
+      container.innerHTML = filtered.map((team, idx) => {
+        const isDirect = team.rank <= 8;
+        const isPlayoff = team.rank >= 9 && team.rank <= 24;
+        const barColor = isDirect
+          ? "bg-[#19D392] shadow-[0_0_10px_rgba(25,211,146,0.8)]"
+          : isPlayoff
+            ? "bg-primary shadow-[0_0_8px_rgba(152,203,255,0.4)]"
+            : "bg-error";
+        const textColor = isDirect ? "text-[#19D392]" : isPlayoff ? "text-primary" : "text-error";
+        const rowBg = idx % 2 === 0 ? "bg-surface-container-low hover:bg-surface-container-high/60" : "bg-surface-container/70 hover:bg-surface-container-high/80";
+
+        const formHtml = team.form.map(f => {
+          const style = f === "V"
+            ? "bg-[#19D392] text-[#0A1124]"
+            : f === "E"
+              ? "bg-surface-bright text-on-surface"
+              : "bg-error text-on-error";
+          return `<span class="w-4 h-4 rounded-full font-label-sm text-[9px] flex items-center justify-center font-bold ${style}">${f}</span>`;
+        }).join("");
+
+        let separatorHtml = "";
+        if (team.rank === 8 && !currentFilter) {
+          separatorHtml = `
+            <div class="bg-surface-container-highest/90 py-1.5 px-4 flex items-center justify-between text-xs border-y border-brand-mint/30">
+              <span class="font-label-sm text-[11px] uppercase text-[#19D392] tracking-wider font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">arrow_upward</span> Umbral Clasificación Directa a Octavos (1-8)
+              </span>
+              <span class="font-label-sm text-[11px] uppercase text-primary tracking-wider font-bold flex items-center gap-1">
+                Ronda de Playoffs (9-24) <span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+              </span>
+            </div>`;
+        } else if (team.rank === 24 && !currentFilter) {
+          separatorHtml = `
+            <div class="bg-surface-container-highest/90 py-1.5 px-4 flex items-center justify-between text-xs border-y border-error/30">
+              <span class="font-label-sm text-[11px] uppercase text-primary tracking-wider font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">arrow_upward</span> Límite Play-off Dieciseisavos (#24)
+              </span>
+              <span class="font-label-sm text-[11px] uppercase text-error tracking-wider font-bold flex items-center gap-1">
+                Zona de Eliminación Directa (25-36) <span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+              </span>
+            </div>`;
+        }
+
+        return `
+          <div class="team-row group grid grid-cols-12 px-3 py-2.5 items-center transition-all relative ${rowBg}">
+            <div class="absolute left-0 top-0 bottom-0 w-1 ${barColor}"></div>
+            <div class="col-span-1 text-center font-headline-md text-body-md font-bold ${textColor}">${team.rank}</div>
+            <div class="col-span-3 flex items-center gap-2 min-w-0 pl-1">
+              <div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center font-bold text-[10px] shrink-0 ${textColor}">${team.short}</div>
+              <span class="team-name font-label-md text-body-md font-semibold text-brand-white truncate group-hover:text-brand-mint transition-colors">${team.name}</span>
+            </div>
+            <div class="col-span-6 grid grid-cols-8 text-center items-center font-tabular-stats text-tabular-stats">
+              <span class="text-on-surface-variant">${team.pj}</span>
+              <span class="text-on-surface font-medium">${team.v}</span>
+              <span class="text-on-surface-variant">${team.e}</span>
+              <span class="text-on-surface-variant">${team.d}</span>
+              <span class="text-on-surface-variant">${team.gf}</span>
+              <span class="text-on-surface-variant">${team.gc}</span>
+              <span class="font-semibold ${textColor}">${team.dg}</span>
+              <span class="font-headline-md text-body-md font-bold ${textColor}">${team.pts}</span>
+            </div>
+            <div class="col-span-2 flex items-center justify-end gap-1 pr-1">${formHtml}</div>
+          </div>
+          ${separatorHtml}`;
+      }).join("");
+    }
+
+    function setSlice(slice) {
+      currentSlice = slice;
+      renderStandings();
+    }
+
+    function filterStandingsTable(val) {
+      currentFilter = val || "";
+      renderStandings();
+    }
+
+    function switchSubTab(mode) {
+      const ids = ["LIGA", "R16", "QF", "SF", "FINAL"];
+      ids.forEach(id => {
+        const btn = document.getElementById("tab-" + id);
+        if (!btn) return;
+        if (id === mode) {
+          btn.className = "flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer bg-brand-mint text-brand-navy font-bold shadow-[0_0_16px_rgba(25,211,146,0.35)]";
+        } else {
+          btn.className = "flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high";
+        }
+      });
+
+      const standingsSec = document.getElementById("section-standings");
+      const bracketSec = document.getElementById("section-bracket");
+      if (mode === "LIGA") {
+        if (standingsSec) standingsSec.style.display = "";
+        if (bracketSec) bracketSec.className = "xl:col-span-5 flex flex-col gap-3";
+      } else {
+        if (standingsSec) standingsSec.style.display = "none";
+        if (bracketSec) bracketSec.className = "xl:col-span-12 flex flex-col gap-3";
+      }
+    }
+
+    renderStandings();
+  </script>
+</body>
+</html>

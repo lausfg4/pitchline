@@ -5,8 +5,9 @@ import React from "react";
 interface EmptyWeekCardProps {
   weekRangeLabel: string;
   nextMatchdayDate: string;
-  showingPreview: boolean;
-  onTogglePreview: () => void;
+  upcomingMatchesSummary?: string;
+  showingPreview?: boolean;
+  onTogglePreview?: () => void;
 }
 
 /**
@@ -17,8 +18,7 @@ interface EmptyWeekCardProps {
 export function EmptyWeekCard({
   weekRangeLabel,
   nextMatchdayDate,
-  showingPreview,
-  onTogglePreview,
+  upcomingMatchesSummary,
 }: EmptyWeekCardProps) {
   return (
     <div
@@ -45,26 +45,10 @@ export function EmptyWeekCard({
               <span className="text-brand-mint capitalize">{nextMatchdayDate}</span>
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              El calendario oficial de la UEFA Champions League no registra encuentros entre lunes y domingo de la semana en curso. El canal WebSocket de Supabase Realtime permanece a la escucha.
+              {upcomingMatchesSummary ??
+                "El calendario oficial de la UEFA Champions League no registra encuentros entre lunes y domingo de la semana en curso."}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={onTogglePreview}
-            className="px-4 py-2.5 rounded-lg bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all shadow-md flex items-center gap-2 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {showingPreview ? "visibility_off" : "sports_soccer"}
-            </span>
-            <span>
-              {showingPreview
-                ? "Ver Solo Semana Vacía"
-                : "Ver Partidos de Jornada 7/8"}
-            </span>
-          </button>
         </div>
       </div>
     </div>

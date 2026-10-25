@@ -20,24 +20,24 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
     {
       id: "msg-1",
       role: "assistant",
-      text: "Hola Analista. Monitorizo 18 encuentros de UCL en tiempo real y el motor de Poisson. ¿Qué deseas consultar?",
+      text: "¡Hola! Analizo los partidos, pronósticos y partes médicos de la UEFA Champions League 2026/27. ¿Qué deseas consultar?",
       timeLabel: "Hace 1 min",
     },
     {
       id: "msg-2",
       role: "user",
-      text: "¿Quién va ganando hoy y quiénes metieron los goles?",
+      text: "¿Cómo quedaron los partidazos de la Jornada 3 y quiénes anotaron?",
       timeLabel: "Hace 30s",
     },
     {
       id: "msg-3",
       role: "assistant",
-      text: "En el Santiago Bernabéu empatan 2-2 Real Madrid (Vinícius 24', Bellingham 55') y Man City (Haaland 38', De Bruyne 62'). En Londres, Arsenal 1-0 Inter (Saka 19'). Bayern derrotó 1-0 a PSG.",
+      text: "En París, PSG venció 4-2 al Barça (Dembélé 12', Barcola 44', João Neves 76', Ramos 89'; Lewandowski 27', Raphinha 61'). En el Bernabéu, Real Madrid superó 4-1 a RB Leipzig, mientras que Bayern y Arsenal empataron 2-2.",
       timeLabel: "Ahora mismo",
     },
   ]);
 
-  const handleAskQuestion = (question: string) => {
+  const handleAskQuestion = async (question: string) => {
     const trimmed = question.trim();
     if (!trimmed) return;
 
@@ -48,43 +48,48 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
       timeLabel: "Ahora mismo",
     };
 
-    let reply =
-      "Consultando tablas matches, match_events y player_injuries en Supabase...";
-    const lower = trimmed.toLowerCase();
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText("");
 
-    if (lower.includes("mbappé") || lower.includes("baja") || lower.includes("lesion")) {
-      reply =
-        "Según el reporte médico en player_injuries, Kylian Mbappé presenta sobrecarga muscular en el bíceps femoral. Tiempo estimado de baja: 7 a 10 días (duda para la próxima jornada).";
-    } else if (lower.includes("probabilidad") || lower.includes("liderar")) {
-      reply =
-        "Según las 100,000 simulaciones Monte Carlo (30% Rendimiento, 30% xG, 25% UEFA Elo, 15% H2H), Liverpool FC (58% victoria hoy) y Arsenal FC (64% en vivo) lideran la proyección al Top 8 directo.";
-    } else {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed }),
+      });
+      const json = (await res.json()) as { reply?: string };
+      const botMsg: ChatMessageItem = {
+        id: `b-${Date.now() + 1}`,
+        role: "assistant",
+        text:
+          json.reply ??
+          "Marcadores y partes médicos actualizados en tiempo real.",
+        timeLabel: "Ahora mismo",
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch {
       const liveMatches = matches.filter(
         (m) => m.status === "IN_PLAY" || m.status === "HT"
       );
-      if (liveMatches.length > 0) {
-        const summary = liveMatches
-          .map(
-            (m) =>
-              `${m.home_team_name} ${m.home_score}-${m.away_score} ${m.away_team_name} (${m.elapsed_minute ?? 45}')`
-          )
-          .join(" • ");
-        reply = `Marcadores en tiempo real vía Supabase Realtime: ${summary}.`;
-      } else {
-        reply =
-          "Actualmente no hay partidos en juego en la semana actual. Puedes revisar las probabilidades pre-partido del modelo Poisson en cada tarjeta.";
-      }
+      const summary =
+        liveMatches.length > 0
+          ? liveMatches
+              .map(
+                (m) =>
+                  `${m.home_team_name} ${m.home_score}-${m.away_score} ${m.away_team_name} (${m.elapsed_minute ?? 45}')`
+              )
+              .join(" • ")
+          : "Consulta el centro completo en /chatbot.";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `b-${Date.now() + 1}`,
+          role: "assistant",
+          text: `Marcadores en tiempo real: ${summary}`,
+          timeLabel: "Ahora mismo",
+        },
+      ]);
     }
-
-    const botMsg: ChatMessageItem = {
-      id: `b-${Date.now() + 1}`,
-      role: "assistant",
-      text: reply,
-      timeLabel: "Ahora mismo",
-    };
-
-    setMessages((prev) => [...prev, userMsg, botMsg]);
-    setInputText("");
   };
 
   return (
@@ -103,18 +108,18 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
 
       {/* Card Central Asistente RAG */}
       <div className="rounded-xl bg-surface-container-low p-4 flex-1 flex flex-col justify-between space-y-4 shadow-xl border border-outline-variant/15">
-        {/* Header Info del Modelo */}
+        {/* Header Info del Asistente */}
         <div className="flex items-center justify-between pb-3 bg-surface-container rounded-lg p-2.5">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[18px]">
               verified
             </span>
             <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-              Gemini 2.5 Flash • RAG
+              Asistente Pitchline
             </span>
           </div>
           <span className="font-label-sm text-label-sm text-brand-mint font-bold">
-            API-Football Online
+            En línea
           </span>
         </div>
 
@@ -166,13 +171,13 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
               type="button"
               onClick={() =>
                 handleAskQuestion(
-                  "¿Cuánto tiempo estará de baja Mbappé por su sobrecarga?"
+                  "¿Qué jugadores están lesionados y cuánto tiempo estarán fuera?"
                 )
               }
               className="w-full text-left p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface font-label-md text-label-md flex items-center justify-between group cursor-pointer"
             >
               <span className="truncate">
-                ¿Cuánto tiempo estará de baja Mbappé por su sobrecarga?
+                ¿Qué jugadores están lesionados y cuánto tiempo estarán fuera?
               </span>
               <span className="material-symbols-outlined text-[16px] text-primary group-hover:translate-x-0.5 transition-transform shrink-0">
                 arrow_outward

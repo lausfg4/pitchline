@@ -2,10 +2,16 @@
 
 import React from "react";
 import type { MatchWithDetails } from "@/types/database";
-import { formatLocalKickoffTime } from "@/lib/date-utils";
+import {
+  computeMatchTelemetry,
+  formatMatchDateTimeLabel,
+  getOrGenerateMatchEvents,
+} from "@/lib/date-utils";
 
 interface MatchGridCardProps {
   match: MatchWithDetails;
+  userPrediction?: { home: number; away: number };
+  onSelectMatch?: (matchId: number) => void;
 }
 
 /**
@@ -14,10 +20,17 @@ interface MatchGridCardProps {
  * - IN_PLAY / HT: Indicador pulsante en verde #19D392, minuto exacto y marcador en vivo
  * - FINISHED: Marcador definitivo, xG Match, goleadores y verificación del pronóstico
  */
-export function MatchGridCard({ match }: MatchGridCardProps) {
+export function MatchGridCard({
+  match,
+  userPrediction,
+  onSelectMatch,
+}: MatchGridCardProps) {
   const isLive = match.status === "IN_PLAY" || match.status === "HT";
   const isFinished = match.status === "FINISHED";
   const isScheduled = match.status === "SCHEDULED";
+
+  const { homePossession, awayPossession, homeXg, awayXg } =
+    computeMatchTelemetry(match);
 
   const homeWinProb = match.prediction?.home_win_prob ?? 50;
   const drawProb = match.prediction?.draw_prob ?? 25;
@@ -32,17 +45,36 @@ export function MatchGridCard({ match }: MatchGridCardProps) {
           : `${match.elapsed_minute}' ${match.live_stats?.half_label ?? "1T"}`
         : "En Vivo";
 
-  const lastGoalEvent = (match.events ?? [])
-    .filter((e) => e.event_type === "GOAL")
-    .slice(-1)[0];
+  const matchEvents = getOrGenerateMatchEvents(match);
+  const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
+  const goalsSummary =
+    goalEvents.length > 0
+      ? goalEvents
+          .slice(0, 3)
+          .map((g) => `${g.player_name} ${g.minute}'`)
+          .join(", ") + (goalEvents.length > 3 ? ` (+${goalEvents.length - 3})` : "")
+      : "Empate sin goles (0-0)";
 
   return (
-    <div className="p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border border-outline-variant/15 flex flex-col justify-between space-y-4">
+    <div
+      onClick={() => onSelectMatch?.(match.id)}
+      role={onSelectMatch ? "button" : undefined}
+      tabIndex={onSelectMatch ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (onSelectMatch && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onSelectMatch(match.id);
+        }
+      }}
+      className={`p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border border-outline-variant/15 flex flex-col justify-between space-y-4 ${
+        onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""
+      }`}
+    >
       {/* Cabecera de Estado y Estadio */}
       <div className="flex items-center justify-between gap-2">
         {isFinished && (
           <span className="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
-            Finalizado
+            Finalizado • {formatMatchDateTimeLabel(match.kickoff_at).split("•")[0].trim()}
           </span>
         )}
         {isLive && (
@@ -53,7 +85,7 @@ export function MatchGridCard({ match }: MatchGridCardProps) {
         )}
         {isScheduled && (
           <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
-            Hoy • {formatLocalKickoffTime(match.kickoff_at)} CET
+            {formatMatchDateTimeLabel(match.kickoff_at)}
           </span>
         )}
         <span className="font-label-sm text-label-sm text-on-surface-variant truncate">
@@ -118,24 +150,38 @@ export function MatchGridCard({ match }: MatchGridCardProps) {
 
       {/* Footer Contextual según los 3 Estados */}
       {isFinished && (
-        <div className="pt-2 bg-surface-container rounded-lg p-2.5 flex items-center justify-between font-tabular-stats text-tabular-stats">
-          <div className="flex items-center gap-2">
-            <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
-              xG Match:
+        <div className="pt-2 bg-surface-container rounded-lg p-2.5 space-y-2 font-tabular-stats text-tabular-stats">
+          {/* Barra de Posesión acorde al resultado */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="text-primary font-bold">{homePossession}%</span>
+              <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
+                Posesión
+              </span>
+              <span className="text-brand-mint font-bold">{awayPossession}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${homePossession}%` }}
+              ></div>
+              <div
+                className="h-full bg-brand-mint transition-all duration-500"
+                style={{ width: `${awayPossession}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-outline-variant/10">
+            <span className="text-brand-mint font-label-sm text-label-sm font-medium truncate">
+              {goalsSummary}
             </span>
-            <span className="text-primary font-bold">
-              {(match.live_stats?.home_xg ?? 2.14).toFixed(2)}
-            </span>
-            <span className="text-outline-variant">vs</span>
-            <span className="text-on-surface-variant">
-              {(match.live_stats?.away_xg ?? 0.86).toFixed(2)}
+            <span className="font-label-sm text-[11px] text-on-surface-variant shrink-0 ml-2">
+              {userPrediction
+                ? `Predicción: ${userPrediction.home}-${userPrediction.away}`
+                : "Sin predicción"}
             </span>
           </div>
-          <span className="text-brand-mint font-label-sm text-label-sm font-medium truncate ml-2">
-            {lastGoalEvent
-              ? `Gol: ${lastGoalEvent.player_name} (${lastGoalEvent.minute}')`
-              : "Pronóstico Verificado"}
-          </span>
         </div>
       )}
 
