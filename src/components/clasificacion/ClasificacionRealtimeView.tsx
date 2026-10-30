@@ -362,7 +362,7 @@ export function ClasificacionRealtimeView({
           <div
             role="tablist"
             aria-label="Fases de la UEFA Champions League"
-            className="flex items-center gap-1.5 bg-surface-container-low p-1.5 rounded-full overflow-x-auto max-w-full border border-outline-variant/10"
+            className="flex items-center gap-1.5 bg-surface-container-low p-1.5 rounded-full overflow-x-auto max-w-full border border-outline-variant/10 no-scrollbar -mx-1 px-1 sm:mx-0 sm:px-1.5 snap-x"
           >
             {subTabs.map((tab) => {
               const isActive = activeSubTab === tab.id;
@@ -373,7 +373,7 @@ export function ClasificacionRealtimeView({
                   aria-selected={isActive}
                   type="button"
                   onClick={() => setActiveSubTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 min-h-10 sm:min-h-0 shrink-0 snap-start rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-brand-mint text-brand-navy font-bold shadow-[0_0_16px_rgba(25,211,146,0.35)]"
                       : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
@@ -444,7 +444,7 @@ export function ClasificacionRealtimeView({
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-brand-mint transition-all font-label-sm text-label-sm cursor-pointer border border-outline-variant/20"
+              className="flex items-center gap-1.5 px-3 py-1.5 min-h-10 sm:min-h-0 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-brand-mint transition-all font-label-sm text-label-sm cursor-pointer border border-outline-variant/20"
             >
               <span className="material-symbols-outlined text-[16px]">
                 sim_card_download
@@ -605,16 +605,16 @@ export function ClasificacionRealtimeView({
                 </div>
 
                 {/* Fast Filter Input */}
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Filtrar club..."
                     aria-label="Filtrar club en la tabla"
-                    className="bg-surface-container-low text-on-surface text-xs px-3 py-1.5 rounded-lg placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-brand-mint w-36 sm:w-44 border border-outline-variant/20"
+                    className="bg-surface-container-low text-on-surface text-base sm:text-xs px-3 py-1.5 rounded-lg placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-brand-mint w-full sm:w-44 border border-outline-variant/20"
                   />
-                  <span className="font-label-sm text-label-sm text-brand-mint bg-surface-container-low px-2.5 py-1.5 rounded-lg uppercase font-bold border border-brand-mint/20">
+                  <span className="font-label-sm text-label-sm text-brand-mint bg-surface-container-low px-2.5 py-1.5 rounded-lg uppercase font-bold border border-brand-mint/20 shrink-0">
                     36 Clubes
                   </span>
                 </div>
@@ -622,8 +622,8 @@ export function ClasificacionRealtimeView({
 
               {/* Table Container Card (PJ, V, E, D, GF, GC, DG, Pts y Racha de últimos 5 partidos) */}
               <div className="bg-surface-container-low rounded-xl overflow-hidden shadow-xl border border-outline-variant/15 flex flex-col">
-                <div className="overflow-x-auto">
-                  <div className="min-w-[660px]">
+                <div className="overflow-x-auto no-scrollbar">
+                  <div className="min-w-[620px] sm:min-w-[660px]">
                     {/* Standings Header Row */}
                     <div className="grid grid-cols-12 px-3 py-2.5 bg-surface-container-high text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider items-center select-none border-b border-outline-variant/20">
                       <div className="col-span-1 text-center font-bold">#</div>

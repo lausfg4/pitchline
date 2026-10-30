@@ -500,7 +500,7 @@ export function ChatbotDeportivoView({
                 UEFA Champions League 2026/27
               </span>
               {authEmail && (
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm max-w-full truncate">
                   {authEmail}
                 </span>
               )}
@@ -518,7 +518,7 @@ export function ChatbotDeportivoView({
             {!authUserId && (
               <Link
                 href="/login"
-                className="px-3.5 py-2 rounded-xl bg-secondary-container text-on-secondary-container font-label-sm text-label-sm uppercase font-bold"
+                className="inline-flex items-center min-h-10 px-3.5 py-2 rounded-xl bg-secondary-container text-on-secondary-container font-label-sm text-label-sm uppercase font-bold"
               >
                 Iniciar Sesión
               </Link>
@@ -526,7 +526,7 @@ export function ChatbotDeportivoView({
             <button
               type="button"
               onClick={handleClearChat}
-              className="px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="min-h-10 px-3.5 py-2 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">
                 refresh
@@ -564,25 +564,25 @@ export function ChatbotDeportivoView({
             </div>
 
             {/* Historial de Mensajes */}
-            <div className="p-5 space-y-4 overflow-y-auto h-[460px] sm:h-[520px]">
+            <div className="p-3.5 sm:p-5 space-y-4 overflow-y-auto h-[420px] sm:h-[520px]">
               {messages.map((msg) =>
                 msg.role === "assistant" ? (
-                  <div key={msg.id} className="flex gap-3 items-start">
-                    <div className="w-9 h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint mt-0.5">
-                      <span className="material-symbols-outlined text-[19px]">
+                  <div key={msg.id} className="flex gap-2.5 sm:gap-3 items-start">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint mt-0.5">
+                      <span className="material-symbols-outlined text-[17px] sm:text-[19px]">
                         smart_toy
                       </span>
                     </div>
-                    <div className="max-w-[86%] rounded-2xl rounded-tl-sm bg-surface-container px-4 py-3.5 border border-outline-variant/15 shadow-sm space-y-1.5">
+                    <div className="max-w-[88%] sm:max-w-[86%] rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-3 sm:px-4 sm:py-3.5 border border-outline-variant/15 shadow-sm space-y-1.5">
                       <div className="flex items-center justify-between gap-4">
                         <span className="font-label-sm text-xs text-brand-mint font-bold">
                           Asistente Pitchline
                         </span>
-                        <span className="font-label-sm text-[11px] text-on-surface-variant">
+                        <span className="font-label-sm text-[10px] sm:text-[11px] text-on-surface-variant">
                           {msg.timeLabel}
                         </span>
                       </div>
-                      <div className="font-body-md text-body-md text-on-surface whitespace-pre-line leading-relaxed">
+                      <div className="font-body-md text-sm sm:text-body-md text-on-surface whitespace-pre-line leading-relaxed">
                         {renderFormattedText(msg.content)}
                       </div>
                     </div>
@@ -590,18 +590,18 @@ export function ChatbotDeportivoView({
                 ) : (
                   <div
                     key={msg.id}
-                    className="flex gap-3 items-start justify-end"
+                    className="flex gap-2.5 sm:gap-3 items-start justify-end"
                   >
-                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary-container px-4 py-3 text-on-secondary-container shadow-md space-y-1">
-                      <div className="font-body-md text-body-md whitespace-pre-line leading-relaxed">
+                    <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary-container px-3.5 py-2.5 sm:px-4 sm:py-3 text-on-secondary-container shadow-md space-y-1">
+                      <div className="font-body-md text-sm sm:text-body-md whitespace-pre-line leading-relaxed">
                         {msg.content}
                       </div>
                       <span className="font-label-sm text-[10px] text-on-secondary-container/70 block text-right">
                         {msg.timeLabel}
                       </span>
                     </div>
-                    <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 text-on-primary mt-0.5">
-                      <span className="material-symbols-outlined text-[19px]">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 text-on-primary mt-0.5">
+                      <span className="material-symbols-outlined text-[17px] sm:text-[19px]">
                         person
                       </span>
                     </div>
@@ -610,13 +610,13 @@ export function ChatbotDeportivoView({
               )}
 
               {isLoading && (
-                <div className="flex gap-3 items-start">
-                  <div className="w-9 h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint animate-pulse">
-                    <span className="material-symbols-outlined text-[19px]">
+                <div className="flex gap-2.5 sm:gap-3 items-start">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint animate-pulse">
+                    <span className="material-symbols-outlined text-[17px] sm:text-[19px]">
                       smart_toy
                     </span>
                   </div>
-                  <div className="rounded-2xl rounded-tl-sm bg-surface-container px-4 py-3 border border-brand-mint/30 flex items-center gap-2.5">
+                  <div className="rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-2.5 sm:px-4 sm:py-3 border border-brand-mint/30 flex items-center gap-2.5">
                     <span className="w-2 h-2 rounded-full bg-brand-mint animate-ping"></span>
                     <span className="font-body-md text-xs text-on-surface">
                       Analizando partidos y partes médicos de la Champions...
@@ -629,11 +629,11 @@ export function ChatbotDeportivoView({
             </div>
 
             {/* Sugerencias Rápidas de Preguntas */}
-            <div className="px-5 py-3 bg-surface-container/60 border-t border-outline-variant/15 space-y-2">
+            <div className="px-3.5 sm:px-5 py-2.5 sm:py-3 bg-surface-container/60 border-t border-outline-variant/15 space-y-2">
               <span className="font-label-sm text-[11px] uppercase tracking-wider text-on-surface-variant block">
                 Preguntas sugeridas:
               </span>
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
                 {QUICK_SUGGESTIONS.map((suggestion) => (
                   <button
                     key={suggestion}
@@ -654,24 +654,24 @@ export function ChatbotDeportivoView({
                 e.preventDefault();
                 void handleSendQuestion(inputText);
               }}
-              className="p-4 bg-surface-container border-t border-outline-variant/20"
+              className="p-3 sm:p-4 bg-surface-container border-t border-outline-variant/20"
             >
-              <div className="flex items-center gap-2 bg-surface-container-low rounded-xl p-1.5 border border-outline-variant/25 focus-within:border-brand-mint transition-colors">
+              <div className="flex items-center gap-2 bg-surface-container-low rounded-xl p-1 sm:p-1.5 border border-outline-variant/25 focus-within:border-brand-mint transition-colors">
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   disabled={isLoading}
-                  placeholder="Escribe tu pregunta sobre un partido, goleador o jugador lesionado..."
+                  placeholder="Escribe tu pregunta sobre un partido, goleador o lesionado..."
                   aria-label="Escribe tu pregunta para el asistente deportivo"
-                  className="w-full bg-transparent px-3.5 py-2 text-brand-white placeholder:text-on-surface-variant focus:outline-none font-body-md text-body-md"
+                  className="w-full bg-transparent px-3 py-2 text-brand-white placeholder:text-on-surface-variant focus:outline-none font-body-md text-base sm:text-body-md min-w-0"
                 />
                 <button
                   type="submit"
                   disabled={isLoading || !inputText.trim()}
-                  className="px-4 py-2 rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
+                  className="px-3.5 sm:px-4 py-2 min-h-[44px] rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
                 >
-                  <span>Enviar</span>
+                  <span className="hidden sm:inline">Enviar</span>
                   <span className="material-symbols-outlined text-[18px]">
                     send
                   </span>

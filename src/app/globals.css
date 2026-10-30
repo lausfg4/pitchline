@@ -134,6 +134,26 @@ body {
   overscroll-behavior: none;
 }
 
+/* Responsive móvil: evita zoom de texto automático y scroll horizontal accidental */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Utilidad para barras de pestañas/chips con scroll horizontal sin barra visible */
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

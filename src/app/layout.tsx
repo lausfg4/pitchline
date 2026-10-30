@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Chivo, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -18,6 +18,14 @@ export const metadata: Metadata = {
   title: "Pitchline — UEFA Champions League Live Scores & AI Predictions",
   description:
     "Marcadores en tiempo real, pronósticos algorítmicos Poisson y asistente táctico IA para la UEFA Champions League.",
+};
+
+// Viewport móvil: ancho de dispositivo, soporte de notch (safe-area) y color de barra del navegador
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0A1124",
 };
 
 export default function RootLayout({

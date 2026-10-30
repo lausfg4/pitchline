@@ -212,7 +212,16 @@ export default function PerfilPage() {
   }, []);
 
   useEffect(() => {
-    void loadUserProfile();
+    let isMounted = true;
+    const fetchProfile = async () => {
+      if (isMounted) {
+        await loadUserProfile();
+      }
+    };
+    void fetchProfile();
+    return () => {
+      isMounted = false;
+    };
   }, [loadUserProfile]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -658,7 +667,7 @@ export default function PerfilPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Tu nombre y apellido"
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                    className="w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                   />
                 </div>
 
@@ -686,7 +695,7 @@ export default function PerfilPage() {
                         )
                       }
                       placeholder="analista_ucl"
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                      className="w-full pl-8 pr-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                     />
                   </div>
                 </div>
@@ -706,7 +715,7 @@ export default function PerfilPage() {
                         e.target.value ? Number(e.target.value) : null
                       )
                     }
-                    className="w-full px-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                    className="w-full px-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                   >
                     <option value="">Seleccionar club favorito (opcional)</option>
                     {STITCH_REFERENCE_STANDINGS.map((club) => (
@@ -717,11 +726,11 @@ export default function PerfilPage() {
                   </select>
                 </div>
 
-                <div className="pt-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                   <button
                     type="submit"
                     disabled={savingProfile || uploadingAvatar}
-                    className="px-6 py-3 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all inline-flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       save
@@ -735,7 +744,7 @@ export default function PerfilPage() {
                     type="button"
                     onClick={handleSignOut}
                     disabled={signingOut}
-                    className="px-4 py-2.5 rounded-xl bg-surface-container hover:bg-error/20 text-on-surface-variant hover:text-error font-label-md text-label-md transition-colors inline-flex items-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] rounded-xl bg-surface-container hover:bg-error/20 text-on-surface-variant hover:text-error font-label-md text-label-md transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       logout

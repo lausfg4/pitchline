@@ -230,9 +230,9 @@ export function NoticiasExclusivasView({
         </section>
 
         {/* Barra Doble de Filtros: Categoría y Club */}
-        <section className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/15 space-y-3">
+        <section className="p-3.5 sm:p-4 rounded-xl bg-surface-container-low border border-outline-variant/15 space-y-3">
           {/* Filtro por Categoría */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
             <span className="font-label-sm text-label-sm uppercase text-on-surface-variant shrink-0 mr-1">
               Categoría:
             </span>
@@ -256,7 +256,7 @@ export function NoticiasExclusivasView({
           </div>
 
           {/* Filtro por Club */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-outline-variant/15">
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-outline-variant/15 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
             <span className="font-label-sm text-label-sm uppercase text-on-surface-variant shrink-0 mr-1">
               Club:
             </span>

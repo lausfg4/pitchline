@@ -16,7 +16,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const err = params.get("error");
+      if (err) {
+        if (err === "oauth_callback_error") {
+          return "No se pudo completar la autenticación con Google. Por favor, inténtalo de nuevo.";
+        }
+        return decodeURIComponent(err);
+      }
+    }
+    return null;
+  });
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,15 +38,6 @@ export default function LoginPage() {
         router.replace("/perfil");
       }
     });
-
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("error") === "oauth_callback_error") {
-        setErrorMessage(
-          "No se pudo completar la autenticación con Google. Por favor, inténtalo de nuevo."
-        );
-      }
-    }
   }, [router]);
 
   const handleGoogleSignIn = async () => {
@@ -158,28 +161,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1124] text-on-surface flex flex-col justify-between relative overflow-hidden">
+    <div className="min-h-screen min-h-dvh bg-[#0A1124] text-on-surface flex flex-col justify-between relative overflow-hidden">
       {/* Luces ambientales con paleta oficial de Pitchline (#0A1124 y #19D392) */}
       <div className="absolute -top-40 -left-32 w-96 h-96 bg-[#19D392]/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* Barra superior de retorno */}
-      <header className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-8 pt-6 flex items-center justify-between">
+      <header className="relative z-10 w-full max-w-6xl mx-auto px-3 sm:px-8 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-6 flex items-center justify-between gap-3">
         <Link
           href="/partidos"
-          className="inline-flex items-center gap-2.5 group"
+          className="inline-flex items-center gap-2.5 group min-w-0"
         >
-          <div className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-md border border-outline-variant/30">
+          <div className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-md border border-outline-variant/30">
             <PitchlineLogo />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold leading-none">
                 pitchline
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#19D392]"></span>
             </div>
-            <span className="font-label-sm text-[10px] uppercase text-[#19D392] tracking-wider font-semibold">
+            <span className="font-label-sm text-[10px] uppercase text-[#19D392] tracking-wider font-semibold truncate">
               UEFA Champions League
             </span>
           </div>
@@ -187,24 +190,25 @@ export default function LoginPage() {
 
         <Link
           href="/partidos"
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-brand-white font-label-md text-label-md transition-colors border border-outline-variant/20"
+          aria-label="Volver a Marcadores"
+          className="shrink-0 inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 px-3 sm:px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-brand-white font-label-md text-label-md transition-colors border border-outline-variant/20"
         >
           <span className="material-symbols-outlined text-[18px]">
             arrow_back
           </span>
-          <span>Volver a Marcadores</span>
+          <span className="hidden min-[400px]:inline">Volver a Marcadores</span>
         </Link>
       </header>
 
       {/* Contenedor central de Autenticación */}
-      <main className="relative z-10 flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md rounded-2xl bg-surface-container-low/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl border border-outline-variant/20 space-y-6">
+      <main className="relative z-10 flex-1 flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10">
+        <div className="w-full max-w-md rounded-2xl bg-surface-container-low/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl border border-outline-variant/20 space-y-5 sm:space-y-6">
           {/* Identidad de Marca Pitchline */}
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="w-16 h-16 rounded-2xl bg-[#0A1124] flex items-center justify-center p-2.5 shadow-lg border border-[#19D392]/35">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0A1124] flex items-center justify-center p-2.5 shadow-lg border border-[#19D392]/35">
               <PitchlineLogo />
             </div>
-            <h1 className="font-headline-lg text-headline-lg text-brand-white font-bold tracking-tight">
+            <h1 className="font-headline-lg text-[24px] leading-8 sm:text-headline-lg text-brand-white font-bold tracking-tight text-balance">
               {activeTab === "LOGIN"
                 ? "Bienvenido a Pitchline"
                 : "Crea tu Cuenta de Analista"}
@@ -338,7 +342,7 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Ej. Carlos Martínez"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                    className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                   />
                 </div>
               </div>
@@ -362,7 +366,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@correo.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                  className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                 />
               </div>
             </div>
@@ -386,7 +390,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-body-md focus:outline-none focus:border-[#19D392]"
+                  className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl bg-[#0A1124] border border-outline-variant/25 text-brand-white placeholder:text-on-surface-variant/60 font-body-md text-base sm:text-body-md focus:outline-none focus:border-[#19D392]"
                 />
               </div>
             </div>
@@ -394,7 +398,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full py-3 px-4 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3 px-4 min-h-[46px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-[18px]">
                 {activeTab === "LOGIN" ? "login" : "person_add"}

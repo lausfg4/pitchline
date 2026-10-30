@@ -126,7 +126,14 @@ export function PitchlineShell({
   }, []);
 
   useEffect(() => {
-    void loadSessionProfile();
+    let isMounted = true;
+    const fetchProfile = async () => {
+      if (isMounted) {
+        await loadSessionProfile();
+      }
+    };
+    void fetchProfile();
+
     const supabase = createClient();
     const {
       data: { subscription },
@@ -140,6 +147,7 @@ export function PitchlineShell({
     window.addEventListener("pitchline:profile-updated", handleProfileUpdated);
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
       window.removeEventListener(
         "pitchline:profile-updated",
@@ -367,22 +375,32 @@ export function PitchlineShell({
       {/* Main Content Area */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top Header */}
-        <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-brand-navy/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-b border-outline-variant/10">
-          <div className="h-16 w-full px-4 lg:px-8 flex items-center justify-between gap-4">
+        <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-brand-navy/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-b border-outline-variant/10 pt-[env(safe-area-inset-top)]">
+          <div className="h-16 w-full px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
             {/* Mobile Logo */}
-            <div className="flex items-center gap-3 lg:hidden">
-              <div className="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shadow-sm shrink-0">
+            <Link
+              href="/partidos"
+              aria-label="Inicio Pitchline"
+              className="flex items-center gap-2 sm:gap-3 lg:hidden shrink-0"
+            >
+              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shadow-sm shrink-0">
                 <PitchlineLogo />
               </div>
-              <div className="flex items-center gap-2">
+              <div
+                className={`items-center gap-2 ${
+                  !isPartidosActive && !isSimuladorActive && !isChatbotActive
+                    ? "hidden min-[400px]:flex"
+                    : "flex"
+                }`}
+              >
                 <span className="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold">
                   pitchline
                 </span>
-                <span className="font-label-sm text-label-sm uppercase text-brand-mint font-bold px-1.5 py-0.5 rounded bg-surface-container text-[9px]">
+                <span className="hidden sm:inline font-label-sm text-label-sm uppercase text-brand-mint font-bold px-1.5 py-0.5 rounded bg-surface-container text-[9px]">
                   UCL AI
                 </span>
               </div>
-            </div>
+            </Link>
 
             {/* Jornada / Fase Pill (Solo en Marcadores y Clasificación) */}
             {!isSimuladorActive && !isNoticiasActive && !isChatbotActive && (
@@ -400,10 +418,10 @@ export function PitchlineShell({
             )}
 
             {/* Search & Live Status */}
-            <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-2 sm:gap-3 ml-auto min-w-0">
               {!isPartidosActive && !isSimuladorActive && !isChatbotActive && (
-                <div className="relative flex items-center rounded-full bg-surface-container hover:bg-surface-container-high transition-colors px-3 py-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant mr-1.5">
+                <div className="relative flex items-center min-w-0 flex-1 sm:flex-none rounded-full bg-surface-container hover:bg-surface-container-high transition-colors px-3 py-2 sm:py-1.5">
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant mr-1.5 shrink-0">
                     search
                   </span>
                   <input
@@ -412,7 +430,7 @@ export function PitchlineShell({
                     onChange={(e) => onSearchChange(e.target.value)}
                     placeholder={searchPlaceholder}
                     aria-label="Buscar equipos o estadísticas"
-                    className="bg-transparent text-on-surface placeholder:text-on-surface-variant font-label-md text-label-md focus:outline-none w-28 sm:w-48"
+                    className="bg-transparent text-on-surface placeholder:text-on-surface-variant font-label-md text-base sm:text-label-md focus:outline-none w-full min-w-0 sm:w-48"
                   />
                   {searchQuery && (
                     <button
@@ -428,7 +446,7 @@ export function PitchlineShell({
                 </div>
               )}
 
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-mint/10 border border-brand-mint/25">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-mint/10 border border-brand-mint/25 shrink-0">
                 <div className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></div>
                 <span className="hidden sm:inline font-label-sm text-label-sm text-brand-mint uppercase font-bold">
                   En Directo
@@ -439,9 +457,9 @@ export function PitchlineShell({
                 <Link
                   href="/perfil"
                   aria-label="Perfil de usuario"
-                  className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-colors shrink-0"
+                  className="flex items-center gap-2 p-1 sm:pl-1.5 sm:pr-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-colors shrink-0"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
                     {authUser.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -462,12 +480,13 @@ export function PitchlineShell({
               ) : (
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_12px_rgba(25,211,146,0.25)] transition-all shrink-0"
+                  aria-label="Iniciar Sesión"
+                  className="inline-flex items-center justify-center gap-1.5 h-10 w-10 sm:h-auto sm:w-auto sm:px-3.5 sm:py-1.5 rounded-full bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_12px_rgba(25,211,146,0.25)] transition-all shrink-0"
                 >
-                  <span className="material-symbols-outlined text-[16px]">
+                  <span className="material-symbols-outlined text-[18px] sm:text-[16px]">
                     login
                   </span>
-                  <span>Iniciar Sesión</span>
+                  <span className="hidden sm:inline">Iniciar Sesión</span>
                 </Link>
               )}
             </div>
@@ -475,7 +494,7 @@ export function PitchlineShell({
         </header>
 
         {/* Page Main Container */}
-        <main className="flex-1 pt-20 pb-24 lg:pb-10 w-full px-4 lg:px-8 bg-brand-navy">
+        <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10 w-full min-w-0 px-3 sm:px-4 lg:px-8 bg-brand-navy">
           {children}
         </main>
       </div>
@@ -483,12 +502,12 @@ export function PitchlineShell({
       {/* Mobile Bottom Navigation Bar (5 Official Tabs) */}
       <nav
         aria-label="Navegación principal móvil"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-outline-variant/15 flex items-center justify-around py-2 px-1"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-outline-variant/15 flex items-stretch justify-around pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] px-1"
       >
         <Link
           aria-current={isPartidosActive ? "page" : undefined}
           href="/partidos"
-          className={`flex flex-col items-center gap-1 py-1 px-2 transition-colors ${
+          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
             isPartidosActive
               ? "text-brand-mint font-bold"
               : "text-on-surface-variant hover:text-on-surface"
@@ -497,12 +516,12 @@ export function PitchlineShell({
           <span className="material-symbols-outlined text-[22px]">
             sports_soccer
           </span>
-          <span className="font-label-sm text-label-sm">En Vivo</span>
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">En Vivo</span>
         </Link>
         <Link
           aria-current={isClasificacionActive ? "page" : undefined}
           href="/clasificacion"
-          className={`flex flex-col items-center gap-1 py-1 px-2 transition-colors ${
+          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
             isClasificacionActive
               ? "text-brand-mint font-bold"
               : "text-on-surface-variant hover:text-on-surface"
@@ -511,12 +530,12 @@ export function PitchlineShell({
           <span className="material-symbols-outlined text-[22px]">
             leaderboard
           </span>
-          <span className="font-label-sm text-label-sm">Tabla 36</span>
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Tabla 36</span>
         </Link>
         <Link
           aria-current={isSimuladorActive ? "page" : undefined}
           href="/simulador"
-          className={`flex flex-col items-center gap-1 py-1 px-2 transition-colors ${
+          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
             isSimuladorActive
               ? "text-brand-mint font-bold"
               : "text-on-surface-variant hover:text-on-surface"
@@ -525,12 +544,12 @@ export function PitchlineShell({
           <span className="material-symbols-outlined text-[22px]">
             account_tree
           </span>
-          <span className="font-label-sm text-label-sm">Simulador</span>
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Simulador</span>
         </Link>
         <Link
           aria-current={isNoticiasActive ? "page" : undefined}
           href="/noticias"
-          className={`flex flex-col items-center gap-1 py-1 px-2 transition-colors ${
+          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
             isNoticiasActive
               ? "text-brand-mint font-bold"
               : "text-on-surface-variant hover:text-on-surface"
@@ -539,12 +558,12 @@ export function PitchlineShell({
           <span className="material-symbols-outlined text-[22px]">
             newspaper
           </span>
-          <span className="font-label-sm text-label-sm">Noticias</span>
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Noticias</span>
         </Link>
         <Link
           aria-current={isChatbotActive ? "page" : undefined}
           href="/chatbot"
-          className={`flex flex-col items-center gap-1 py-1 px-2 transition-colors ${
+          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
             isChatbotActive
               ? "text-brand-mint font-bold"
               : "text-on-surface-variant hover:text-on-surface"
@@ -553,7 +572,7 @@ export function PitchlineShell({
           <span className="material-symbols-outlined text-[22px] text-brand-mint">
             neurology
           </span>
-          <span className="font-label-sm text-label-sm text-brand-mint">
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate text-brand-mint">
             Gemini IA
           </span>
         </Link>

@@ -57,14 +57,8 @@ export function PartidosRealtimeView({
   >("CONNECTING");
   const [userPredictions, setUserPredictions] = useState<
     Record<number, { home: number; away: number }>
-  >({});
-
-  const [referenceDate, setReferenceDate] = useState<Date>(
-    DEFAULT_REFERENCE_DATE
-  );
-
-  useEffect(() => {
-    setReferenceDate(new Date());
+  >(() => {
+    if (typeof window === "undefined") return {};
     try {
       const saved = localStorage.getItem("pitchline_user_predictions");
       if (saved) {
@@ -73,13 +67,16 @@ export function PartidosRealtimeView({
           { home: number; away: number }
         >;
         if (parsed && typeof parsed === "object") {
-          setUserPredictions(parsed);
+          return parsed;
         }
       }
     } catch {
       // Ignorar errores de almacenamiento local
     }
-  }, []);
+    return {};
+  });
+
+  const [referenceDate] = useState<Date>(DEFAULT_REFERENCE_DATE);
 
   // Función para recargar en caliente desde Supabase cuando se dispara una sincronización
   const reloadFromSupabaseClient = useCallback(async () => {
@@ -275,11 +272,11 @@ export function PartidosRealtimeView({
     [allTournamentMatches]
   );
 
-  useEffect(() => {
-    if (!userChangedPhase) {
-      setSelectedPhase(activeOrNextPhaseKey);
-    }
-  }, [activeOrNextPhaseKey, userChangedPhase]);
+  const [prevActiveOrNext, setPrevActiveOrNext] = useState(activeOrNextPhaseKey);
+  if (!userChangedPhase && prevActiveOrNext !== activeOrNextPhaseKey) {
+    setPrevActiveOrNext(activeOrNextPhaseKey);
+    setSelectedPhase(activeOrNextPhaseKey);
+  }
 
   const phaseInfo = useMemo(
     () =>
@@ -417,9 +414,9 @@ export function PartidosRealtimeView({
       <div className="flex flex-col w-full space-y-6">
         {/* Sub-header de Telemetría & Navegación de Jornada / Fase Eliminatoria */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl bg-surface-container shadow-sm border border-outline-variant/15">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Selector de Jornada (J1-J8) o Fase Eliminatoria (Octavos, Cuartos, Semis, Final) */}
-            <div className="flex items-center bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/15">
+            <div className="flex items-center justify-between w-full sm:w-auto bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/15">
               <button
                 type="button"
                 onClick={() => {
@@ -430,13 +427,13 @@ export function PartidosRealtimeView({
                   setActiveFilter("ALL");
                 }}
                 aria-label="Fase o jornada anterior"
-                className="p-1 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                className="p-1 min-w-10 min-h-10 sm:min-w-0 sm:min-h-0 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   chevron_left
                 </span>
               </button>
-              <div className="px-3 flex flex-col text-center min-w-[165px]">
+              <div className="px-2 sm:px-3 flex flex-col text-center flex-1 min-w-0 sm:flex-none sm:min-w-[165px]">
                 <span className="font-label-sm text-[10px] uppercase tracking-wider text-brand-mint font-bold">
                   {phaseInfo.subtitle}
                 </span>
@@ -457,7 +454,7 @@ export function PartidosRealtimeView({
                   setActiveFilter("ALL");
                 }}
                 aria-label="Fase o jornada siguiente"
-                className="p-1 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                className="p-1 min-w-10 min-h-10 sm:min-w-0 sm:min-h-0 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   chevron_right
@@ -506,7 +503,7 @@ export function PartidosRealtimeView({
             </div>
 
             {/* Filtros de Partido */}
-            <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1 w-full sm:w-auto min-w-0 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <button
                 type="button"
                 onClick={() => setActiveFilter("ALL")}

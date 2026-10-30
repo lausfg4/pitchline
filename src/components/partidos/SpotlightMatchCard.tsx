@@ -57,7 +57,7 @@ export function SpotlightMatchCard({
       <div className="absolute -top-32 -left-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-20 w-96 h-96 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="relative z-10 flex flex-col p-5 lg:p-8 space-y-6">
+      <div className="relative z-10 flex flex-col p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         {/* Top Meta Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -91,18 +91,18 @@ export function SpotlightMatchCard({
         </div>
 
         {/* Live Match Scoreboard Hub */}
-        <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-6 py-2">
+        <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-4 sm:gap-6 py-2">
           {/* Local */}
-          <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-4 order-1">
-            <div className="flex flex-col text-left md:text-right">
-              <span className="font-headline-lg text-headline-lg text-brand-white tracking-tight">
+          <div className="md:col-span-4 flex items-center justify-between sm:justify-start md:justify-end gap-3 sm:gap-4 order-1">
+            <div className="flex flex-col text-left md:text-right min-w-0">
+              <span className="font-headline-lg text-xl sm:text-2xl md:text-headline-lg text-brand-white tracking-tight truncate">
                 {match.home_team_name}
               </span>
-              <span className="font-label-md text-label-md text-on-surface-variant">
+              <span className="font-label-md text-xs sm:text-label-md text-on-surface-variant truncate">
                 {match.live_stats?.home_rank_label ?? "2° Lugar • 16 pts (+11)"}
               </span>
             </div>
-            <div className="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2.5 shadow-md shrink-0 border border-outline-variant/20">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border border-outline-variant/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="w-full h-full object-contain"
@@ -113,25 +113,25 @@ export function SpotlightMatchCard({
           </div>
 
           {/* Centro: Marcador y Minuto / Fecha de Previa */}
-          <div className="md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3 px-4 rounded-xl shadow-inner border border-outline-variant/15">
+          <div className="md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3 px-3 sm:px-4 rounded-xl shadow-inner border border-outline-variant/15 w-full">
             {isLive || isFinished ? (
               <div className="flex items-center gap-3">
-                <span className="font-score-display text-score-display text-primary tracking-tight">
+                <span className="font-score-display text-3xl sm:text-score-display text-primary tracking-tight">
                   {match.home_score}
                 </span>
-                <span className="font-headline-lg text-headline-lg text-outline-variant">
+                <span className="font-headline-lg text-2xl sm:text-headline-lg text-outline-variant">
                   -
                 </span>
-                <span className="font-score-display text-score-display text-primary tracking-tight">
+                <span className="font-score-display text-3xl sm:text-score-display text-primary tracking-tight">
                   {match.away_score}
                 </span>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-0.5">
-                <span className="font-score-display text-headline-lg text-brand-mint tracking-wider uppercase">
+                <span className="font-score-display text-xl sm:text-headline-lg text-brand-mint tracking-wider uppercase">
                   VS
                 </span>
-                <span className="font-label-md text-xs text-brand-white font-bold uppercase">
+                <span className="font-label-md text-xs text-brand-white font-bold uppercase text-center">
                   {formatMatchDateTimeLabel(match.kickoff_at)}
                 </span>
               </div>
@@ -142,7 +142,7 @@ export function SpotlightMatchCard({
                   ? minuteDisplay
                   : getStageNameEs(match.stage, match.matchday ?? 4)}
               </span>
-              <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              <span className="font-label-sm text-[11px] sm:text-label-sm text-on-surface-variant uppercase tracking-wider">
                 {isLive
                   ? match.live_stats?.half_label ?? "En Vivo"
                   : isFinished
@@ -154,9 +154,9 @@ export function SpotlightMatchCard({
             {/* Barra de Posesión (Solo en Vivo o Finalizados) */}
             {(isLive || isFinished) && (
               <div className="w-full mt-3 space-y-1">
-                <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant">
+                <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant text-xs">
                   <span className="text-primary font-bold">{homePossession}%</span>
-                  <span className="font-label-sm text-label-sm uppercase">
+                  <span className="font-label-sm text-[10px] sm:text-label-sm uppercase">
                     Posesión
                   </span>
                   <span className="text-brand-mint font-bold">{awayPossession}%</span>
@@ -176,8 +176,8 @@ export function SpotlightMatchCard({
           </div>
 
           {/* Visitante */}
-          <div className="md:col-span-4 flex items-center justify-end md:justify-start gap-4 order-3">
-            <div className="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2.5 shadow-md shrink-0 border border-outline-variant/20">
+          <div className="md:col-span-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 order-3">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border border-outline-variant/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="w-full h-full object-contain"
@@ -185,11 +185,11 @@ export function SpotlightMatchCard({
                 src={match.away_team_crest}
               />
             </div>
-            <div className="flex flex-col text-left">
-              <span className="font-headline-lg text-headline-lg text-brand-white tracking-tight">
+            <div className="flex flex-col text-left min-w-0">
+              <span className="font-headline-lg text-xl sm:text-2xl md:text-headline-lg text-brand-white tracking-tight truncate">
                 {match.away_team_name}
               </span>
-              <span className="font-label-md text-label-md text-on-surface-variant">
+              <span className="font-label-md text-xs sm:text-label-md text-on-surface-variant truncate">
                 {match.live_stats?.away_rank_label ?? "3° Lugar • 15 pts (+14)"}
               </span>
             </div>
@@ -283,29 +283,29 @@ export function SpotlightMatchCard({
 
               {/* 3-Way Poisson Probability Bar */}
               <div className="space-y-2">
-                <div className="flex justify-between items-end font-tabular-stats text-tabular-stats">
+                <div className="flex justify-between items-end font-tabular-stats text-tabular-stats text-xs sm:text-tabular-stats">
                   <div>
-                    <span className="text-primary font-bold text-headline-md">
+                    <span className="text-primary font-bold text-base sm:text-headline-md">
                       {homeWinProb}%
                     </span>
-                    <span className="text-on-surface-variant ml-1 font-label-md text-label-md">
-                      Gana {match.home_team_name}
+                    <span className="text-on-surface-variant ml-1 font-label-md text-xs sm:text-label-md hidden min-[360px]:inline">
+                      {match.home_team_name.split(" ")[0]}
                     </span>
                   </div>
                   <div>
-                    <span className="text-secondary font-bold text-headline-md">
+                    <span className="text-secondary font-bold text-base sm:text-headline-md">
                       {drawProb}%
                     </span>
-                    <span className="text-on-surface-variant ml-1 font-label-md text-label-md">
+                    <span className="text-on-surface-variant ml-1 font-label-md text-xs sm:text-label-md hidden min-[360px]:inline">
                       Empate
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-brand-mint font-bold text-headline-md">
+                    <span className="text-brand-mint font-bold text-base sm:text-headline-md">
                       {awayWinProb}%
                     </span>
-                    <span className="text-on-surface-variant ml-1 font-label-md text-label-md">
-                      Gana {match.away_team_name}
+                    <span className="text-on-surface-variant ml-1 font-label-md text-xs sm:text-label-md hidden min-[360px]:inline">
+                      {match.away_team_name.split(" ")[0]}
                     </span>
                   </div>
                 </div>
@@ -400,13 +400,13 @@ export function SpotlightMatchCard({
               </div>
 
               {editingPrediction && (
-                <div className="p-4 rounded-lg bg-surface-container-low border border-primary/30 flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+                <div className="p-3 sm:p-4 rounded-lg bg-surface-container-low border border-primary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                     <span className="font-label-md text-label-md text-on-surface">
                       Tu Pronóstico:
                     </span>
                     <div className="flex items-center gap-2">
-                      <label className="font-label-sm text-label-sm text-on-surface-variant">
+                      <label className="font-label-sm text-label-sm text-on-surface-variant truncate max-w-[100px] sm:max-w-none">
                         {match.home_team_name}
                       </label>
                       <input
@@ -415,7 +415,7 @@ export function SpotlightMatchCard({
                         max={15}
                         value={predHome}
                         onChange={(e) => setPredHome(Number(e.target.value))}
-                        className="w-14 px-2 py-1 rounded bg-surface-container text-center text-brand-white font-bold border border-outline-variant/40"
+                        className="w-12 sm:w-14 px-2 py-1.5 rounded bg-surface-container text-center text-brand-white font-bold border border-outline-variant/40 text-base sm:text-sm"
                       />
                       <span className="text-on-surface-variant">-</span>
                       <input
@@ -424,28 +424,28 @@ export function SpotlightMatchCard({
                         max={15}
                         value={predAway}
                         onChange={(e) => setPredAway(Number(e.target.value))}
-                        className="w-14 px-2 py-1 rounded bg-surface-container text-center text-brand-white font-bold border border-outline-variant/40"
+                        className="w-12 sm:w-14 px-2 py-1.5 rounded bg-surface-container text-center text-brand-white font-bold border border-outline-variant/40 text-base sm:text-sm"
                       />
-                      <label className="font-label-sm text-label-sm text-on-surface-variant">
+                      <label className="font-label-sm text-label-sm text-on-surface-variant truncate max-w-[100px] sm:max-w-none">
                         {match.away_team_name}
                       </label>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       type="button"
                       onClick={() => {
                         onSaveUserPrediction(match.id, predHome, predAway);
                         setEditingPrediction(false);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-brand-mint text-brand-navy font-label-md text-label-md font-bold cursor-pointer"
+                      className="flex-1 sm:flex-none px-3.5 py-2 rounded-lg bg-brand-mint text-brand-navy font-label-md text-label-md font-bold cursor-pointer min-h-[40px] flex items-center justify-center"
                     >
                       Guardar Pronóstico
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingPrediction(false)}
-                      className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-md text-label-md cursor-pointer"
+                      className="px-3.5 py-2 rounded-lg bg-surface-container text-on-surface-variant font-label-md text-label-md cursor-pointer min-h-[40px] flex items-center justify-center"
                     >
                       Cancelar
                     </button>

@@ -1036,7 +1036,7 @@ export function KnockoutBracket({
     FINAL: "la Gran Final",
   };
 
-  const activeRoundUpcomingText = useMemo(() => {
+  const getActiveRoundUpcomingText = () => {
     const targetStage: KnockoutStageKey =
       internalRoundFilter === "ALL"
         ? !r16List.every((t) => t.status === "FINISHED")
@@ -1088,7 +1088,9 @@ export function KnockoutBracket({
     }
 
     return getUpcomingPhaseMatchesSummary(matches);
-  }, [internalRoundFilter, r16List, qfList, sfList, finalNode, matches]);
+  };
+
+  const activeRoundUpcomingText = getActiveRoundUpcomingText();
 
   return (
     <div className="flex flex-col space-y-6 w-full">
@@ -1121,9 +1123,9 @@ export function KnockoutBracket({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <div className="flex items-center bg-surface-container rounded-lg px-3 py-2 border border-outline-variant/25">
-              <span className="material-symbols-outlined text-on-surface-variant text-[18px] mr-2">
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+            <div className="flex items-center flex-1 sm:flex-none bg-surface-container rounded-lg px-3 py-2 border border-outline-variant/25">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px] mr-2 shrink-0">
                 bookmark_manager
               </span>
               <input
@@ -1132,14 +1134,14 @@ export function KnockoutBracket({
                 onChange={(e) => setBracketName(e.target.value)}
                 placeholder="Nombre de tu predicción..."
                 aria-label="Nombre de tu predicción de bracket"
-                className="bg-transparent text-brand-white font-label-md text-label-md focus:outline-none w-44"
+                className="bg-transparent text-brand-white font-label-md text-base sm:text-label-md focus:outline-none w-full sm:w-44"
               />
             </div>
 
             <button
               type="button"
               onClick={handleAutoFillWithAI}
-              className="px-3.5 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-label-md text-label-md font-bold transition-colors flex items-center gap-1.5 cursor-pointer border border-outline-variant/20"
+              className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-label-md text-label-md font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-outline-variant/20 min-h-[40px]"
             >
               <span className="material-symbols-outlined text-[18px]">
                 auto_awesome
@@ -1150,7 +1152,7 @@ export function KnockoutBracket({
             <button
               type="button"
               onClick={handleResetBracket}
-              className="px-3 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
             >
               <span className="material-symbols-outlined text-[18px]">
                 restart_alt
@@ -1162,7 +1164,7 @@ export function KnockoutBracket({
               type="button"
               disabled={isSaving}
               onClick={handleSaveBracketToSupabase}
-              className="px-4 py-2.5 rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all shadow-[0_0_20px_rgba(25,211,146,0.3)] flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all shadow-[0_0_20px_rgba(25,211,146,0.3)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 min-h-[44px]"
             >
               <span className="material-symbols-outlined text-[18px]">
                 cloud_upload
@@ -1389,8 +1391,16 @@ export function KnockoutBracket({
         </div>
       )}
 
+      {/* Indicador de Desplazamiento Horizontal en Móviles */}
+      <div className="flex items-center gap-1.5 md:hidden text-xs text-brand-mint/90 px-1 py-0.5">
+        <span className="material-symbols-outlined text-[16px] animate-pulse">
+          swipe
+        </span>
+        <span>Desliza horizontalmente para ver todo el cuadro eliminatorio</span>
+      </div>
+
       {/* ÁRBOL INTERACTIVO DE 4 COLUMNAS: OCTAVOS -> CUARTOS -> SEMIFINALES -> GRAN FINAL & CAMPEÓN */}
-      <div className="bg-surface-container-low rounded-2xl p-4 lg:p-6 shadow-xl border border-outline-variant/15 overflow-x-auto">
+      <div className="bg-surface-container-low rounded-2xl p-4 lg:p-6 shadow-xl border border-outline-variant/15 overflow-x-auto no-scrollbar">
         <div className="min-w-[980px] grid grid-cols-12 gap-5 items-stretch">
           {/* COLUMNA 1: OCTAVOS DE FINAL (8 Llaves) - 3 Cols */}
           <div
