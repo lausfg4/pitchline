@@ -17,6 +17,7 @@ import {
   STITCH_REFERENCE_MATCHES,
 } from "@/data/stitch-matches";
 import { STITCH_REFERENCE_INJURIES } from "@/data/stitch-news";
+import { getOrGenerateMatchEvents, isMatchLive } from "@/lib/date-utils";
 
 const FOOTBALL_DATA_STANDINGS_URL =
   "https://api.football-data.org/v4/competitions/CL/standings";
@@ -380,7 +381,11 @@ function normalizeTeamName(name: string): string {
 }
 
 let lastLiveSyncTime = 0;
-const SYNC_THROTTLE_MS = 15_000;
+const SYNC_THROTTLE_MS = 8_000; // 8s para detección rápida de goles en vivo (< 7.5 req/min en Football-Data)
+
+let cachedStandingsToSync: StandingRow[] = [];
+let lastStandingsFetchMs = 0;
+const STANDINGS_CACHE_MS = 3 * 60 * 1000; // 3 min
 
 let cachedApiFootballFixtures: ApiFootballLiveFixture[] = [];
 let lastApiFootballFetchMs = 0;
@@ -462,14 +467,20 @@ async function handleChampionsSync(request: NextRequest) {
   // ============================================================================
   if (footballDataKey && footballDataKey.trim().length > 5) {
     try {
+      const shouldFetchStandings =
+        cachedStandingsToSync.length === 0 ||
+        Date.now() - lastStandingsFetchMs >= STANDINGS_CACHE_MS;
+
       const [standingsRes, matchesRes] = await Promise.all([
-        fetch(FOOTBALL_DATA_STANDINGS_URL, {
-          headers: {
-            "X-Auth-Token": footballDataKey.trim(),
-          },
-          cache: "no-store",
-          signal: AbortSignal.timeout(10000),
-        }),
+        shouldFetchStandings
+          ? fetch(FOOTBALL_DATA_STANDINGS_URL, {
+              headers: {
+                "X-Auth-Token": footballDataKey.trim(),
+              },
+              cache: "no-store",
+              signal: AbortSignal.timeout(10000),
+            })
+          : Promise.resolve(null),
         fetch(FOOTBALL_DATA_MATCHES_URL, {
           headers: {
             "X-Auth-Token": footballDataKey.trim(),
@@ -488,7 +499,10 @@ async function handleChampionsSync(request: NextRequest) {
 
       const computedFormMap = computeFormByTeamFromMatches(rawMatchesList);
 
-      if (standingsRes.ok) {
+      if (!shouldFetchStandings && cachedStandingsToSync.length > 0) {
+        standingsToSync = cachedStandingsToSync;
+        standingsSource = "FOOTBALL_DATA_ORG_2026_CACHED";
+      } else if (standingsRes && standingsRes.ok) {
         const standingsJson =
           (await standingsRes.json()) as FootballDataStandingsResponse;
         const totalTable =
@@ -530,6 +544,8 @@ async function handleChampionsSync(request: NextRequest) {
             ),
             updated_at: nowIso,
           }));
+          cachedStandingsToSync = standingsToSync;
+          lastStandingsFetchMs = Date.now();
           standingsSource = "FOOTBALL_DATA_ORG_2026_LIVE";
         }
       }
@@ -1028,7 +1044,28 @@ async function handleChampionsSync(request: NextRequest) {
       upsertSummary.dbStatus = `Error matches: ${mErr.message}`;
     }
 
-    // 5.3 Upsert en public.match_events (actualiza incidencias en vivo sin duplicados)
+    // 5.3 Upsert en public.match_events (actualiza incidencias y goles en vivo al instante)
+    const liveOrScoredGoalEvents: MatchEventRow[] = [];
+    for (const m of matchesToSync) {
+      if ((isMatchLive(m.status) || (m.matchday ?? 0) >= 4) && (m.home_score > 0 || m.away_score > 0)) {
+        const genEvents = getOrGenerateMatchEvents({
+          ...m,
+          events: [],
+          prediction: null,
+        }).filter((e) => e.event_type === "GOAL");
+
+        genEvents.forEach((evt, idx) => {
+          const matchHex = String(m.id).padStart(4, "0").slice(-4);
+          const teamHex = String(evt.team_id).padStart(6, "0").slice(-6);
+          const idxHex = String(idx + 1).padStart(6, "0").slice(-6);
+          liveOrScoredGoalEvents.push({
+            ...evt,
+            id: `22222222-${matchHex}-4000-8000-${teamHex}${idxHex}`,
+          });
+        });
+      }
+    }
+
     if (eventsToSync.length > 0) {
       const liveMatchIds = Array.from(new Set(eventsToSync.map((e) => e.match_id)));
       await adminSupabase.from("match_events").delete().in("match_id", liveMatchIds);
@@ -1039,11 +1076,15 @@ async function handleChampionsSync(request: NextRequest) {
         upsertSummary.match_events = eventsToSync.length;
       }
     } else {
+      const combinedEvents = [
+        ...STITCH_REFERENCE_EVENTS,
+        ...liveOrScoredGoalEvents,
+      ];
       const { error: evtErr } = await adminSupabase
         .from("match_events")
-        .upsert(STITCH_REFERENCE_EVENTS, { onConflict: "id" });
+        .upsert(combinedEvents, { onConflict: "id" });
       if (!evtErr) {
-        upsertSummary.match_events = STITCH_REFERENCE_EVENTS.length;
+        upsertSummary.match_events = combinedEvents.length;
       }
     }
 

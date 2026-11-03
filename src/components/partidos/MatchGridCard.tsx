@@ -13,6 +13,7 @@ interface MatchGridCardProps {
   match: MatchWithDetails;
   userPrediction?: { home: number; away: number };
   onSelectMatch?: (matchId: number) => void;
+  goalAnimationSide?: "HOME" | "AWAY" | null;
 }
 
 /**
@@ -25,6 +26,7 @@ export function MatchGridCard({
   match,
   userPrediction,
   onSelectMatch,
+  goalAnimationSide = null,
 }: MatchGridCardProps) {
   const isLive = isMatchLive(match.status);
   const isFinished = match.status === "FINISHED";
@@ -56,6 +58,14 @@ export function MatchGridCard({
           .join(", ") + (goalEvents.length > 3 ? ` (+${goalEvents.length - 3})` : "")
       : "Empate sin goles (0-0)";
 
+  const isGoalActive = Boolean(goalAnimationSide);
+  const scoringTeamName =
+    goalAnimationSide === "HOME"
+      ? match.home_team_name
+      : goalAnimationSide === "AWAY"
+        ? match.away_team_name
+        : null;
+
   return (
     <div
       onClick={() => onSelectMatch?.(match.id)}
@@ -67,10 +77,34 @@ export function MatchGridCard({
           onSelectMatch(match.id);
         }
       }}
-      className={`p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border border-outline-variant/15 flex flex-col justify-between space-y-4 ${
-        onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""
-      }`}
+      className={`relative overflow-hidden p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border flex flex-col justify-between space-y-4 ${
+        isGoalActive
+          ? "border-brand-mint animate-goal-card-glow"
+          : "border-outline-variant/15"
+      } ${onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""}`}
     >
+      {/* Barrido luminoso cuando cae un gol en vivo */}
+      {isGoalActive && (
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+          <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
+        </div>
+      )}
+
+      {/* Alerta compacta de ¡GOOOOL! dentro de la tarjeta */}
+      {isGoalActive && scoringTeamName && (
+        <div className="relative z-10 flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-brand-mint text-brand-navy font-label-sm text-xs font-extrabold uppercase tracking-wider animate-goal-banner shadow-md">
+          <span className="flex items-center gap-1.5 truncate">
+            <span className="material-symbols-outlined text-[16px] animate-bounce">
+              sports_soccer
+            </span>
+            ¡GOOOOL DE {scoringTeamName}!
+          </span>
+          <span className="shrink-0">
+            {match.home_score}-{match.away_score}
+          </span>
+        </div>
+      )}
+
       {/* Cabecera de Estado y Estadio */}
       <div className="flex items-center justify-between gap-2">
         {isFinished && (
@@ -116,7 +150,13 @@ export function MatchGridCard({
               {match.live_stats?.home_odds ?? `${homeWinProb}%`}
             </span>
           ) : (
-            <span className="font-score-display-mobile text-score-display-mobile text-primary font-tabular-stats">
+            <span
+              className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-block ${
+                goalAnimationSide === "HOME"
+                  ? "text-brand-mint animate-goal-score-pop"
+                  : "text-primary"
+              }`}
+            >
               {match.home_score}
             </span>
           )}
@@ -142,7 +182,13 @@ export function MatchGridCard({
               {match.live_stats?.away_odds ?? `${awayWinProb}%`}
             </span>
           ) : (
-            <span className="font-score-display-mobile text-score-display-mobile text-on-surface-variant font-tabular-stats">
+            <span
+              className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-block ${
+                goalAnimationSide === "AWAY"
+                  ? "text-brand-mint animate-goal-score-pop"
+                  : "text-on-surface-variant"
+              }`}
+            >
               {match.away_score}
             </span>
           )}
