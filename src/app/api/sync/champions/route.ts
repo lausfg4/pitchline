@@ -1394,7 +1394,8 @@ async function handleChampionsSync(request: NextRequest) {
       await adminSupabase
         .from("match_events")
         .delete()
-        .in("match_id", Array.from(syncedEventMatchIds));
+        .in("match_id", Array.from(syncedEventMatchIds))
+        .like("id", "22222222-%");
     }
 
     const combinedEvents = [

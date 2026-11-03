@@ -1394,12 +1394,21 @@ export function getOrGenerateMatchEvents(
     (e) => e.event_type === "GOAL"
   ).length;
 
-  // Si ya existen eventos reales sincronizados para este partido, usarlos directamente
+  // Si ya existen eventos reales sincronizados para este partido, usarlos directamente sin duplicados
   if (
     existing.length > 0 &&
     (existingGoalCount === totalGoals || existingGoalCount > 0)
   ) {
-    return existing;
+    const seenKeys = new Set<string>();
+    const deduped: MatchEventRow[] = [];
+    for (const evt of existing) {
+      const key = `${evt.event_type}-${evt.minute}-${evt.team_id}-${evt.player_name.toLowerCase().trim()}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        deduped.push(evt);
+      }
+    }
+    return deduped.sort((a, b) => a.minute - b.minute);
   }
 
   const homeRoster = getTeamPlayers(match.home_team_id, match.home_team_name);

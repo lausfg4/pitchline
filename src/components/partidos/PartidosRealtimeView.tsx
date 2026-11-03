@@ -214,16 +214,28 @@ export function PartidosRealtimeView({
           if (payload.eventType === "INSERT") {
             const newEvent = payload.new as MatchEventRow;
             setDbMatches((prev) =>
-              prev.map((m) =>
-                m.id === newEvent.match_id
-                  ? {
-                    ...m,
-                    events: [...(m.events ?? []), newEvent].sort(
-                      (a, b) => a.minute - b.minute
-                    ),
-                  }
-                  : m
-              )
+              prev.map((m) => {
+                if (m.id !== newEvent.match_id) return m;
+                const currentEvents = m.events ?? [];
+                const duplicateIndex = currentEvents.findIndex(
+                  (e) =>
+                    e.id === newEvent.id ||
+                    (e.event_type === newEvent.event_type &&
+                      e.minute === newEvent.minute &&
+                      e.player_name.toLowerCase() ===
+                        newEvent.player_name.toLowerCase())
+                );
+                const nextEvents =
+                  duplicateIndex >= 0
+                    ? currentEvents.map((e, i) =>
+                        i === duplicateIndex ? newEvent : e
+                      )
+                    : [...currentEvents, newEvent];
+                return {
+                  ...m,
+                  events: nextEvents.sort((a, b) => a.minute - b.minute),
+                };
+              })
             );
           } else if (payload.eventType === "UPDATE") {
             const updatedEvt = payload.new as MatchEventRow;
@@ -231,14 +243,24 @@ export function PartidosRealtimeView({
               prev.map((m) =>
                 m.id === updatedEvt.match_id
                   ? {
-                    ...m,
-                    events: (m.events ?? []).map((e) =>
-                      e.id === updatedEvt.id ? updatedEvt : e
-                    ),
-                  }
+                      ...m,
+                      events: (m.events ?? []).map((e) =>
+                        e.id === updatedEvt.id ? updatedEvt : e
+                      ),
+                    }
                   : m
               )
             );
+          } else if (payload.eventType === "DELETE") {
+            const deletedId = (payload.old as { id?: string })?.id;
+            if (deletedId) {
+              setDbMatches((prev) =>
+                prev.map((m) => ({
+                  ...m,
+                  events: (m.events ?? []).filter((e) => e.id !== deletedId),
+                }))
+              );
+            }
           }
         }
       )
