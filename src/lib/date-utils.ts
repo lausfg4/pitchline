@@ -4,7 +4,7 @@ import {
   STITCH_REFERENCE_EVENTS,
 } from "@/data/stitch-matches";
 
-export const DEFAULT_REFERENCE_DATE = new Date("2026-10-23T20:00:00Z");
+export const DEFAULT_REFERENCE_DATE = new Date("2026-11-03T18:00:00Z");
 
 /**
  * Obtiene el rango de lunes (00:00:00) a domingo (23:59:59) de la semana actual.
@@ -41,24 +41,17 @@ export function getCurrentWeekBounds(
 }
 
 /**
- * Filtra los partidos en vivo o programados que restan por jugarse en la semana actual.
+ * Filtra todos los partidos de la UEFA Champions League programados, en vivo o jugados en la semana actual (Lunes a Domingo).
  */
 export function getMatchesInCurrentWeek(
   matches: MatchWithDetails[],
   referenceDate: Date = DEFAULT_REFERENCE_DATE
 ): MatchWithDetails[] {
   const { monday, sunday } = getCurrentWeekBounds(referenceDate);
-  const nowMs = referenceDate.getTime();
 
   return matches.filter((m) => {
     const kickoff = new Date(m.kickoff_at);
-    const inWeek = kickoff >= monday && kickoff <= sunday;
-    if (!inWeek) return false;
-    // Si ya terminó en días anteriores de esta misma semana, no cuenta como partido pendiente hoy/esta semana
-    if (m.status === "FINISHED" && kickoff.getTime() < nowMs - 12 * 3600 * 1000) {
-      return false;
-    }
-    return true;
+    return kickoff >= monday && kickoff <= sunday;
   });
 }
 

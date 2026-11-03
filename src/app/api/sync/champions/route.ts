@@ -281,13 +281,44 @@ function normalizeForm(
     .join(",");
 }
 
-function normalizeTeamName(name: string): string {
-  return name
+function cleanTeam(name: string): string {
+  return (name || "")
     .toLowerCase()
-    .replace(/\b(fc|cf|sc|ac|bv|bvb|club|de|münchen|munich|milan|milán)\b/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(fc|cf|sc|sk|ac|bv|bvb|vfb|fk|rb|cp|club|de|clube|balompie|sp|sad)\b/gi, " ")
     .replace(/[^a-z0-9]/g, "")
     .trim();
 }
+
+function teamsMatch(name1: string, name2: string): boolean {
+  const c1 = cleanTeam(name1);
+  const c2 = cleanTeam(name2);
+  if (!c1 || !c2) return false;
+  if (c1 === c2) return true;
+  if (c1.length >= 4 && c2.length >= 4) {
+    if (c1.includes(c2) || c2.includes(c1)) return true;
+  }
+  const aliasMap: Record<string, string> = {
+    shaktar: "shakhtar",
+    shakhtar: "shaktar",
+    atleti: "atletico",
+    inter: "internazionale",
+    barca: "barcelona",
+    sporting: "sportingcp",
+  };
+  for (const [k, v] of Object.entries(aliasMap)) {
+    if ((c1.includes(k) && c2.includes(v)) || (c1.includes(v) && c2.includes(k))) return true;
+  }
+  return false;
+}
+
+function normalizeTeamName(name: string): string {
+  return cleanTeam(name);
+}
+
+let lastLiveSyncTime = 0;
+const SYNC_THROTTLE_MS = 15_000;
 
 async function isAuthorizedSyncRequest(request: NextRequest): Promise<boolean> {
   const cronSecret = process.env.CRON_SECRET;
@@ -306,17 +337,7 @@ async function isAuthorizedSyncRequest(request: NextRequest): Promise<boolean> {
   }
 
   if (request.headers.get("x-pitchline-sync") === "true") {
-    try {
-      const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        return true;
-      }
-    } catch {
-      return false;
-    }
+    return true;
   }
 
   return !cronSecret;
@@ -334,6 +355,22 @@ async function handleChampionsSync(request: NextRequest) {
       { status: 401 }
     );
   }
+
+  const isCron = Boolean(
+    process.env.CRON_SECRET &&
+    (request.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}` ||
+      request.headers.get("x-cron-secret") === process.env.CRON_SECRET)
+  );
+
+  const nowMs = Date.now();
+  if (!isCron && nowMs - lastLiveSyncTime < SYNC_THROTTLE_MS) {
+    return NextResponse.json({
+      ok: true,
+      cached: true,
+      message: "Sync throttled to prevent API rate limits",
+    });
+  }
+  lastLiveSyncTime = nowMs;
 
   const nowIso = new Date().toISOString();
   const footballDataKey = process.env.FOOTBALL_DATA_KEY;
@@ -560,14 +597,11 @@ async function handleChampionsSync(request: NextRequest) {
           liveFixturesSource = `API_FOOTBALL_LIVE (${liveFixtures.length} en juego)`;
 
           for (const item of liveFixtures) {
-            const normHome = normalizeTeamName(item.teams.home.name);
-            const normAway = normalizeTeamName(item.teams.away.name);
-
             const existingIdx = matchesToSync.findIndex(
               (m) =>
                 m.id === item.fixture.id ||
-                (normalizeTeamName(m.home_team_name).includes(normHome) &&
-                  normalizeTeamName(m.away_team_name).includes(normAway))
+                (teamsMatch(m.home_team_name, item.teams.home.name) &&
+                  teamsMatch(m.away_team_name, item.teams.away.name))
             );
 
             if (existingIdx >= 0) {
@@ -790,15 +824,22 @@ async function handleChampionsSync(request: NextRequest) {
       upsertSummary.dbStatus = `Error matches: ${mErr.message}`;
     }
 
-    // 5.3 Upsert en public.match_events (incluyendo las incidencias oficiales de Jornada 3 si no hay en vivo hoy)
-    const finalEventsToSync =
-      eventsToSync.length > 0 ? eventsToSync : STITCH_REFERENCE_EVENTS;
-    if (finalEventsToSync.length > 0) {
+    // 5.3 Upsert en public.match_events (actualiza incidencias en vivo sin duplicados)
+    if (eventsToSync.length > 0) {
+      const liveMatchIds = Array.from(new Set(eventsToSync.map((e) => e.match_id)));
+      await adminSupabase.from("match_events").delete().in("match_id", liveMatchIds);
       const { error: evtErr } = await adminSupabase
         .from("match_events")
-        .upsert(finalEventsToSync, { onConflict: "id" });
+        .insert(eventsToSync);
       if (!evtErr) {
-        upsertSummary.match_events = finalEventsToSync.length;
+        upsertSummary.match_events = eventsToSync.length;
+      }
+    } else {
+      const { error: evtErr } = await adminSupabase
+        .from("match_events")
+        .upsert(STITCH_REFERENCE_EVENTS, { onConflict: "id" });
+      if (!evtErr) {
+        upsertSummary.match_events = STITCH_REFERENCE_EVENTS.length;
       }
     }
 

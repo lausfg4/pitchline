@@ -38,12 +38,20 @@ export function PartidosRealtimeView({
 }: PartidosRealtimeViewProps) {
   const [dbMatches, setDbMatches] =
     useState<MatchWithDetails[]>(initialDbMatches);
+  const [referenceDate, setReferenceDate] = useState<Date>(
+    DEFAULT_REFERENCE_DATE
+  );
   const [selectedPhase, setSelectedPhase] = useState<TournamentPhaseKey>(() =>
     getActiveOrNextPhaseKey(
       initialDbMatches.length > 0 ? initialDbMatches : STITCH_REFERENCE_MATCHES,
       DEFAULT_REFERENCE_DATE
     )
   );
+
+  useEffect(() => {
+    const clientNow = new Date();
+    setReferenceDate(clientNow);
+  }, []);
   const [userChangedPhase, setUserChangedPhase] =
     useState<boolean>(false);
   const [selectedSpotlightId, setSelectedSpotlightId] = useState<number | null>(
@@ -75,8 +83,6 @@ export function PartidosRealtimeView({
     }
     return {};
   });
-
-  const [referenceDate] = useState<Date>(DEFAULT_REFERENCE_DATE);
 
   // Función para recargar en caliente desde Supabase cuando se dispara una sincronización
   const reloadFromSupabaseClient = useCallback(async () => {
@@ -213,8 +219,28 @@ export function PartidosRealtimeView({
         }
       });
 
+    // Disparar sincronización inmediata al montar para actualizar marcadores y eventos en vivo
+    const triggerSync = async () => {
+      try {
+        await fetch("/api/sync/champions", {
+          method: "POST",
+          headers: { "x-pitchline-sync": "true" },
+        });
+        await reloadFromSupabaseClient();
+      } catch {
+        // Ignorar errores de red temporales
+      }
+    };
+    void triggerSync();
+
+    // Polling de refresco continuo cada 20 segundos para actualizar minuto y goles en directo
+    const intervalId = window.setInterval(() => {
+      void triggerSync();
+    }, 20_000);
+
     return () => {
       window.removeEventListener("pitchline:synced", handleCustomSync);
+      window.clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
   }, [reloadFromSupabaseClient]);
