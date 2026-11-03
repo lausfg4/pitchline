@@ -191,30 +191,65 @@ interface ApiFootballInjuryItem {
  * 'SCHEDULED' | 'TIMED' | '1H' | 'HT' | '2H' | 'ET' | 'PEN' | 'FINISHED' | 'POSTPONED' | 'CANCELLED'
  * (Nota: 'IN_PLAY' NO está permitido en la restricción CHECK de PostgreSQL)
  */
+const STATUS_PROGRESSION_RANK: Record<string, number> = {
+  SCHEDULED: 0,
+  TIMED: 0,
+  "1H": 1,
+  IN_PLAY: 2,
+  HT: 3,
+  "2H": 4,
+  ET: 5,
+  PEN: 6,
+  FINISHED: 7,
+};
+
 function mapFootballDataStatusAndMinute(
   rawStatus: string,
   utcDate: string,
   halfTimeHome?: number | null
 ): { status: MatchStatus; elapsedMinute: number | null; halfLabel: string } {
   const upper = rawStatus.toUpperCase();
+  const kickoffMs = new Date(utcDate).getTime();
+  const diffMin = Math.floor((Date.now() - kickoffMs) / 60_000);
+
+  if (upper === "FINISHED" || upper === "AWARDED") {
+    return { status: "FINISHED", elapsedMinute: 90, halfLabel: "Tiempo Completo" };
+  }
   if (upper === "PAUSED") {
     return { status: "HT", elapsedMinute: 45, halfLabel: "Descanso" };
   }
   if (upper === "IN_PLAY" || upper === "LIVE") {
-    const kickoffMs = new Date(utcDate).getTime();
-    const diffMin = Math.max(1, Math.floor((Date.now() - kickoffMs) / 60_000));
+    const activeDiff = Math.max(1, diffMin);
     const isSecondHalf =
-      (halfTimeHome !== null && halfTimeHome !== undefined) || diffMin >= 56;
+      (halfTimeHome !== null && halfTimeHome !== undefined) || activeDiff >= 56;
     if (isSecondHalf) {
-      const estMin = Math.min(90, Math.max(46, diffMin - 17));
+      const estMin = Math.min(90, Math.max(46, activeDiff - 17));
       return { status: "2H", elapsedMinute: estMin, halfLabel: "2° Tiempo" };
     }
-    const estMin = Math.min(45, Math.max(1, diffMin));
+    const estMin = Math.min(45, Math.max(1, activeDiff));
     return { status: "1H", elapsedMinute: estMin, halfLabel: "1° Tiempo" };
   }
-  if (upper === "FINISHED" || upper === "AWARDED") {
-    return { status: "FINISHED", elapsedMinute: 90, halfLabel: "Tiempo Completo" };
+
+  // Protección contra réplicas CDN desactualizadas de Football-Data ('TIMED'/'SCHEDULED')
+  // cuando el partido ya está en horario real de juego (entre el minuto 1 y 112 desde el pitazo inicial)
+  if ((upper === "TIMED" || upper === "SCHEDULED") && diffMin >= 1 && diffMin <= 112) {
+    if (diffMin <= 47) {
+      return {
+        status: "1H",
+        elapsedMinute: Math.min(45, diffMin),
+        halfLabel: "1° Tiempo",
+      };
+    }
+    if (diffMin <= 62) {
+      return { status: "HT", elapsedMinute: 45, halfLabel: "Descanso" };
+    }
+    return {
+      status: "2H",
+      elapsedMinute: Math.min(90, Math.max(46, diffMin - 17)),
+      halfLabel: "2° Tiempo",
+    };
   }
+
   return { status: "SCHEDULED", elapsedMinute: null, halfLabel: "Programado" };
 }
 
@@ -905,7 +940,85 @@ async function handleChampionsSync(request: NextRequest) {
       upsertSummary.dbStatus = `Error standings: ${stErr.message}`;
     }
 
-    // 5.2 Upsert en public.matches (144 partidos de J1 a J8)
+    // 5.2 Protección Monotónica Anti-Regresión y Upsert en public.matches (144 partidos de J1 a J8)
+    const { data: existingMatchesData } = await adminSupabase
+      .from("matches")
+      .select("*");
+    const existingMatchesList = (existingMatchesData ?? []) as MatchRow[];
+    const existingById = new Map<number, MatchRow>();
+    for (const em of existingMatchesList) {
+      existingById.set(em.id, em);
+    }
+
+    // Si Football-Data falló por límite de tasa (429) o red, conservar los partidos reales de la BD en lugar de pisarlos con el mock estático
+    if (
+      matchesSource === "FALLBACK_REFERENCE_MATCHES" &&
+      existingMatchesList.length > 0
+    ) {
+      matchesToSync = existingMatchesList;
+      matchesSource = `SUPABASE_EXISTING_PROTECTED (${existingMatchesList.length})`;
+    }
+
+    matchesToSync = matchesToSync.map((m) => {
+      const prev = existingById.get(m.id);
+      if (!prev) return m;
+
+      const prevRank = STATUS_PROGRESSION_RANK[prev.status] ?? 0;
+      const nextRank = STATUS_PROGRESSION_RANK[m.status] ?? 0;
+      const kickoffMs = new Date(m.kickoff_at).getTime();
+      const diffMin = Math.floor((Date.now() - kickoffMs) / 60_000);
+
+      // Si el partido ya estaba en vivo (1H/HT/2H) y han pasado > 115 min desde el inicio, marcarlo como FINISHED
+      if (prevRank >= 1 && prevRank < 7 && nextRank === 0 && diffMin > 115) {
+        return {
+          ...m,
+          status: "FINISHED",
+          elapsed_minute: 90,
+          home_score: Math.max(m.home_score, prev.home_score),
+          away_score: Math.max(m.away_score, prev.away_score),
+          live_stats: {
+            ...m.live_stats,
+            ...prev.live_stats,
+            half_label: "Tiempo Completo",
+          },
+        };
+      }
+
+      // Nunca degradar un partido que ya inició o terminó hacia un estado anterior (ej. de 2H o FINISHED a SCHEDULED por caché CDN)
+      if (prevRank > nextRank) {
+        return {
+          ...m,
+          status: prev.status,
+          elapsed_minute:
+            m.elapsed_minute != null && prev.elapsed_minute != null
+              ? Math.max(m.elapsed_minute, prev.elapsed_minute)
+              : (prev.elapsed_minute ?? m.elapsed_minute),
+          extra_minute: m.extra_minute ?? prev.extra_minute,
+          home_score: Math.max(m.home_score, prev.home_score),
+          away_score: Math.max(m.away_score, prev.away_score),
+          live_stats: {
+            ...m.live_stats,
+            ...prev.live_stats,
+          },
+        };
+      }
+
+      // Si está en vivo o finalizado, proteger el marcador contra lecturas 0-0 de réplicas atrasadas
+      if (nextRank >= 1) {
+        return {
+          ...m,
+          home_score: Math.max(m.home_score, prev.home_score),
+          away_score: Math.max(m.away_score, prev.away_score),
+          elapsed_minute:
+            m.elapsed_minute != null && prev.elapsed_minute != null
+              ? Math.max(m.elapsed_minute, prev.elapsed_minute)
+              : (m.elapsed_minute ?? prev.elapsed_minute),
+        };
+      }
+
+      return m;
+    });
+
     const { error: mErr } = await adminSupabase
       .from("matches")
       .upsert(matchesToSync, { onConflict: "id" });
