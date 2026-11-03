@@ -157,11 +157,8 @@ export function ChatbotDeportivoView({
 
   // Mostrar únicamente los partidos más recientes (en vivo o recién finalizados en la última jornada)
   const recentMatches = useMemo(() => {
-    const playedOrLive = activeMatches.filter(
-      (m) =>
-        m.status === "IN_PLAY" ||
-        m.status === "HT" ||
-        m.status === "FINISHED"
+    const playedOrLive = activeMatches.filter((m) =>
+      ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN", "FINISHED"].includes(m.status)
     );
     const source = playedOrLive.length > 0 ? playedOrLive : activeMatches;
 

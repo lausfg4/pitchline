@@ -1,4 +1,13 @@
-export type MatchStatus = "SCHEDULED" | "IN_PLAY" | "HT" | "FINISHED";
+export type MatchStatus =
+  | "SCHEDULED"
+  | "TIMED"
+  | "IN_PLAY"
+  | "1H"
+  | "HT"
+  | "2H"
+  | "ET"
+  | "PEN"
+  | "FINISHED";
 
 export interface LiveStats {
   home_possession?: number;

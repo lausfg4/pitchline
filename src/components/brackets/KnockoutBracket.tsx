@@ -800,7 +800,7 @@ export function KnockoutBracket({
             {visibleTies.map((tie) => {
               const isHomeWinner = tie.winnerTeamId === tie.homeTeam?.team_id;
               const isAwayWinner = tie.winnerTeamId === tie.awayTeam?.team_id;
-              const isLive = tie.status === "IN_PLAY" || tie.status === "HT";
+              const isLive = ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(tie.status);
               const winnerName = isHomeWinner
                 ? tie.homeTeam?.team_name
                 : isAwayWinner
@@ -1269,7 +1269,7 @@ export function KnockoutBracket({
                 const isHomeWin = tie.winnerTeamId === tie.homeTeam?.team_id;
                 const isAwayWin = tie.winnerTeamId === tie.awayTeam?.team_id;
                 const isLive =
-                  tie.status === "IN_PLAY" || tie.status === "HT";
+                  ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(tie.status);
 
                 return (
                   <div
@@ -1428,7 +1428,7 @@ export function KnockoutBracket({
                   tie.winnerTeamId !== null &&
                   tie.winnerTeamId === tie.awayTeam?.team_id;
                 const isLive =
-                  tie.status === "IN_PLAY" || tie.status === "HT";
+                  ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(tie.status);
 
                 return (
                   <div

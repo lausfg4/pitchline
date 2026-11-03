@@ -8,6 +8,7 @@ import {
   formatMatchDateTimeLabel,
   getOrGenerateMatchEvents,
   getStageNameEs,
+  isMatchLive,
 } from "@/lib/date-utils";
 
 interface SpotlightMatchCardProps {
@@ -29,9 +30,9 @@ export function SpotlightMatchCard({
     userPrediction?.away ?? match.prediction?.predicted_away_goals ?? 2
   );
 
-  const isLive = match.status === "IN_PLAY" || match.status === "HT";
+  const isLive = isMatchLive(match.status);
   const isFinished = match.status === "FINISHED";
-  const isScheduled = match.status === "SCHEDULED";
+  const isScheduled = !isLive && !isFinished;
 
   const { homePossession, awayPossession, homeXg, awayXg } =
     computeMatchTelemetry(match);
@@ -47,7 +48,9 @@ export function SpotlightMatchCard({
         ? match.extra_minute && match.extra_minute > 0
           ? `${match.elapsed_minute}+${match.extra_minute}'`
           : `${match.elapsed_minute}'`
-        : formatLocalKickoffTime(match.kickoff_at);
+        : isLive
+          ? "En Juego"
+          : formatLocalKickoffTime(match.kickoff_at);
 
   const events = getOrGenerateMatchEvents(match);
 

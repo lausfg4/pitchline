@@ -132,12 +132,15 @@ function buildDeterministicRagAnswer(
           : m.status === "SCHEDULED"
             ? "Partido programado para el 3–4 de noviembre"
             : "Marcador oficial registrado";
-      const statusLabel =
-        m.status === "IN_PLAY"
-          ? `En Vivo (${m.elapsed_minute ?? 65}')`
-          : m.status === "FINISHED"
-            ? `Finalizado • Jornada ${m.matchday ?? 3}`
-            : `Próximo • Jornada ${m.matchday ?? 4}`;
+      const statusLabel = ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(
+        m.status
+      )
+        ? m.status === "HT"
+          ? "En Vivo (Descanso)"
+          : `En Vivo (${m.elapsed_minute ?? 65}')`
+        : m.status === "FINISHED"
+          ? `Finalizado • Jornada ${m.matchday ?? 3}`
+          : `Próximo • Jornada ${m.matchday ?? 4}`;
       return `• **${m.home_team_name} ${m.home_score} - ${m.away_score} ${m.away_team_name}** (${statusLabel})\n  ↳ *Goles e incidencias:* ${goalsStr}`;
     });
 
@@ -253,8 +256,10 @@ export async function POST(request: NextRequest) {
         const statusDesc =
           m.status === "FINISHED"
             ? "Finalizado"
-            : m.status === "IN_PLAY"
-              ? `En Vivo (${m.elapsed_minute ?? 60}')`
+            : ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(m.status)
+              ? m.status === "HT"
+                ? "En Vivo (Descanso)"
+                : `En Vivo (${m.elapsed_minute ?? 60}')`
               : "Programado";
         return `- Jornada ${m.matchday ?? 4}: ${m.home_team_name} ${m.home_score}-${m.away_score} ${m.away_team_name} | Estado: ${statusDesc} | Estadio: ${m.venue ?? "UEFA"} | Goles e incidencias: ${evts || "Sin goles registrados aún"}`;
       })

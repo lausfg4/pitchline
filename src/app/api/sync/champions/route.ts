@@ -186,18 +186,45 @@ interface ApiFootballInjuryItem {
   };
 }
 
-function mapFootballDataStatus(rawStatus: string): MatchStatus {
+/**
+ * Valores exactos permitidos por la restricción CHECK `matches_status_check` en PostgreSQL:
+ * 'SCHEDULED' | 'TIMED' | '1H' | 'HT' | '2H' | 'ET' | 'PEN' | 'FINISHED' | 'POSTPONED' | 'CANCELLED'
+ * (Nota: 'IN_PLAY' NO está permitido en la restricción CHECK de PostgreSQL)
+ */
+function mapFootballDataStatusAndMinute(
+  rawStatus: string,
+  utcDate: string,
+  halfTimeHome?: number | null
+): { status: MatchStatus; elapsedMinute: number | null; halfLabel: string } {
   const upper = rawStatus.toUpperCase();
-  if (upper === "IN_PLAY" || upper === "LIVE") return "IN_PLAY";
-  if (upper === "PAUSED") return "HT";
-  if (upper === "FINISHED" || upper === "AWARDED") return "FINISHED";
-  return "SCHEDULED";
+  if (upper === "PAUSED") {
+    return { status: "HT", elapsedMinute: 45, halfLabel: "Descanso" };
+  }
+  if (upper === "IN_PLAY" || upper === "LIVE") {
+    const kickoffMs = new Date(utcDate).getTime();
+    const diffMin = Math.max(1, Math.floor((Date.now() - kickoffMs) / 60_000));
+    const isSecondHalf =
+      (halfTimeHome !== null && halfTimeHome !== undefined) || diffMin >= 56;
+    if (isSecondHalf) {
+      const estMin = Math.min(90, Math.max(46, diffMin - 17));
+      return { status: "2H", elapsedMinute: estMin, halfLabel: "2° Tiempo" };
+    }
+    const estMin = Math.min(45, Math.max(1, diffMin));
+    return { status: "1H", elapsedMinute: estMin, halfLabel: "1° Tiempo" };
+  }
+  if (upper === "FINISHED" || upper === "AWARDED") {
+    return { status: "FINISHED", elapsedMinute: 90, halfLabel: "Tiempo Completo" };
+  }
+  return { status: "SCHEDULED", elapsedMinute: null, halfLabel: "Programado" };
 }
 
 function mapApiFootballStatus(shortStatus: string): MatchStatus {
   const upper = shortStatus.toUpperCase();
+  if (upper === "1H") return "1H";
   if (upper === "HT") return "HT";
-  if (["1H", "2H", "ET", "BT", "P", "LIVE"].includes(upper)) return "IN_PLAY";
+  if (upper === "2H" || upper === "LIVE") return "2H";
+  if (upper === "ET" || upper === "BT") return "ET";
+  if (upper === "P") return "PEN";
   if (["FT", "AET", "PEN"].includes(upper)) return "FINISHED";
   return "SCHEDULED";
 }
@@ -319,6 +346,14 @@ function normalizeTeamName(name: string): string {
 
 let lastLiveSyncTime = 0;
 const SYNC_THROTTLE_MS = 15_000;
+
+let cachedApiFootballFixtures: ApiFootballLiveFixture[] = [];
+let lastApiFootballFetchMs = 0;
+const API_FOOTBALL_CACHE_MS = 3 * 60 * 1000; // 3 min para proteger la cuota gratuita (100 req/día)
+
+let cachedInjuriesToSync: PlayerInjuryRow[] = [];
+let lastInjuriesFetchMs = 0;
+const INJURIES_CACHE_MS = 4 * 60 * 60 * 1000; // 4 horas
 
 async function isAuthorizedSyncRequest(request: NextRequest): Promise<boolean> {
   const cronSecret = process.env.CRON_SECRET;
@@ -482,7 +517,15 @@ async function handleChampionsSync(request: NextRequest) {
             ? `${awaySt.rank}° Lugar • ${awaySt.points} pts (${awaySt.goal_diff >= 0 ? `+${awaySt.goal_diff}` : awaySt.goal_diff})`
             : "Fase de Liga UCL";
 
-          const mappedStatus = mapFootballDataStatus(m.status);
+          const {
+            status: mappedStatus,
+            elapsedMinute: estimatedMinute,
+            halfLabel: fdHalfLabel,
+          } = mapFootballDataStatusAndMinute(
+            m.status,
+            m.utcDate,
+            m.score?.halfTime?.home
+          );
 
           // Destacar el partidazo estelar de cada jornada (ej. Barça vs Aston Villa / Atleti vs Bayern / RB Leipzig vs Man City en J4)
           const isBigMatch =
@@ -499,7 +542,7 @@ async function handleChampionsSync(request: NextRequest) {
             leg: null,
             kickoff_at: m.utcDate,
             status: mappedStatus,
-            elapsed_minute: null,
+            elapsed_minute: estimatedMinute,
             extra_minute: null,
             home_team_id: m.homeTeam.id,
             home_team_name: m.homeTeam.shortName ?? m.homeTeam.name,
@@ -523,12 +566,15 @@ async function handleChampionsSync(request: NextRequest) {
               home_rank_label: homeRankLabel,
               away_rank_label: awayRankLabel,
               half_label:
-                mappedStatus === "FINISHED"
-                  ? "Tiempo Completo"
-                  : mappedStatus === "IN_PLAY"
-                    ? "En Juego"
-                    : `Jornada ${m.matchday ?? 4}`,
-              is_spotlight: Boolean(isBigMatch),
+                mappedStatus === "SCHEDULED"
+                  ? `Jornada ${m.matchday ?? 4}`
+                  : fdHalfLabel,
+              is_spotlight: Boolean(
+                isBigMatch ||
+                  mappedStatus === "1H" ||
+                  mappedStatus === "2H" ||
+                  mappedStatus === "HT"
+              ),
             },
             venue: m.venue ?? `Estadio UEFA (${m.homeTeam.shortName ?? m.homeTeam.name})`,
             referee: m.referees?.[0]?.name ?? "Designación Oficial UEFA",
@@ -557,6 +603,7 @@ async function handleChampionsSync(request: NextRequest) {
       void _e;
       return {
         ...matchRow,
+        status: matchRow.status === "IN_PLAY" ? "2H" : matchRow.status,
         updated_at: nowIso,
       };
     });
@@ -568,8 +615,12 @@ async function handleChampionsSync(request: NextRequest) {
   const todayPrefix = nowIso.slice(0, 10);
   const hasMatchesInPlayOrToday = matchesToSync.some(
     (m) =>
-      m.status === "IN_PLAY" ||
+      m.status === "1H" ||
       m.status === "HT" ||
+      m.status === "2H" ||
+      m.status === "ET" ||
+      m.status === "PEN" ||
+      m.status === "IN_PLAY" ||
       m.kickoff_at.startsWith(todayPrefix)
   );
 
@@ -579,30 +630,63 @@ async function handleChampionsSync(request: NextRequest) {
     hasMatchesInPlayOrToday
   ) {
     try {
-      const liveRes = await fetch(API_FOOTBALL_LIVE_URL, {
-        headers: {
-          "x-apisports-key": apiFootballKey.trim(),
-        },
-        cache: "no-store",
-        signal: AbortSignal.timeout(8000),
-      });
+      let liveFixtures: ApiFootballLiveFixture[] = [];
+      const cacheAgeMs = Date.now() - lastApiFootballFetchMs;
 
-      if (liveRes.ok) {
-        const liveJson = (await liveRes.json()) as {
-          response?: ApiFootballLiveFixture[];
-        };
-        const liveFixtures = liveJson.response ?? [];
+      if (
+        cachedApiFootballFixtures.length > 0 &&
+        cacheAgeMs < API_FOOTBALL_CACHE_MS
+      ) {
+        const deltaMin = Math.floor(cacheAgeMs / 60_000);
+        liveFixtures = cachedApiFootballFixtures.map((fix) => ({
+          ...fix,
+          fixture: {
+            ...fix.fixture,
+            status: {
+              ...fix.fixture.status,
+              elapsed:
+                fix.fixture.status.elapsed != null &&
+                (fix.fixture.status.short === "1H" ||
+                  fix.fixture.status.short === "2H")
+                  ? Math.min(
+                      fix.fixture.status.short === "1H" ? 45 : 90,
+                      fix.fixture.status.elapsed + deltaMin
+                    )
+                  : fix.fixture.status.elapsed,
+            },
+          },
+        }));
+      } else {
+        const liveRes = await fetch(API_FOOTBALL_LIVE_URL, {
+          headers: {
+            "x-apisports-key": apiFootballKey.trim(),
+          },
+          cache: "no-store",
+          signal: AbortSignal.timeout(8000),
+        });
 
-        if (liveFixtures.length > 0) {
-          liveFixturesSource = `API_FOOTBALL_LIVE (${liveFixtures.length} en juego)`;
+        if (liveRes.ok) {
+          const liveJson = (await liveRes.json()) as {
+            response?: ApiFootballLiveFixture[];
+          };
+          if (Array.isArray(liveJson.response) && liveJson.response.length > 0) {
+            liveFixtures = liveJson.response;
+            cachedApiFootballFixtures = liveJson.response;
+            lastApiFootballFetchMs = Date.now();
+          }
+        }
+      }
 
-          for (const item of liveFixtures) {
-            const existingIdx = matchesToSync.findIndex(
-              (m) =>
-                m.id === item.fixture.id ||
-                (teamsMatch(m.home_team_name, item.teams.home.name) &&
-                  teamsMatch(m.away_team_name, item.teams.away.name))
-            );
+      if (liveFixtures.length > 0) {
+        liveFixturesSource = `API_FOOTBALL_LIVE (${liveFixtures.length} en juego)`;
+
+        for (const item of liveFixtures) {
+          const existingIdx = matchesToSync.findIndex(
+            (m) =>
+              m.id === item.fixture.id ||
+              (teamsMatch(m.home_team_name, item.teams.home.name) &&
+                teamsMatch(m.away_team_name, item.teams.away.name))
+          );
 
             if (existingIdx >= 0) {
               const matchId = matchesToSync[existingIdx].id;
@@ -695,7 +779,6 @@ async function handleChampionsSync(request: NextRequest) {
             }
           }
         }
-      }
     } catch {
       // Continuar sin bloquear
     }
@@ -722,7 +805,13 @@ async function handleChampionsSync(request: NextRequest) {
   // ============================================================================
   // 4. API-FOOTBALL: /injuries?league=2&season=2026 -> public.player_injuries
   // ============================================================================
-  if (apiFootballKey && apiFootballKey.trim().length > 5) {
+  if (
+    cachedInjuriesToSync.length > 0 &&
+    Date.now() - lastInjuriesFetchMs < INJURIES_CACHE_MS
+  ) {
+    injuriesToSync = cachedInjuriesToSync;
+    injuriesSource = `API_FOOTBALL_INJURIES_CACHED (${injuriesToSync.length})`;
+  } else if (apiFootballKey && apiFootballKey.trim().length > 5) {
     try {
       const injuriesRes = await fetch(API_FOOTBALL_INJURIES_URL, {
         headers: {
@@ -770,6 +859,8 @@ async function handleChampionsSync(request: NextRequest) {
               updated_at: nowIso,
             };
           });
+          cachedInjuriesToSync = injuriesToSync;
+          lastInjuriesFetchMs = Date.now();
         }
       }
     } catch {

@@ -6,6 +6,7 @@ import {
   computeMatchTelemetry,
   formatMatchDateTimeLabel,
   getOrGenerateMatchEvents,
+  isMatchLive,
 } from "@/lib/date-utils";
 
 interface MatchGridCardProps {
@@ -25,9 +26,9 @@ export function MatchGridCard({
   userPrediction,
   onSelectMatch,
 }: MatchGridCardProps) {
-  const isLive = match.status === "IN_PLAY" || match.status === "HT";
+  const isLive = isMatchLive(match.status);
   const isFinished = match.status === "FINISHED";
-  const isScheduled = match.status === "SCHEDULED";
+  const isScheduled = !isLive && !isFinished;
 
   const { homePossession, awayPossession, homeXg, awayXg } =
     computeMatchTelemetry(match);
@@ -38,11 +39,11 @@ export function MatchGridCard({
 
   const minuteLabel =
     match.status === "HT"
-      ? "ET"
+      ? "ET • Descanso"
       : match.elapsed_minute
         ? match.extra_minute && match.extra_minute > 0
           ? `${match.elapsed_minute}+${match.extra_minute}'`
-          : `${match.elapsed_minute}' ${match.live_stats?.half_label ?? "1T"}`
+          : `${match.elapsed_minute}' ${match.live_stats?.half_label ?? (match.status === "2H" ? "2T" : "1T")}`
         : "En Vivo";
 
   const matchEvents = getOrGenerateMatchEvents(match);

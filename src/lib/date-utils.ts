@@ -7,6 +7,20 @@ import {
 export const DEFAULT_REFERENCE_DATE = new Date("2026-11-03T18:00:00Z");
 
 /**
+ * Determina si un estado de partido corresponde a un encuentro en juego o descanso (1H, HT, 2H, ET, PEN, IN_PLAY).
+ */
+export function isMatchLive(status?: string | null): boolean {
+  return (
+    status === "IN_PLAY" ||
+    status === "1H" ||
+    status === "HT" ||
+    status === "2H" ||
+    status === "ET" ||
+    status === "PEN"
+  );
+}
+
+/**
  * Obtiene el rango de lunes (00:00:00) a domingo (23:59:59) de la semana actual.
  */
 export function getCurrentWeekBounds(
@@ -123,7 +137,7 @@ export function hasLeagueStageCompleted(matches: MatchWithDetails[]): boolean {
   const anyKnockoutStarted = matches.some(
     (m) =>
       isKnockoutPhaseKey(getMatchPhaseKey(m)) &&
-      (m.status === "IN_PLAY" || m.status === "HT" || m.status === "FINISHED")
+      (isMatchLive(m.status) || m.status === "FINISHED")
   );
   return allJ8Finished || anyKnockoutStarted;
 }
@@ -261,7 +275,7 @@ export function getActiveOrNextMatchday(
 
   // 1. Si hay algún partido en vivo ahora mismo, priorizar su jornada
   const liveMatch = matches.find(
-    (m) => (m.status === "IN_PLAY" || m.status === "HT") && m.matchday != null
+    (m) => isMatchLive(m.status) && m.matchday != null
   );
   if (liveMatch?.matchday) {
     return liveMatch.matchday;
@@ -345,7 +359,7 @@ export function getMatchdaySubtitle(
   }
 
   const hasLive = mdMatches.some(
-    (m) => m.status === "IN_PLAY" || m.status === "HT"
+    (m) => isMatchLive(m.status)
   );
   const allFinished = mdMatches.every((m) => m.status === "FINISHED");
 
@@ -373,7 +387,7 @@ export function getActiveOrNextPhaseKey(
 
   // 1. Si hay un partido en vivo ahora mismo, priorizar su fase
   const liveMatch = matches.find(
-    (m) => m.status === "IN_PLAY" || m.status === "HT"
+    (m) => isMatchLive(m.status)
   );
   if (liveMatch) {
     return getMatchPhaseKey(liveMatch);
@@ -583,7 +597,7 @@ export function getPhaseDisplayInfo(
     }
 
     const hasLive = phaseMatches.some(
-      (m) => m.status === "IN_PLAY" || m.status === "HT"
+      (m) => isMatchLive(m.status)
     );
     const allFinished = phaseMatches.every((m) => m.status === "FINISHED");
 
@@ -1409,7 +1423,7 @@ export function getOrGenerateMatchEvents(
   }
 
   const maxMinute =
-    match.status === "IN_PLAY" && match.elapsed_minute
+    isMatchLive(match.status) && match.elapsed_minute
       ? Math.max(15, match.elapsed_minute - 2)
       : 89;
 

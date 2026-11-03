@@ -68,8 +68,8 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch {
-      const liveMatches = matches.filter(
-        (m) => m.status === "IN_PLAY" || m.status === "HT"
+      const liveMatches = matches.filter((m) =>
+        ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(m.status)
       );
       const summary =
         liveMatches.length > 0

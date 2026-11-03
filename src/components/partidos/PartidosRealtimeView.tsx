@@ -19,6 +19,7 @@ import {
   getTournamentPhaseList,
   getUpcomingPhaseMatchesSummary,
   hasLeagueStageCompleted,
+  isMatchLive,
   type TournamentPhaseKey,
 } from "@/lib/date-utils";
 import { STITCH_REFERENCE_MATCHES } from "@/data/stitch-matches";
@@ -238,9 +239,28 @@ export function PartidosRealtimeView({
       void triggerSync();
     }, 20_000);
 
+    // Reloj local cada 60s para avanzar el minuto en pantalla mientras el balón rueda (1H / 2H / IN_PLAY)
+    const minuteTickerId = window.setInterval(() => {
+      setDbMatches((prev) =>
+        prev.map((m) => {
+          if (
+            (m.status === "1H" || m.status === "2H" || m.status === "IN_PLAY") &&
+            m.elapsed_minute != null
+          ) {
+            const cap = m.status === "1H" ? 45 : 90;
+            if (m.elapsed_minute < cap) {
+              return { ...m, elapsed_minute: m.elapsed_minute + 1 };
+            }
+          }
+          return m;
+        })
+      );
+    }, 60_000);
+
     return () => {
       window.removeEventListener("pitchline:synced", handleCustomSync);
       window.clearInterval(intervalId);
+      window.clearInterval(minuteTickerId);
       supabase.removeChannel(channel);
     };
   }, [reloadFromSupabaseClient]);
@@ -335,9 +355,7 @@ export function PartidosRealtimeView({
   // Contadores para las píldoras de filtro de la jornada seleccionada
   const counts = useMemo(() => {
     const all = activeSourceMatches.length;
-    const live = activeSourceMatches.filter(
-      (m) => m.status === "IN_PLAY" || m.status === "HT"
-    ).length;
+    const live = activeSourceMatches.filter((m) => isMatchLive(m.status)).length;
     const finished = activeSourceMatches.filter(
       (m) => m.status === "FINISHED"
     ).length;
@@ -352,7 +370,7 @@ export function PartidosRealtimeView({
   // Filtrado por pestaña y búsqueda
   const filteredMatches = useMemo(() => {
     return activeSourceMatches.filter((m) => {
-      if (activeFilter === "LIVE" && m.status !== "IN_PLAY" && m.status !== "HT")
+      if (activeFilter === "LIVE" && !isMatchLive(m.status))
         return false;
       if (activeFilter === "FINISHED" && m.status !== "FINISHED") return false;
       if (activeFilter === "PREDICTIONS") {
@@ -385,9 +403,7 @@ export function PartidosRealtimeView({
     }
     return (
       filteredMatches.find((m) => m.live_stats?.is_spotlight) ??
-      filteredMatches.find(
-        (m) => m.status === "IN_PLAY" || m.status === "HT"
-      ) ??
+      filteredMatches.find((m) => isMatchLive(m.status)) ??
       filteredMatches[0]
     );
   }, [filteredMatches, selectedSpotlightId]);
