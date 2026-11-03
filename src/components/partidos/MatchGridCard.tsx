@@ -50,6 +50,17 @@ export function MatchGridCard({
 
   const matchEvents = getOrGenerateMatchEvents(match);
   const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
+  const latestGoalEvent =
+    goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
+  const inferredLiveGoalSide: "HOME" | "AWAY" | null =
+    isLive && latestGoalEvent
+      ? latestGoalEvent.team_id === match.home_team_id
+        ? "HOME"
+        : "AWAY"
+      : null;
+
+  const activeScoreboardGoalSide = goalAnimationSide ?? inferredLiveGoalSide;
+
   const goalsSummary =
     goalEvents.length > 0
       ? goalEvents
@@ -57,14 +68,6 @@ export function MatchGridCard({
           .map((g) => `${g.player_name} ${g.minute}'`)
           .join(", ") + (goalEvents.length > 3 ? ` (+${goalEvents.length - 3})` : "")
       : "Empate sin goles (0-0)";
-
-  const isGoalActive = Boolean(goalAnimationSide);
-  const scoringTeamName =
-    goalAnimationSide === "HOME"
-      ? match.home_team_name
-      : goalAnimationSide === "AWAY"
-        ? match.away_team_name
-        : null;
 
   return (
     <div
@@ -77,34 +80,10 @@ export function MatchGridCard({
           onSelectMatch(match.id);
         }
       }}
-      className={`relative overflow-hidden p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border flex flex-col justify-between space-y-4 ${
-        isGoalActive
-          ? "border-brand-mint animate-goal-card-glow"
-          : "border-outline-variant/15"
-      } ${onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""}`}
+      className={`relative overflow-hidden p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border border-outline-variant/15 flex flex-col justify-between space-y-4 ${
+        onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""
+      }`}
     >
-      {/* Barrido luminoso cuando cae un gol en vivo */}
-      {isGoalActive && (
-        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-          <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
-        </div>
-      )}
-
-      {/* Alerta compacta de ¡GOOOOL! dentro de la tarjeta */}
-      {isGoalActive && scoringTeamName && (
-        <div className="relative z-10 flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-brand-mint text-brand-navy font-label-sm text-xs font-extrabold uppercase tracking-wider animate-goal-banner shadow-md">
-          <span className="flex items-center gap-1.5 truncate">
-            <span className="material-symbols-outlined text-[16px] animate-bounce">
-              sports_soccer
-            </span>
-            ¡GOOOOL DE {scoringTeamName}!
-          </span>
-          <span className="shrink-0">
-            {match.home_score}-{match.away_score}
-          </span>
-        </div>
-      )}
-
       {/* Cabecera de Estado y Estadio */}
       <div className="flex items-center justify-between gap-2">
         {isFinished && (
@@ -128,11 +107,30 @@ export function MatchGridCard({
         </span>
       </div>
 
-      {/* Scoreboard Compacto */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+      {/* Scoreboard Compacto con Animación Integrada en el Propio Marcador */}
+      <div className="space-y-2.5">
+        {/* Fila Local */}
+        <div
+          className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
+            activeScoreboardGoalSide === "HOME"
+              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 shadow-[0_0_18px_rgba(25,211,146,0.3)]"
+              : "py-0.5"
+          }`}
+        >
+          {activeScoreboardGoalSide === "HOME" && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
+            </div>
+          )}
+
+          <div className="relative z-10 flex items-center gap-3 min-w-0">
+            <div
+              className={`w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0 transition-transform ${
+                activeScoreboardGoalSide === "HOME"
+                  ? "border border-brand-mint scale-105"
+                  : ""
+              }`}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="w-full h-full object-contain"
@@ -140,9 +138,16 @@ export function MatchGridCard({
                 src={match.home_team_crest}
               />
             </div>
-            <span className="font-label-md text-label-md font-bold text-on-surface truncate">
-              {match.home_team_name}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-label-md text-label-md font-bold text-on-surface truncate">
+                {match.home_team_name}
+              </span>
+              {activeScoreboardGoalSide === "HOME" && latestGoalEvent && (
+                <span className="font-label-sm text-[10px] text-brand-mint font-bold truncate">
+                  ⚽ {latestGoalEvent.player_name} ({latestGoalEvent.minute}&apos;)
+                </span>
+              )}
+            </div>
           </div>
 
           {isScheduled ? (
@@ -150,21 +155,50 @@ export function MatchGridCard({
               {match.live_stats?.home_odds ?? `${homeWinProb}%`}
             </span>
           ) : (
-            <span
-              className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-block ${
-                goalAnimationSide === "HOME"
-                  ? "text-brand-mint animate-goal-score-pop"
-                  : "text-primary"
-              }`}
-            >
-              {match.home_score}
-            </span>
+            <div className="relative z-10 flex items-center gap-1.5">
+              {activeScoreboardGoalSide === "HOME" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[10px] font-extrabold uppercase tracking-wider animate-goal-banner shadow">
+                  <span className="material-symbols-outlined text-[12px] animate-spin">
+                    sports_soccer
+                  </span>
+                  ¡GOL!
+                </span>
+              )}
+              <span
+                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
+                  activeScoreboardGoalSide === "HOME"
+                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit shadow-[0_0_14px_rgba(25,211,146,0.7)]"
+                    : "text-primary"
+                }`}
+              >
+                {match.home_score}
+              </span>
+            </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0">
+        {/* Fila Visitante */}
+        <div
+          className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
+            activeScoreboardGoalSide === "AWAY"
+              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 shadow-[0_0_18px_rgba(25,211,146,0.3)]"
+              : "py-0.5"
+          }`}
+        >
+          {activeScoreboardGoalSide === "AWAY" && (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
+            </div>
+          )}
+
+          <div className="relative z-10 flex items-center gap-3 min-w-0">
+            <div
+              className={`w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0 transition-transform ${
+                activeScoreboardGoalSide === "AWAY"
+                  ? "border border-brand-mint scale-105"
+                  : ""
+              }`}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 className="w-full h-full object-contain"
@@ -172,9 +206,16 @@ export function MatchGridCard({
                 src={match.away_team_crest}
               />
             </div>
-            <span className="font-label-md text-label-md font-medium text-on-surface-variant truncate">
-              {match.away_team_name}
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="font-label-md text-label-md font-medium text-on-surface-variant truncate">
+                {match.away_team_name}
+              </span>
+              {activeScoreboardGoalSide === "AWAY" && latestGoalEvent && (
+                <span className="font-label-sm text-[10px] text-brand-mint font-bold truncate">
+                  ⚽ {latestGoalEvent.player_name} ({latestGoalEvent.minute}&apos;)
+                </span>
+              )}
+            </div>
           </div>
 
           {isScheduled ? (
@@ -182,15 +223,25 @@ export function MatchGridCard({
               {match.live_stats?.away_odds ?? `${awayWinProb}%`}
             </span>
           ) : (
-            <span
-              className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-block ${
-                goalAnimationSide === "AWAY"
-                  ? "text-brand-mint animate-goal-score-pop"
-                  : "text-on-surface-variant"
-              }`}
-            >
-              {match.away_score}
-            </span>
+            <div className="relative z-10 flex items-center gap-1.5">
+              {activeScoreboardGoalSide === "AWAY" && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[10px] font-extrabold uppercase tracking-wider animate-goal-banner shadow">
+                  <span className="material-symbols-outlined text-[12px] animate-spin">
+                    sports_soccer
+                  </span>
+                  ¡GOL!
+                </span>
+              )}
+              <span
+                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
+                  activeScoreboardGoalSide === "AWAY"
+                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit shadow-[0_0_14px_rgba(25,211,146,0.7)]"
+                    : "text-on-surface-variant"
+                }`}
+              >
+                {match.away_score}
+              </span>
+            </div>
           )}
         </div>
       </div>

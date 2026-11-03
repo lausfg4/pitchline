@@ -15,7 +15,6 @@ import {
   getMatchesInCurrentWeek,
   getMatchPhaseKey,
   getNextMatchdayDateLabel,
-  getOrGenerateMatchEvents,
   getPhaseDisplayInfo,
   getTournamentPhaseList,
   getUpcomingPhaseMatchesSummary,
@@ -30,19 +29,6 @@ import { SpotlightMatchCard } from "@/components/partidos/SpotlightMatchCard";
 import { MatchGridCard } from "@/components/partidos/MatchGridCard";
 
 type FilterTab = "ALL" | "LIVE" | "FINISHED" | "PREDICTIONS";
-
-interface GoalCelebrationBannerData {
-  matchId: number;
-  side: "HOME" | "AWAY";
-  scoringTeamName: string;
-  scoringTeamCrest: string;
-  homeTeamName: string;
-  awayTeamName: string;
-  homeScore: number;
-  awayScore: number;
-  minuteLabel: string;
-  scorerName: string;
-}
 
 interface PartidosRealtimeViewProps {
   initialDbMatches: MatchWithDetails[];
@@ -81,50 +67,18 @@ export function PartidosRealtimeView({
   const [goalAnimationsByMatchId, setGoalAnimationsByMatchId] = useState<
     Record<number, "HOME" | "AWAY">
   >({});
-  const [activeGoalCelebration, setActiveGoalCelebration] =
-    useState<GoalCelebrationBannerData | null>(null);
   const prevScoresRef = useRef<Record<number, { home: number; away: number }>>(
     {}
   );
   const hasAutoShownInitialLiveGoalRef = useRef<boolean>(false);
   const goalTimeoutByMatchRef = useRef<Record<number, number>>({});
-  const bannerTimeoutRef = useRef<number | null>(null);
 
   const triggerGoalCelebration = useCallback(
     (match: MatchWithDetails, side: "HOME" | "AWAY") => {
-      const scoringTeamId =
-        side === "HOME" ? match.home_team_id : match.away_team_id;
-      const scoringTeamName =
-        side === "HOME" ? match.home_team_name : match.away_team_name;
-      const scoringTeamCrest =
-        side === "HOME" ? match.home_team_crest : match.away_team_crest;
-
-      const generatedEvts = getOrGenerateMatchEvents(match).filter(
-        (e) => e.event_type === "GOAL" && e.team_id === scoringTeamId
-      );
-      const latestEvt = generatedEvts[generatedEvts.length - 1];
-      const minuteNum =
-        latestEvt?.minute ?? match.elapsed_minute ?? (match.status === "HT" ? 45 : 25);
-      const minuteLabel = `${minuteNum}'`;
-      const scorerName = latestEvt?.player_name ?? scoringTeamName;
-
       setGoalAnimationsByMatchId((prev) => ({
         ...prev,
         [match.id]: side,
       }));
-
-      setActiveGoalCelebration({
-        matchId: match.id,
-        side,
-        scoringTeamName,
-        scoringTeamCrest,
-        homeTeamName: match.home_team_name,
-        awayTeamName: match.away_team_name,
-        homeScore: match.home_score,
-        awayScore: match.away_score,
-        minuteLabel,
-        scorerName,
-      });
 
       if (typeof window !== "undefined") {
         if (goalTimeoutByMatchRef.current[match.id]) {
@@ -136,13 +90,6 @@ export function PartidosRealtimeView({
             delete copy[match.id];
             return copy;
           });
-        }, 12_000);
-
-        if (bannerTimeoutRef.current) {
-          window.clearTimeout(bannerTimeoutRef.current);
-        }
-        bannerTimeoutRef.current = window.setTimeout(() => {
-          setActiveGoalCelebration(null);
         }, 12_000);
       }
     },
@@ -723,28 +670,22 @@ export function PartidosRealtimeView({
               <button
                 type="button"
                 onClick={() => {
-                  const liveWithGoal = activeSourceMatches.find(
-                    (m) =>
-                      isMatchLive(m.status) &&
-                      (m.home_score > 0 || m.away_score > 0)
-                  );
-                  const fallbackWithGoal = activeSourceMatches.find(
+                  const matchesWithGoals = activeSourceMatches.filter(
                     (m) => m.home_score > 0 || m.away_score > 0
                   );
-                  const target = liveWithGoal ?? fallbackWithGoal;
-                  if (target) {
+                  for (const m of matchesWithGoals) {
                     const side: "HOME" | "AWAY" =
-                      target.home_score >= target.away_score ? "HOME" : "AWAY";
-                    triggerGoalCelebration(target, side);
+                      m.home_score >= m.away_score ? "HOME" : "AWAY";
+                    triggerGoalCelebration(m, side);
                   }
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-mint/15 hover:bg-brand-mint/25 text-brand-mint border border-brand-mint/40 font-label-sm text-label-sm font-bold uppercase tracking-wider transition-all cursor-pointer"
-                title="Reproducir animación del último gol"
+                title="Animar último gol directamente en el marcador"
               >
                 <span className="material-symbols-outlined text-[16px]">
                   sports_soccer
                 </span>
-                <span>Ver último gol</span>
+                <span>Animar gol en marcador</span>
               </button>
             )}
 
@@ -769,117 +710,6 @@ export function PartidosRealtimeView({
             </div>
           </div>
         </div>
-
-        {/* ALERTA ANIMADA DE ¡GOOOOL EN LA CHAMPIONS! EN TIEMPO REAL */}
-        {activeGoalCelebration && (
-          <div
-            onClick={() => {
-              setSelectedSpotlightId(activeGoalCelebration.matchId);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setSelectedSpotlightId(activeGoalCelebration.matchId);
-              }
-            }}
-            className="relative overflow-hidden rounded-xl bg-brand-navy border-2 border-brand-mint p-4 sm:p-5 shadow-2xl animate-goal-banner animate-goal-card-glow cursor-pointer"
-          >
-            {/* Barrido de luz verde menta */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
-            </div>
-
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-surface-container-high border border-brand-mint/60 p-2 flex items-center justify-center shrink-0 shadow-lg">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={activeGoalCelebration.scoringTeamCrest}
-                    alt={activeGoalCelebration.scoringTeamName}
-                    className="w-full h-full object-contain"
-                  />
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand-mint text-brand-navy flex items-center justify-center shadow">
-                    <span className="material-symbols-outlined text-[13px] font-bold animate-spin">
-                      sports_soccer
-                    </span>
-                  </span>
-                </div>
-
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-brand-mint text-brand-navy font-label-sm text-[11px] font-extrabold uppercase tracking-widest">
-                      ¡GOOOOL EN VIVO! • {activeGoalCelebration.minuteLabel}
-                    </span>
-                    <span className="font-label-sm text-xs text-brand-mint font-bold uppercase tracking-wider">
-                      UEFA Champions League
-                    </span>
-                  </div>
-                  <p className="font-headline-md text-lg sm:text-xl text-brand-white font-extrabold tracking-tight mt-0.5">
-                    ¡Gol de {activeGoalCelebration.scoringTeamName}! ({activeGoalCelebration.scorerName})
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between sm:justify-end gap-3 bg-surface-container px-4 py-2 rounded-xl border border-brand-mint/40">
-                <span
-                  className={`font-label-md text-sm font-bold ${
-                    activeGoalCelebration.side === "HOME"
-                      ? "text-brand-mint"
-                      : "text-brand-white"
-                  }`}
-                >
-                  {activeGoalCelebration.homeTeamName}
-                </span>
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-brand-mint/20 border border-brand-mint/50">
-                  <span
-                    className={`font-score-display text-xl ${
-                      activeGoalCelebration.side === "HOME"
-                        ? "text-brand-mint animate-goal-score-pop"
-                        : "text-brand-white"
-                    }`}
-                  >
-                    {activeGoalCelebration.homeScore}
-                  </span>
-                  <span className="text-outline-variant font-bold">-</span>
-                  <span
-                    className={`font-score-display text-xl ${
-                      activeGoalCelebration.side === "AWAY"
-                        ? "text-brand-mint animate-goal-score-pop"
-                        : "text-brand-white"
-                    }`}
-                  >
-                    {activeGoalCelebration.awayScore}
-                  </span>
-                </div>
-                <span
-                  className={`font-label-md text-sm font-bold ${
-                    activeGoalCelebration.side === "AWAY"
-                      ? "text-brand-mint"
-                      : "text-brand-white"
-                  }`}
-                >
-                  {activeGoalCelebration.awayTeamName}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveGoalCelebration(null);
-                  }}
-                  aria-label="Cerrar alerta de gol"
-                  className="ml-1 text-on-surface-variant hover:text-brand-white p-1 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    close
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* DETECTOR DE SEMANA VACÍA (AGENTS.md Regla de Negocio Pestaña 2) */}
         {isCurrentWeekEmpty && (

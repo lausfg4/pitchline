@@ -55,51 +55,53 @@ export function SpotlightMatchCard({
           : formatLocalKickoffTime(match.kickoff_at);
 
   const events = getOrGenerateMatchEvents(match);
-  const isGoalActive = Boolean(goalAnimationSide);
-  const scoringTeamName =
-    goalAnimationSide === "HOME"
-      ? match.home_team_name
-      : goalAnimationSide === "AWAY"
-        ? match.away_team_name
-        : null;
+  const goalEvents = events.filter((e) => e.event_type === "GOAL");
+  const latestGoalEvent =
+    goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
+  const inferredLiveGoalSide: "HOME" | "AWAY" | null =
+    isLive && latestGoalEvent
+      ? latestGoalEvent.team_id === match.home_team_id
+        ? "HOME"
+        : "AWAY"
+      : null;
+
+  const [manualReplaySide, setManualReplaySide] = useState<
+    "HOME" | "AWAY" | null
+  >(null);
+
+  const activeScoreboardGoalSide =
+    goalAnimationSide ?? manualReplaySide ?? inferredLiveGoalSide;
+  const isGoalActive = Boolean(activeScoreboardGoalSide);
+
+  const activeGoalEvent =
+    activeScoreboardGoalSide === "HOME"
+      ? [...goalEvents]
+          .reverse()
+          .find((e) => e.team_id === match.home_team_id) ?? latestGoalEvent
+      : activeScoreboardGoalSide === "AWAY"
+        ? [...goalEvents]
+            .reverse()
+            .find((e) => e.team_id === match.away_team_id) ?? latestGoalEvent
+        : latestGoalEvent;
+
+  const handleReplayScoreboardGoal = () => {
+    if (match.home_score === 0 && match.away_score === 0) return;
+    const side: "HOME" | "AWAY" =
+      inferredLiveGoalSide ??
+      (match.home_score >= match.away_score ? "HOME" : "AWAY");
+    setManualReplaySide(null);
+    window.setTimeout(() => {
+      setManualReplaySide(side);
+    }, 30);
+  };
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl border transition-all duration-500 ${
-        isGoalActive
-          ? "border-brand-mint animate-goal-card-glow"
-          : "border-outline-variant/15"
-      }`}
-    >
-      {/* Barrido luminoso diagonal cuando cae un gol en vivo */}
-      {isGoalActive && (
-        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-          <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
-        </div>
-      )}
-
+    <div className="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl border border-outline-variant/15">
       {/* Luz ambiental sutil de fondo */}
       <div className="absolute -top-32 -left-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-20 w-96 h-96 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="relative z-10 flex flex-col p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
-        {/* Banner superior de ¡GOOOOL! dentro del Spotlight */}
-        {isGoalActive && scoringTeamName && (
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-brand-mint/20 border border-brand-mint/50 text-brand-white animate-goal-banner shadow-lg">
-            <div className="flex items-center gap-2.5">
-              <span className="material-symbols-outlined text-brand-mint text-[22px] animate-bounce">
-                sports_soccer
-              </span>
-              <span className="font-headline-md text-sm sm:text-base font-extrabold tracking-wider uppercase text-brand-mint">
-                ¡GOOOOL DE {scoringTeamName}!
-              </span>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-xs font-extrabold uppercase tracking-wider">
-              {match.home_score} - {match.away_score} • {minuteDisplay}
-            </span>
-          </div>
-        )}
-
         {/* Top Meta Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
@@ -146,8 +148,8 @@ export function SpotlightMatchCard({
             </div>
             <div
               className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border transition-transform duration-500 ${
-                goalAnimationSide === "HOME"
-                  ? "border-brand-mint ring-2 ring-brand-mint/60 scale-110"
+                activeScoreboardGoalSide === "HOME"
+                  ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
                   : "border-outline-variant/20"
               }`}
             >
@@ -160,37 +162,105 @@ export function SpotlightMatchCard({
             </div>
           </div>
 
-          {/* Centro: Marcador y Minuto / Fecha de Previa */}
+          {/* Centro: Marcador En Vivo con Animación de Gol Integrada */}
           <div
-            className={`md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3 px-3 sm:px-4 rounded-xl shadow-inner border w-full transition-colors duration-500 ${
+            onClick={handleReplayScoreboardGoal}
+            title={
+              match.home_score > 0 || match.away_score > 0
+                ? "Haz clic en el marcador para repetir la animación del gol"
+                : undefined
+            }
+            className={`relative overflow-hidden md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3.5 px-3 sm:px-4 rounded-xl shadow-inner border w-full transition-all duration-500 ${
               isGoalActive
-                ? "border-brand-mint/60 bg-brand-mint/10"
+                ? "border-brand-mint animate-goal-card-glow bg-gradient-to-b from-brand-mint/15 via-surface-container to-surface-container cursor-pointer"
                 : "border-outline-variant/15"
             }`}
           >
+            {/* Barrido de luz y onda expansiva DENTRO del propio marcador */}
+            {isGoalActive && (
+              <>
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/30 to-transparent animate-goal-shimmer"></div>
+                </div>
+                <span className="pointer-events-none absolute w-24 h-24 rounded-full border-2 border-brand-mint/50 animate-scoreboard-shockwave"></span>
+              </>
+            )}
+
+            {/* Píldora "¡GOOOOL!" integrada en la parte superior del marcador */}
+            {isGoalActive && (
+              <div className="relative z-10 mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[11px] font-extrabold uppercase tracking-widest shadow-md animate-goal-banner">
+                <span className="material-symbols-outlined text-[14px] animate-spin">
+                  sports_soccer
+                </span>
+                <span>
+                  ¡GOOOOL{" "}
+                  {activeScoreboardGoalSide === "HOME"
+                    ? `DE ${match.home_team_name}`
+                    : `DE ${match.away_team_name}`}
+                  !
+                </span>
+              </div>
+            )}
+
             {isLive || isFinished ? (
-              <div className="flex items-center gap-3">
-                <span
-                  className={`font-score-display text-3xl sm:text-score-display tracking-tight inline-block ${
-                    goalAnimationSide === "HOME"
-                      ? "text-brand-mint animate-goal-score-pop"
-                      : "text-primary"
+              <div className="relative z-10 flex items-center gap-2.5 sm:gap-3.5">
+                {/* Dígito Local en el Marcador */}
+                <div
+                  className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
+                    activeScoreboardGoalSide === "HOME"
+                      ? "bg-brand-mint/25 border-2 border-brand-mint shadow-[0_0_24px_rgba(25,211,146,0.65)]"
+                      : "bg-surface-container-low/70 border border-outline-variant/15"
                   }`}
                 >
-                  {match.home_score}
-                </span>
+                  {activeScoreboardGoalSide === "HOME" && (
+                    <span className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-brand-mint text-brand-navy flex items-center justify-center shadow animate-bounce">
+                      <span className="material-symbols-outlined text-[12px] font-bold">
+                        sports_soccer
+                      </span>
+                    </span>
+                  )}
+                  <span
+                    key={`h-${match.home_score}-${manualReplaySide ?? ""}`}
+                    className={`font-score-display text-3xl sm:text-score-display tracking-tight ${
+                      activeScoreboardGoalSide === "HOME"
+                        ? "text-brand-mint animate-scoreboard-digit"
+                        : "text-primary"
+                    }`}
+                  >
+                    {match.home_score}
+                  </span>
+                </div>
+
                 <span className="font-headline-lg text-2xl sm:text-headline-lg text-outline-variant">
                   -
                 </span>
-                <span
-                  className={`font-score-display text-3xl sm:text-score-display tracking-tight inline-block ${
-                    goalAnimationSide === "AWAY"
-                      ? "text-brand-mint animate-goal-score-pop"
-                      : "text-primary"
+
+                {/* Dígito Visitante en el Marcador */}
+                <div
+                  className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
+                    activeScoreboardGoalSide === "AWAY"
+                      ? "bg-brand-mint/25 border-2 border-brand-mint shadow-[0_0_24px_rgba(25,211,146,0.65)]"
+                      : "bg-surface-container-low/70 border border-outline-variant/15"
                   }`}
                 >
-                  {match.away_score}
-                </span>
+                  {activeScoreboardGoalSide === "AWAY" && (
+                    <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-brand-mint text-brand-navy flex items-center justify-center shadow animate-bounce">
+                      <span className="material-symbols-outlined text-[12px] font-bold">
+                        sports_soccer
+                      </span>
+                    </span>
+                  )}
+                  <span
+                    key={`a-${match.away_score}-${manualReplaySide ?? ""}`}
+                    className={`font-score-display text-3xl sm:text-score-display tracking-tight ${
+                      activeScoreboardGoalSide === "AWAY"
+                        ? "text-brand-mint animate-scoreboard-digit"
+                        : "text-primary"
+                    }`}
+                  >
+                    {match.away_score}
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-0.5">
@@ -202,7 +272,20 @@ export function SpotlightMatchCard({
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-2 mt-1">
+
+            {/* Goleador del gol activo integrado dentro del propio marcador */}
+            {isGoalActive && activeGoalEvent && (
+              <div className="relative z-10 mt-1.5 px-2.5 py-0.5 rounded-md bg-brand-navy/80 border border-brand-mint/40 text-brand-mint font-label-sm text-[11px] font-bold tracking-wide flex items-center gap-1 animate-goal-banner">
+                <span className="material-symbols-outlined text-[13px]">
+                  sports_soccer
+                </span>
+                <span>
+                  {activeGoalEvent.player_name} ({activeGoalEvent.minute}&apos;)
+                </span>
+              </div>
+            )}
+
+            <div className="relative z-10 flex items-center gap-2 mt-1.5">
               <span className="font-label-md text-xs font-bold text-brand-mint">
                 {isLive || isFinished
                   ? minuteDisplay
@@ -245,8 +328,8 @@ export function SpotlightMatchCard({
           <div className="md:col-span-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 order-3">
             <div
               className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border transition-transform duration-500 ${
-                goalAnimationSide === "AWAY"
-                  ? "border-brand-mint ring-2 ring-brand-mint/60 scale-110"
+                activeScoreboardGoalSide === "AWAY"
+                  ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
                   : "border-outline-variant/20"
               }`}
             >
