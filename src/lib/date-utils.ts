@@ -792,7 +792,6 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   if (officialPoss && !isLive) {
     homePossession = officialPoss.home;
   } else if (
-    !isLive &&
     typeof explicitHomePoss === "number" &&
     typeof explicitAwayPoss === "number" &&
     explicitHomePoss + explicitAwayPoss === 100 &&
@@ -835,11 +834,11 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
     progressFactor;
 
   let homeXg =
-    !isLive && match.live_stats?.home_xg != null
+    match.live_stats?.home_xg != null
       ? match.live_stats.home_xg
       : Number(Math.max(0.08, homeGoals * 0.72 + baseHomeChance).toFixed(2));
   let awayXg =
-    !isLive && match.live_stats?.away_xg != null
+    match.live_stats?.away_xg != null
       ? match.live_stats.away_xg
       : Number(Math.max(0.06, awayGoals * 0.7 + baseAwayChance).toFixed(2));
 
@@ -1395,8 +1394,11 @@ export function getOrGenerateMatchEvents(
     (e) => e.event_type === "GOAL"
   ).length;
 
-  // Si ya existen los eventos cargados y coinciden con los goles del marcador, usarlos directamente
-  if (existing.length > 0 && existingGoalCount === totalGoals) {
+  // Si ya existen eventos reales sincronizados para este partido, usarlos directamente
+  if (
+    existing.length > 0 &&
+    (existingGoalCount === totalGoals || existingGoalCount > 0)
+  ) {
     return existing;
   }
 

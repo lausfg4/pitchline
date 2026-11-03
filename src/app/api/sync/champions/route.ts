@@ -351,9 +351,14 @@ function normalizeForm(
 function cleanTeam(name: string): string {
   return (name || "")
     .toLowerCase()
+    .replace(/[øØ]/g, "o")
+    .replace(/[łŁ]/g, "l")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\b(fc|cf|sc|sk|ac|bv|bvb|vfb|fk|rb|cp|club|de|clube|balompie|sp|sad)\b/gi, " ")
+    .replace(
+      /\b(fc|cf|sc|sk|ac|bv|bvb|vfb|fk|rb|cp|club|de|clube|balompie|sp|sad|linz|rotterdam|donetsk)\b/gi,
+      " "
+    )
     .replace(/[^a-z0-9]/g, "")
     .trim();
 }
@@ -363,7 +368,7 @@ function teamsMatch(name1: string, name2: string): boolean {
   const c2 = cleanTeam(name2);
   if (!c1 || !c2) return false;
   if (c1 === c2) return true;
-  if (c1.length >= 4 && c2.length >= 4) {
+  if (c1.length >= 3 && c2.length >= 3) {
     if (c1.includes(c2) || c2.includes(c1)) return true;
   }
   const aliasMap: Record<string, string> = {
@@ -373,6 +378,12 @@ function teamsMatch(name1: string, name2: string): boolean {
     inter: "internazionale",
     barca: "barcelona",
     sporting: "sportingcp",
+    psg: "parissaintgermain",
+    manutd: "manchesterunited",
+    manunited: "manchesterunited",
+    mancity: "manchestercity",
+    slbratislava: "slovanbratislava",
+    sbratislava: "slovanbratislava",
   };
   for (const [k, v] of Object.entries(aliasMap)) {
     if ((c1.includes(k) && c2.includes(v)) || (c1.includes(v) && c2.includes(k))) return true;
@@ -840,6 +851,292 @@ async function handleChampionsSync(request: NextRequest) {
   }
 
   // ============================================================================
+  // 2B. TELEMETRÍA EN TIEMPO REAL UEFA CHAMPIONS LEAGUE (Marcador, Minuto Exacto, Posesión Real y Goleadores Reales)
+  // ============================================================================
+  if (hasMatchesInPlayOrToday && eventsToSync.length === 0) {
+    try {
+      const uclLiveRes = await fetch(
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard",
+        {
+          cache: "no-store",
+          signal: AbortSignal.timeout(6000),
+        }
+      );
+
+      if (uclLiveRes.ok) {
+        const uclLiveJson = (await uclLiveRes.json()) as {
+          events?: Array<{
+            status?: {
+              displayClock?: string;
+              period?: number;
+              type?: {
+                name?: string;
+                state?: string;
+                completed?: boolean;
+              };
+            };
+            competitions?: Array<{
+              competitors?: Array<{
+                homeAway?: string;
+                score?: string;
+                team?: {
+                  id?: string;
+                  displayName?: string;
+                  shortDisplayName?: string;
+                };
+                statistics?: Array<{
+                  name?: string;
+                  displayValue?: string;
+                }>;
+              }>;
+              details?: Array<{
+                clock?: { displayValue?: string };
+                team?: { id?: string };
+                scoringPlay?: boolean;
+                redCard?: boolean;
+                yellowCard?: boolean;
+                penaltyKick?: boolean;
+                ownGoal?: boolean;
+                athletesInvolved?: Array<{
+                  displayName?: string;
+                }>;
+              }>;
+            }>;
+          }>;
+        };
+
+        const parseClockMinute = (
+          rawClock?: string
+        ): { minute: number | null; extra: number | null } => {
+          if (!rawClock) return { minute: null, extra: null };
+          const cleaned = rawClock.replace(/'/g, "").trim();
+          if (cleaned.includes("+")) {
+            const [baseStr, extStr] = cleaned.split("+");
+            const base = parseInt(baseStr, 10);
+            const ext = parseInt(extStr, 10);
+            return {
+              minute: Number.isFinite(base) ? base : null,
+              extra: Number.isFinite(ext) ? ext : null,
+            };
+          }
+          const num = parseInt(cleaned, 10);
+          return { minute: Number.isFinite(num) ? num : null, extra: null };
+        };
+
+        const parseStatNumber = (
+          stats: Array<{ name?: string; displayValue?: string }> | undefined,
+          statName: string
+        ): number | undefined => {
+          const found = stats?.find((s) => s.name === statName);
+          if (!found || found.displayValue == null) return undefined;
+          const val = parseFloat(found.displayValue);
+          return Number.isFinite(val) ? val : undefined;
+        };
+
+        let matchedLiveCount = 0;
+
+        for (const ev of uclLiveJson.events ?? []) {
+          const comp = ev.competitions?.[0];
+          if (!comp) continue;
+
+          const homeComp = comp.competitors?.find((c) => c.homeAway === "home");
+          const awayComp = comp.competitors?.find((c) => c.homeAway === "away");
+          if (!homeComp?.team || !awayComp?.team) continue;
+
+          const idx = matchesToSync.findIndex(
+            (m) =>
+              (teamsMatch(m.home_team_name, homeComp.team?.displayName ?? "") ||
+                teamsMatch(
+                  m.home_team_name,
+                  homeComp.team?.shortDisplayName ?? ""
+                )) &&
+              (teamsMatch(m.away_team_name, awayComp.team?.displayName ?? "") ||
+                teamsMatch(
+                  m.away_team_name,
+                  awayComp.team?.shortDisplayName ?? ""
+                ))
+          );
+
+          if (idx < 0) continue;
+          matchedLiveCount++;
+
+          const currentMatch = matchesToSync[idx];
+          const state = (ev.status?.type?.state ?? "").toLowerCase();
+          const typeName = (ev.status?.type?.name ?? "").toUpperCase();
+          const period = ev.status?.period ?? 1;
+          const { minute: parsedMin, extra: parsedExtra } = parseClockMinute(
+            ev.status?.displayClock
+          );
+
+          let liveStatus: MatchStatus = currentMatch.status;
+          let halfLabel = currentMatch.live_stats?.half_label ?? "En Vivo";
+          let elapsedMinute = parsedMin ?? currentMatch.elapsed_minute;
+          let extraMinute = parsedExtra;
+
+          if (
+            ev.status?.type?.completed ||
+            typeName.includes("FULL_TIME") ||
+            typeName.includes("FINAL")
+          ) {
+            liveStatus = "FINISHED";
+            elapsedMinute = 90;
+            extraMinute = null;
+            halfLabel = "Tiempo Completo";
+          } else if (typeName.includes("HALFTIME")) {
+            liveStatus = "HT";
+            elapsedMinute = 45;
+            extraMinute = null;
+            halfLabel = "Descanso";
+          } else if (state === "in") {
+            if (period === 1 || typeName.includes("FIRST_HALF")) {
+              liveStatus = "1H";
+              halfLabel = "1° Tiempo";
+            } else if (period === 2 || typeName.includes("SECOND_HALF") || typeName.includes("IN_PROGRESS")) {
+              liveStatus = "2H";
+              halfLabel = "2° Tiempo";
+            } else {
+              liveStatus = "ET";
+              halfLabel = "Tiempo Extra";
+            }
+          }
+
+          const rawHomePoss = parseStatNumber(
+            homeComp.statistics,
+            "possessionPct"
+          );
+          const homePoss =
+            rawHomePoss !== undefined
+              ? Math.min(85, Math.max(15, Math.round(rawHomePoss)))
+              : undefined;
+          const awayPoss = homePoss !== undefined ? 100 - homePoss : undefined;
+
+          const homeShots =
+            parseStatNumber(homeComp.statistics, "totalShots") ?? 0;
+          const homeSot =
+            parseStatNumber(homeComp.statistics, "shotsOnTarget") ?? 0;
+          const awayShots =
+            parseStatNumber(awayComp.statistics, "totalShots") ?? 0;
+          const awaySot =
+            parseStatNumber(awayComp.statistics, "shotsOnTarget") ?? 0;
+
+          const homeScore =
+            homeComp.score != null
+              ? parseInt(homeComp.score, 10) || 0
+              : currentMatch.home_score;
+          const awayScore =
+            awayComp.score != null
+              ? parseInt(awayComp.score, 10) || 0
+              : currentMatch.away_score;
+
+          const computedHomeXg =
+            homeShots > 0 || homeScore > 0
+              ? Number(
+                  Math.max(
+                    0.12,
+                    homeScore * 0.48 +
+                      homeSot * 0.22 +
+                      (homeShots - homeSot) * 0.07
+                  ).toFixed(2)
+                )
+              : undefined;
+          const computedAwayXg =
+            awayShots > 0 || awayScore > 0
+              ? Number(
+                  Math.max(
+                    0.1,
+                    awayScore * 0.48 +
+                      awaySot * 0.22 +
+                      (awayShots - awaySot) * 0.07
+                  ).toFixed(2)
+                )
+              : undefined;
+
+          matchesToSync[idx] = {
+            ...currentMatch,
+            status: liveStatus,
+            elapsed_minute: elapsedMinute,
+            extra_minute: extraMinute,
+            home_score: homeScore,
+            away_score: awayScore,
+            live_stats: {
+              ...currentMatch.live_stats,
+              ...(homePoss !== undefined ? { home_possession: homePoss } : {}),
+              ...(awayPoss !== undefined ? { away_possession: awayPoss } : {}),
+              ...(computedHomeXg !== undefined
+                ? { home_xg: computedHomeXg }
+                : {}),
+              ...(computedAwayXg !== undefined
+                ? { away_xg: computedAwayXg }
+                : {}),
+              half_label: halfLabel,
+            },
+            updated_at: nowIso,
+          };
+
+          const details = comp.details ?? [];
+          let matchEvtCounter = 0;
+          for (const d of details) {
+            if (!d.scoringPlay && !d.yellowCard && !d.redCard) continue;
+            matchEvtCounter++;
+            const isHomeEvt = d.team?.id === homeComp.team?.id;
+            const teamId = isHomeEvt
+              ? currentMatch.home_team_id
+              : currentMatch.away_team_id;
+            const teamName = isHomeEvt
+              ? currentMatch.home_team_name
+              : currentMatch.away_team_name;
+
+            const { minute: evtMin, extra: evtExtra } = parseClockMinute(
+              d.clock?.displayValue
+            );
+            const playerName =
+              d.athletesInvolved?.[0]?.displayName ?? `Jugador (${teamName})`;
+            const assistName = d.athletesInvolved?.[1]?.displayName ?? null;
+
+            let evtType = "GOAL";
+            let evtDetail = `Gol de ${teamName}`;
+            if (d.scoringPlay) {
+              evtType = "GOAL";
+              if (d.penaltyKick) evtDetail = `Gol de penalti (${teamName})`;
+              else if (d.ownGoal)
+                evtDetail = `Gol en propia puerta (${teamName})`;
+              else evtDetail = `Gol de ${playerName} (${teamName})`;
+            } else if (d.redCard) {
+              evtType = "RED_CARD";
+              evtDetail = `Tarjeta roja (${teamName})`;
+            } else if (d.yellowCard) {
+              evtType = "YELLOW_CARD";
+              evtDetail = `Tarjeta amarilla (${teamName})`;
+            }
+
+            const matchHex = String(currentMatch.id).padStart(4, "0").slice(-4);
+            const idxHex = String(matchEvtCounter).padStart(12, "0");
+
+            eventsToSync.push({
+              id: `33333333-${matchHex}-4000-8000-${idxHex}`,
+              match_id: currentMatch.id,
+              minute: evtMin ?? elapsedMinute ?? 1,
+              extra_minute: evtExtra,
+              team_id: teamId,
+              player_name: playerName,
+              assist_or_sub_name: assistName,
+              event_type: evtType,
+              detail: evtDetail,
+              created_at: nowIso,
+            });
+          }
+        }
+
+        if (matchedLiveCount > 0) {
+          liveFixturesSource = `UEFA_REALTIME_SCOREBOARD (${matchedLiveCount} partidos sincronizados al segundo)`;
+        }
+      }
+    } catch {
+      // Continuar sin bloquear si la red falla temporalmente
+    }
+  }
+
+  // ============================================================================
   // 3. MOTOR DE PRONÓSTICOS ALGORÍTMICOS POISSON (30% / 30% / 25% / 15%)
   // ============================================================================
   const standingsByTeamId = new Map<number, StandingRow>();
@@ -1023,16 +1320,13 @@ async function handleChampionsSync(request: NextRequest) {
         };
       }
 
-      // Si está en vivo o finalizado, proteger el marcador contra lecturas 0-0 de réplicas atrasadas y recalcular telemetría (posesión y xG) acorde al partido
+      // Si está en vivo o finalizado, proteger el marcador contra lecturas 0-0 de réplicas atrasadas y conservar posesión/xG reales en directo
       if (nextRank >= 1) {
         const mergedMatch: MatchRow = {
           ...m,
           home_score: Math.max(m.home_score, prev.home_score),
           away_score: Math.max(m.away_score, prev.away_score),
-          elapsed_minute:
-            m.elapsed_minute != null && prev.elapsed_minute != null
-              ? Math.max(m.elapsed_minute, prev.elapsed_minute)
-              : (m.elapsed_minute ?? prev.elapsed_minute),
+          elapsed_minute: m.elapsed_minute ?? prev.elapsed_minute,
         };
         const telemetry = computeMatchTelemetry({
           ...mergedMatch,
@@ -1044,10 +1338,14 @@ async function handleChampionsSync(request: NextRequest) {
           live_stats: {
             ...prev.live_stats,
             ...mergedMatch.live_stats,
-            home_possession: telemetry.homePossession,
-            away_possession: telemetry.awayPossession,
-            home_xg: telemetry.homeXg,
-            away_xg: telemetry.awayXg,
+            home_possession:
+              mergedMatch.live_stats?.home_possession ??
+              telemetry.homePossession,
+            away_possession:
+              mergedMatch.live_stats?.away_possession ??
+              telemetry.awayPossession,
+            home_xg: mergedMatch.live_stats?.home_xg ?? telemetry.homeXg,
+            away_xg: mergedMatch.live_stats?.away_xg ?? telemetry.awayXg,
           },
         };
       }
@@ -1064,10 +1362,16 @@ async function handleChampionsSync(request: NextRequest) {
       upsertSummary.dbStatus = `Error matches: ${mErr.message}`;
     }
 
-    // 5.3 Upsert en public.match_events (actualiza incidencias y goles en vivo al instante)
-    const liveOrScoredGoalEvents: MatchEventRow[] = [];
+    // 5.3 Upsert en public.match_events (actualiza incidencias y goles reales en vivo al instante)
+    const syncedEventMatchIds = new Set(eventsToSync.map((e) => e.match_id));
+    const fallbackScoredGoalEvents: MatchEventRow[] = [];
+
     for (const m of matchesToSync) {
-      if ((isMatchLive(m.status) || (m.matchday ?? 0) >= 4) && (m.home_score > 0 || m.away_score > 0)) {
+      if (
+        !syncedEventMatchIds.has(m.id) &&
+        (isMatchLive(m.status) || (m.matchday ?? 0) >= 4) &&
+        (m.home_score > 0 || m.away_score > 0)
+      ) {
         const genEvents = getOrGenerateMatchEvents({
           ...m,
           events: [],
@@ -1078,7 +1382,7 @@ async function handleChampionsSync(request: NextRequest) {
           const matchHex = String(m.id).padStart(4, "0").slice(-4);
           const teamHex = String(evt.team_id).padStart(6, "0").slice(-6);
           const idxHex = String(idx + 1).padStart(6, "0").slice(-6);
-          liveOrScoredGoalEvents.push({
+          fallbackScoredGoalEvents.push({
             ...evt,
             id: `22222222-${matchHex}-4000-8000-${teamHex}${idxHex}`,
           });
@@ -1086,26 +1390,25 @@ async function handleChampionsSync(request: NextRequest) {
       }
     }
 
-    if (eventsToSync.length > 0) {
-      const liveMatchIds = Array.from(new Set(eventsToSync.map((e) => e.match_id)));
-      await adminSupabase.from("match_events").delete().in("match_id", liveMatchIds);
-      const { error: evtErr } = await adminSupabase
+    if (syncedEventMatchIds.size > 0) {
+      await adminSupabase
         .from("match_events")
-        .insert(eventsToSync);
-      if (!evtErr) {
-        upsertSummary.match_events = eventsToSync.length;
-      }
-    } else {
-      const combinedEvents = [
-        ...STITCH_REFERENCE_EVENTS,
-        ...liveOrScoredGoalEvents,
-      ];
-      const { error: evtErr } = await adminSupabase
-        .from("match_events")
-        .upsert(combinedEvents, { onConflict: "id" });
-      if (!evtErr) {
-        upsertSummary.match_events = combinedEvents.length;
-      }
+        .delete()
+        .in("match_id", Array.from(syncedEventMatchIds));
+    }
+
+    const combinedEvents = [
+      ...STITCH_REFERENCE_EVENTS.filter(
+        (e) => !syncedEventMatchIds.has(e.match_id)
+      ),
+      ...eventsToSync,
+      ...fallbackScoredGoalEvents,
+    ];
+    const { error: evtErr } = await adminSupabase
+      .from("match_events")
+      .upsert(combinedEvents, { onConflict: "id" });
+    if (!evtErr) {
+      upsertSummary.match_events = combinedEvents.length;
     }
 
     // 5.4 Upsert en public.predictions (Modelo Poisson 30/30/25/15 para los 144 partidos)
