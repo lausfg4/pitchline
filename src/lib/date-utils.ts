@@ -688,12 +688,14 @@ function getClubPossessionStyleBonus(teamId: number, teamName: string): number {
   if (
     [65, 81, 5, 524].includes(teamId) ||
     n.includes("manchester city") ||
+    n.includes("man city") ||
     n.includes("barcelona") ||
+    n.includes("barça") ||
     n.includes("bayern") ||
     n.includes("paris") ||
     n.includes("psg")
   ) {
-    return 4;
+    return 5.5;
   }
   if (
     [86, 57, 64, 3, 108].includes(teamId) ||
@@ -703,25 +705,36 @@ function getClubPossessionStyleBonus(teamId: number, teamName: string): number {
     n.includes("leverkusen") ||
     n.includes("inter")
   ) {
-    return 2.5;
+    return 3.5;
   }
   if (
-    [4, 78, 98, 109, 721, 58, 102, 498, 1903].includes(teamId) ||
+    [4, 78, 98, 109, 721, 58, 102, 498, 1903, 90, 674, 675, 100, 113, 503].includes(
+      teamId
+    ) ||
     n.includes("dortmund") ||
     n.includes("atlético") ||
+    n.includes("atleti") ||
     n.includes("milan") ||
     n.includes("juventus") ||
     n.includes("leipzig") ||
-    n.includes("aston villa")
+    n.includes("aston villa") ||
+    n.includes("betis") ||
+    n.includes("psv") ||
+    n.includes("feyenoord") ||
+    n.includes("roma") ||
+    n.includes("napoli") ||
+    n.includes("porto") ||
+    n.includes("sporting")
   ) {
-    return 1;
+    return 1.8;
   }
   return 0;
 }
 
 /**
- * Calcula la posesión y el xG de un partido en vivo o finalizado de forma coherente
- * con el resultado del encuentro (goles anotados, estilo de juego y variación determinista por partido).
+ * Calcula la posesión y el xG de un partido en vivo o finalizado de forma dinámica
+ * y coherente con el minuto de juego (`elapsed_minute`), el marcador (`home_score` / `away_score`),
+ * el estilo táctico de cada club y el ritmo del encuentro.
  */
 export function computeMatchTelemetry(match: MatchWithDetails): {
   homePossession: number;
@@ -732,6 +745,14 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   const officialPoss = OFFICIAL_MATCH_POSSESSION[match.id];
   const explicitHomePoss = match.live_stats?.home_possession;
   const explicitAwayPoss = match.live_stats?.away_possession;
+
+  const isLive = isMatchLive(match.status);
+  const minute =
+    match.elapsed_minute ??
+    (match.status === "HT" ? 45 : match.status === "FINISHED" ? 90 : 25);
+  const progressFactor = isLive
+    ? Math.min(1, Math.max(0.14, minute / 90))
+    : 1;
 
   const homeGoals = match.home_score ?? 0;
   const awayGoals = match.away_score ?? 0;
@@ -747,16 +768,31 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   );
   const styleDiff = homeStyle - awayStyle;
 
-  // Variación única por partido basada en IDs para que cada encuentro tenga cifras distintas
+  // Semilla única del cruce + oscilación dinámica por minuto cuando el partido está en vivo
   const seed =
     ((match.id * 31 + match.home_team_id * 7 + match.away_team_id * 13) % 7) -
     3;
 
+  // Oscilación en vivo minuto a minuto según las oleadas ofensivas del partido
+  const liveWave = isLive
+    ? Math.round(
+        Math.sin(minute * 0.55 + (match.id % 11)) * 2.4 +
+          Math.cos(minute * 0.28 + (match.home_team_id % 7)) * 1.4
+      )
+    : 0;
+
+  // Efecto táctico según el minuto y el marcador (asedio final si van por 1 gol tras el 65', o control si ganan por 2+)
+  const lateGameShift =
+    isLive && minute >= 65 && Math.abs(goalDiff) === 1
+      ? -goalDiff * 1.5
+      : 0;
+
   let homePossession: number;
 
-  if (officialPoss) {
+  if (officialPoss && !isLive) {
     homePossession = officialPoss.home;
   } else if (
+    !isLive &&
     typeof explicitHomePoss === "number" &&
     typeof explicitAwayPoss === "number" &&
     explicitHomePoss + explicitAwayPoss === 100 &&
@@ -764,50 +800,53 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   ) {
     homePossession = explicitHomePoss;
   } else if (goalDiff > 0) {
-    // Ganó el local: posesión favorable acorde a la diferencia de goles
-    const raw = Math.round(53 + goalDiff * 4.2 + styleDiff * 0.6 + seed);
-    homePossession = Math.min(71, Math.max(54, raw));
+    // Va ganando o ganó el local: posesión acorde a la ventaja, estilo del club y minuto actual
+    const raw = Math.round(
+      53 + goalDiff * 4.2 + styleDiff * 0.85 + seed + liveWave + lateGameShift
+    );
+    homePossession = Math.min(73, Math.max(52, raw));
   } else if (goalDiff < 0) {
-    // Ganó el visitante: posesión favorable al visitante acorde al marcador
+    // Va ganando o ganó el visitante: posesión acorde a la ventaja visitante, estilo y minuto actual
     const absDiff = Math.abs(goalDiff);
-    const raw = Math.round(47 - absDiff * 4.2 + styleDiff * 0.6 + seed);
-    homePossession = Math.max(29, Math.min(46, raw));
+    const raw = Math.round(
+      47 - absDiff * 4.2 + styleDiff * 0.85 + seed + liveWave + lateGameShift
+    );
+    homePossession = Math.max(27, Math.min(48, raw));
   } else {
-    // Empate: posesión equilibrada con matiz táctico por club y semilla del partido
-    let raw = Math.round(50 + styleDiff + seed);
+    // Empate parcial o final: posesión dinámica guiada por el estilo de cada club y el minuto en curso
+    let raw = Math.round(50.8 + styleDiff * 0.95 + seed + liveWave);
     if (raw === 50) {
-      raw = match.id % 2 === 0 ? 52 : 48;
+      raw = (match.id + minute) % 2 === 0 ? 52 : 48;
     }
-    homePossession = Math.min(55, Math.max(45, raw));
+    homePossession = Math.min(64, Math.max(36, raw));
   }
 
   const awayPossession = 100 - homePossession;
 
+  const baseHomeChance =
+    (0.38 +
+      ((match.id * 17 + match.home_team_id * 5) % 39) / 100 +
+      Math.max(0, styleDiff) * 0.05) *
+    progressFactor;
+  const baseAwayChance =
+    (0.32 +
+      ((match.id * 29 + match.away_team_id * 7) % 37) / 100 +
+      Math.max(0, -styleDiff) * 0.05) *
+    progressFactor;
+
   let homeXg =
-    match.live_stats?.home_xg ??
-    Number(
-      Math.max(
-        0.24,
-        homeGoals * 0.76 +
-          0.34 +
-          ((match.id * 17 + match.home_team_id * 5) % 39) / 100
-      ).toFixed(2)
-    );
+    !isLive && match.live_stats?.home_xg != null
+      ? match.live_stats.home_xg
+      : Number(Math.max(0.08, homeGoals * 0.72 + baseHomeChance).toFixed(2));
   let awayXg =
-    match.live_stats?.away_xg ??
-    Number(
-      Math.max(
-        0.2,
-        awayGoals * 0.74 +
-          0.28 +
-          ((match.id * 29 + match.away_team_id * 7) % 37) / 100
-      ).toFixed(2)
-    );
+    !isLive && match.live_stats?.away_xg != null
+      ? match.live_stats.away_xg
+      : Number(Math.max(0.06, awayGoals * 0.7 + baseAwayChance).toFixed(2));
 
   if (goalDiff > 0 && homeXg <= awayXg) {
-    homeXg = Number((awayXg + 0.42 + goalDiff * 0.25).toFixed(2));
+    homeXg = Number((awayXg + 0.34 + goalDiff * 0.22).toFixed(2));
   } else if (goalDiff < 0 && awayXg <= homeXg) {
-    awayXg = Number((homeXg + 0.42 + Math.abs(goalDiff) * 0.25).toFixed(2));
+    awayXg = Number((homeXg + 0.34 + Math.abs(goalDiff) * 0.22).toFixed(2));
   }
 
   return {

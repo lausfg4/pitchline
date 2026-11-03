@@ -278,19 +278,42 @@ export function MatchGridCard({
       )}
 
       {isLive && (
-        <div className="pt-2 bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-primary text-[16px]">
-              insights
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">
-              Pronóstico Vivo:
-            </span>
+        <div className="pt-2 bg-surface-container rounded-lg p-2.5 space-y-2 font-tabular-stats text-tabular-stats">
+          {/* Barra de Posesión en Vivo que evoluciona con el minuto y el marcador */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[11px]">
+              <span className="text-primary font-bold">{homePossession}%</span>
+              <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
+                Posesión en Vivo • xG {homeXg.toFixed(2)} - {awayXg.toFixed(2)}
+              </span>
+              <span className="text-brand-mint font-bold">{awayPossession}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+              <div
+                className="h-full bg-primary transition-all duration-700"
+                style={{ width: `${homePossession}%` }}
+              ></div>
+              <div
+                className="h-full bg-brand-mint transition-all duration-700"
+                style={{ width: `${awayPossession}%` }}
+              ></div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 font-tabular-stats text-tabular-stats">
-            <span className="text-primary font-bold">1 ({homeWinProb}%)</span>
-            <span className="text-secondary font-bold">X ({drawProb}%)</span>
-            <span className="text-on-surface-variant">2 ({awayWinProb}%)</span>
+
+          <div className="flex items-center justify-between pt-1 border-t border-outline-variant/10">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="material-symbols-outlined text-primary text-[15px] shrink-0">
+                insights
+              </span>
+              <span className="font-label-sm text-label-sm text-brand-mint truncate">
+                {goalEvents.length > 0 ? goalsSummary : "Pronóstico Vivo:"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 ml-2">
+              <span className="text-primary font-bold">1 ({homeWinProb}%)</span>
+              <span className="text-secondary font-bold">X ({drawProb}%)</span>
+              <span className="text-on-surface-variant">2 ({awayWinProb}%)</span>
+            </div>
           </div>
         </div>
       )}

@@ -17,7 +17,11 @@ import {
   STITCH_REFERENCE_MATCHES,
 } from "@/data/stitch-matches";
 import { STITCH_REFERENCE_INJURIES } from "@/data/stitch-news";
-import { getOrGenerateMatchEvents, isMatchLive } from "@/lib/date-utils";
+import {
+  computeMatchTelemetry,
+  getOrGenerateMatchEvents,
+  isMatchLive,
+} from "@/lib/date-utils";
 
 const FOOTBALL_DATA_STANDINGS_URL =
   "https://api.football-data.org/v4/competitions/CL/standings";
@@ -1019,9 +1023,9 @@ async function handleChampionsSync(request: NextRequest) {
         };
       }
 
-      // Si está en vivo o finalizado, proteger el marcador contra lecturas 0-0 de réplicas atrasadas
+      // Si está en vivo o finalizado, proteger el marcador contra lecturas 0-0 de réplicas atrasadas y recalcular telemetría (posesión y xG) acorde al partido
       if (nextRank >= 1) {
-        return {
+        const mergedMatch: MatchRow = {
           ...m,
           home_score: Math.max(m.home_score, prev.home_score),
           away_score: Math.max(m.away_score, prev.away_score),
@@ -1029,6 +1033,22 @@ async function handleChampionsSync(request: NextRequest) {
             m.elapsed_minute != null && prev.elapsed_minute != null
               ? Math.max(m.elapsed_minute, prev.elapsed_minute)
               : (m.elapsed_minute ?? prev.elapsed_minute),
+        };
+        const telemetry = computeMatchTelemetry({
+          ...mergedMatch,
+          events: [],
+          prediction: null,
+        });
+        return {
+          ...mergedMatch,
+          live_stats: {
+            ...prev.live_stats,
+            ...mergedMatch.live_stats,
+            home_possession: telemetry.homePossession,
+            away_possession: telemetry.awayPossession,
+            home_xg: telemetry.homeXg,
+            away_xg: telemetry.awayXg,
+          },
         };
       }
 
