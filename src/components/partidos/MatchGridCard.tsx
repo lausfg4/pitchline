@@ -52,14 +52,8 @@ export function MatchGridCard({
   const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
   const latestGoalEvent =
     goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
-  const inferredLiveGoalSide: "HOME" | "AWAY" | null =
-    isLive && latestGoalEvent
-      ? latestGoalEvent.team_id === match.home_team_id
-        ? "HOME"
-        : "AWAY"
-      : null;
 
-  const activeScoreboardGoalSide = goalAnimationSide ?? inferredLiveGoalSide;
+  const activeScoreboardGoalSide = goalAnimationSide;
 
   const goalsSummary =
     goalEvents.length > 0

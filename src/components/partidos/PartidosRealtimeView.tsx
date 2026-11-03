@@ -70,7 +70,6 @@ export function PartidosRealtimeView({
   const prevScoresRef = useRef<Record<number, { home: number; away: number }>>(
     {}
   );
-  const hasAutoShownInitialLiveGoalRef = useRef<boolean>(false);
   const goalTimeoutByMatchRef = useRef<Record<number, number>>({});
 
   const triggerGoalCelebration = useCallback(
@@ -90,7 +89,7 @@ export function PartidosRealtimeView({
             delete copy[match.id];
             return copy;
           });
-        }, 12_000);
+        }, 6_000);
       }
     },
     []
@@ -296,44 +295,22 @@ export function PartidosRealtimeView({
     };
   }, [reloadFromSupabaseClient]);
 
-  // Detector en tiempo real de nuevos goles en cualquier partido
+  // Detector en tiempo real de nuevos goles: se activa únicamente cuando sube el marcador y se quita a los 6 segundos
   useEffect(() => {
     if (dbMatches.length === 0) return;
 
     const prevMap = prevScoresRef.current;
-    const isFirstSnapshot = Object.keys(prevMap).length === 0;
-    let newlyScoredMatch: { match: MatchWithDetails; side: "HOME" | "AWAY" } | null =
-      null;
 
     for (const m of dbMatches) {
       const prev = prevMap[m.id];
       if (prev) {
         if (m.home_score > prev.home) {
-          newlyScoredMatch = { match: m, side: "HOME" };
+          triggerGoalCelebration(m, "HOME");
         } else if (m.away_score > prev.away) {
-          newlyScoredMatch = { match: m, side: "AWAY" };
+          triggerGoalCelebration(m, "AWAY");
         }
       }
       prevMap[m.id] = { home: m.home_score, away: m.away_score };
-    }
-
-    if (newlyScoredMatch) {
-      triggerGoalCelebration(newlyScoredMatch.match, newlyScoredMatch.side);
-      return;
-    }
-
-    // Al entrar si hay un partido EN VIVO con goles recién anotados, mostrar la celebración del último gol en vivo
-    if (isFirstSnapshot && !hasAutoShownInitialLiveGoalRef.current) {
-      const liveWithGoals = dbMatches.filter(
-        (m) => isMatchLive(m.status) && (m.home_score > 0 || m.away_score > 0)
-      );
-      if (liveWithGoals.length > 0) {
-        hasAutoShownInitialLiveGoalRef.current = true;
-        const target = liveWithGoals[0];
-        const side: "HOME" | "AWAY" =
-          target.home_score >= target.away_score ? "HOME" : "AWAY";
-        triggerGoalCelebration(target, side);
-      }
     }
   }, [dbMatches, triggerGoalCelebration]);
 
@@ -662,33 +639,8 @@ export function PartidosRealtimeView({
             </div>
           </div>
 
-          {/* Status en Tiempo Real + Botón de Celebración del Último Gol */}
-          <div className="flex items-center justify-between lg:justify-end gap-2.5 self-stretch lg:self-auto flex-wrap">
-            {activeSourceMatches.some(
-              (m) => m.home_score > 0 || m.away_score > 0
-            ) && (
-              <button
-                type="button"
-                onClick={() => {
-                  const matchesWithGoals = activeSourceMatches.filter(
-                    (m) => m.home_score > 0 || m.away_score > 0
-                  );
-                  for (const m of matchesWithGoals) {
-                    const side: "HOME" | "AWAY" =
-                      m.home_score >= m.away_score ? "HOME" : "AWAY";
-                    triggerGoalCelebration(m, side);
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-mint/15 hover:bg-brand-mint/25 text-brand-mint border border-brand-mint/40 font-label-sm text-label-sm font-bold uppercase tracking-wider transition-all cursor-pointer"
-                title="Animar último gol directamente en el marcador"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  sports_soccer
-                </span>
-                <span>Animar gol en marcador</span>
-              </button>
-            )}
-
+          {/* Status en Tiempo Real */}
+          <div className="flex items-center justify-between lg:justify-end gap-3 self-stretch lg:self-auto">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low border border-brand-mint/20">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>

@@ -58,19 +58,12 @@ export function SpotlightMatchCard({
   const goalEvents = events.filter((e) => e.event_type === "GOAL");
   const latestGoalEvent =
     goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
-  const inferredLiveGoalSide: "HOME" | "AWAY" | null =
-    isLive && latestGoalEvent
-      ? latestGoalEvent.team_id === match.home_team_id
-        ? "HOME"
-        : "AWAY"
-      : null;
 
   const [manualReplaySide, setManualReplaySide] = useState<
     "HOME" | "AWAY" | null
   >(null);
 
-  const activeScoreboardGoalSide =
-    goalAnimationSide ?? manualReplaySide ?? inferredLiveGoalSide;
+  const activeScoreboardGoalSide = goalAnimationSide ?? manualReplaySide;
   const isGoalActive = Boolean(activeScoreboardGoalSide);
 
   const activeGoalEvent =
@@ -87,12 +80,17 @@ export function SpotlightMatchCard({
   const handleReplayScoreboardGoal = () => {
     if (match.home_score === 0 && match.away_score === 0) return;
     const side: "HOME" | "AWAY" =
-      inferredLiveGoalSide ??
-      (match.home_score >= match.away_score ? "HOME" : "AWAY");
-    setManualReplaySide(null);
+      latestGoalEvent
+        ? latestGoalEvent.team_id === match.home_team_id
+          ? "HOME"
+          : "AWAY"
+        : match.home_score >= match.away_score
+          ? "HOME"
+          : "AWAY";
+    setManualReplaySide(side);
     window.setTimeout(() => {
-      setManualReplaySide(side);
-    }, 30);
+      setManualReplaySide(null);
+    }, 6_000);
   };
 
   return (
