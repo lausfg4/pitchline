@@ -200,7 +200,7 @@ export function NoticiasExclusivasView({
     >
       <div className="flex flex-col w-full space-y-6">
         {/* Cabecera Editorial (Sincronización Automática en Tiempo Real) */}
-        <section className="p-5 rounded-xl bg-surface-container border border-outline-variant/15 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <section className="p-5 rounded-xl bg-surface-container border border-white/8  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold tracking-wider">
@@ -230,7 +230,7 @@ export function NoticiasExclusivasView({
         </section>
 
         {/* Barra Doble de Filtros: Categoría y Club */}
-        <section className="p-3.5 sm:p-4 rounded-xl bg-surface-container-low border border-outline-variant/15 space-y-3">
+        <section className="p-3.5 sm:p-4 rounded-xl bg-surface-container-low border border-white/8 space-y-3">
           {/* Filtro por Categoría */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
             <span className="font-label-sm text-label-sm uppercase text-on-surface-variant shrink-0 mr-1">
@@ -245,7 +245,7 @@ export function NoticiasExclusivasView({
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3.5 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all cursor-pointer ${
                     active
-                      ? "bg-brand-mint text-brand-navy font-bold shadow-sm"
+                      ? "bg-brand-mint text-brand-navy font-bold "
                       : "bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
                 >
@@ -256,7 +256,7 @@ export function NoticiasExclusivasView({
           </div>
 
           {/* Filtro por Club */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-outline-variant/15 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-white/8 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
             <span className="font-label-sm text-label-sm uppercase text-on-surface-variant shrink-0 mr-1">
               Club:
             </span>
@@ -282,7 +282,7 @@ export function NoticiasExclusivasView({
 
         {/* Noticia Principal Destacada (Hero Card) */}
         {heroArticle ? (
-          <article className="relative overflow-hidden rounded-2xl bg-surface-container-low border border-outline-variant/20 shadow-xl grid grid-cols-1 lg:grid-cols-12">
+          <article className="relative overflow-hidden rounded-2xl bg-surface-container-low border border-white/10  grid grid-cols-1 lg:grid-cols-12">
             <div className="lg:col-span-7 relative min-h-[260px] sm:min-h-[340px] bg-surface-container-highest overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -295,7 +295,7 @@ export function NoticiasExclusivasView({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-surface-container-low"></div>
               <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold shadow-md">
+                <span className="px-3 py-1 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold ">
                   {heroArticle.category ?? "Destacado UCL"}
                 </span>
                 {heroArticle.club_tag && (
@@ -328,7 +328,7 @@ export function NoticiasExclusivasView({
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-outline-variant/15 flex items-center justify-between">
+              <div className="pt-4 border-t border-white/8 flex items-center justify-between">
                 <span className="font-label-sm text-label-sm text-brand-mint uppercase">
                   Cobertura Verificada
                 </span>
@@ -347,7 +347,7 @@ export function NoticiasExclusivasView({
             </div>
           </article>
         ) : (
-          <div className="p-10 rounded-xl bg-surface-container-low border border-outline-variant/15 text-center space-y-3">
+          <div className="p-10 rounded-xl bg-surface-container-low border border-white/8 text-center space-y-3">
             <span className="material-symbols-outlined text-brand-mint text-[36px]">
               newspaper
             </span>
@@ -388,7 +388,7 @@ export function NoticiasExclusivasView({
               {gridArticles.map((art) => (
                 <article
                   key={art.id}
-                  className="rounded-xl bg-surface-container-low hover:bg-surface-container transition-all border border-outline-variant/15 shadow-md overflow-hidden flex flex-col justify-between group"
+                  className="rounded-xl bg-surface-container-low hover:bg-surface-container transition-all border border-white/8  overflow-hidden flex flex-col justify-between group"
                 >
                   <div>
                     <div className="relative h-48 w-full bg-surface-container-highest overflow-hidden">

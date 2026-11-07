@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:worker": "node --env-file=.env.local scripts/sync-worker.mjs",
+    "test:sync": "node --test scripts/sync.test.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

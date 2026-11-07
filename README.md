@@ -1,3 +1,9 @@
+# Pitchline
+
+Configuración de marcadores y planes gratuitos: [Guía de sincronización](docs/sincronizacion.md).
+
+Validación: `npm run test:sync` y `npx tsc --noEmit`. La sincronización requiere la migración SQL indicada en la guía y un worker activo (`npm run sync:worker`).
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

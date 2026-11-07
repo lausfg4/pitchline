@@ -174,13 +174,9 @@ async function handleSync(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get("authorization");
   const headerCronSecret = request.headers.get("x-cron-secret");
-  const isInternalTrigger = request.headers.get("x-pitchline-sync") === "true";
 
   if (
-    cronSecret &&
-    !isInternalTrigger &&
-    authHeader !== `Bearer ${cronSecret}` &&
-    headerCronSecret !== cronSecret
+    !cronSecret || (authHeader !== `Bearer ${cronSecret}` && headerCronSecret !== cronSecret)
   ) {
     return NextResponse.json(
       {

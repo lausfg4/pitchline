@@ -433,7 +433,7 @@ export default function PerfilPage() {
     >
       <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Encabezado de Sección */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-surface-container border border-outline-variant/15 shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-surface-container border border-white/8 ">
           <div className="space-y-1">
             <span className="font-label-sm text-label-sm uppercase tracking-wider text-[#19D392] font-bold">
               Cuenta &amp; Personalización
@@ -462,7 +462,7 @@ export default function PerfilPage() {
         </div>
 
         {loadingProfile ? (
-          <div className="p-12 rounded-2xl bg-surface-container-low border border-outline-variant/15 text-center space-y-3">
+          <div className="p-12 rounded-2xl bg-surface-container-low border border-white/8 text-center space-y-3">
             <span className="material-symbols-outlined text-[#19D392] text-[36px] animate-spin">
               progress_activity
             </span>
@@ -472,7 +472,7 @@ export default function PerfilPage() {
           </div>
         ) : !userId ? (
           /* Estado sin sesión activa: Invitación clara a Iniciar Sesión */
-          <div className="p-8 sm:p-10 rounded-2xl bg-surface-container-low border border-outline-variant/20 text-center space-y-5 shadow-xl">
+          <div className="p-8 sm:p-10 rounded-2xl bg-surface-container-low border border-white/10 text-center space-y-5 ">
             <div className="w-16 h-16 rounded-full bg-[#19D392]/15 border border-[#19D392]/30 flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-[#19D392] text-[32px]">
                 person_Add
@@ -489,7 +489,7 @@ export default function PerfilPage() {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <Link
                 href="/login"
-                className="px-6 py-3 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all inline-flex items-center gap-2"
+                className="px-6 py-3 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all inline-flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   login
@@ -498,7 +498,7 @@ export default function PerfilPage() {
               </Link>
               <Link
                 href="/partidos"
-                className="px-5 py-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors border border-outline-variant/20"
+                className="px-5 py-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors border border-white/10"
               >
                 Explorar Marcadores en Vivo
               </Link>
@@ -508,10 +508,10 @@ export default function PerfilPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Columna Izquierda: Foto de Perfil Actual + Subida WebP 256x256 + Galería Futbolística */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="p-6 rounded-2xl bg-surface-container-low border border-outline-variant/15 space-y-5 shadow-md">
+              <div className="p-6 rounded-2xl bg-surface-container-low border border-white/8 space-y-5 ">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <div className="relative group">
-                    <div className="w-28 h-28 rounded-full overflow-hidden bg-[#0A1124] border-2 border-[#19D392] shadow-[0_0_24px_rgba(25,211,146,0.25)] flex items-center justify-center">
+                    <div className="w-28 h-28 rounded-full overflow-hidden bg-[#0A1124] border-2 border-[#19D392]  flex items-center justify-center">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={avatarUrl}
@@ -524,7 +524,7 @@ export default function PerfilPage() {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingAvatar}
                       title="Subir foto desde tu dispositivo"
-                      className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#19D392] text-[#0A1124] shadow-lg flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
+                      className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#19D392] text-[#0A1124]  flex items-center justify-center hover:scale-105 transition-transform cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[18px]">
                         photo_camera
@@ -548,7 +548,7 @@ export default function PerfilPage() {
                 </div>
 
                 {/* Subida de foto propia (Canvas HTML5 -> WebP 256x256) */}
-                <div className="pt-2 border-t border-outline-variant/15 space-y-2.5">
+                <div className="pt-2 border-t border-white/8 space-y-2.5">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -581,7 +581,7 @@ export default function PerfilPage() {
                 </div>
 
                 {/* Galería de Avatares Futbolísticos Predefinidos */}
-                <div className="pt-2 border-t border-outline-variant/15 space-y-3">
+                <div className="pt-2 border-t border-white/8 space-y-3">
                   <span className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold block">
                     Galería de Avatares Futbolísticos
                   </span>
@@ -598,8 +598,8 @@ export default function PerfilPage() {
                           title={preset.label}
                           className={`group relative rounded-xl p-1.5 flex flex-col items-center gap-1 transition-all cursor-pointer border ${
                             isSelected
-                              ? "bg-[#19D392]/15 border-[#19D392] shadow-[0_0_12px_rgba(25,211,146,0.3)]"
-                              : "bg-surface-container hover:bg-surface-container-high border-outline-variant/15"
+                              ? "bg-[#19D392]/15 border-[#19D392] "
+                              : "bg-surface-container hover:bg-surface-container-high border-white/8"
                           }`}
                         >
                           <div className="w-12 h-12 rounded-full overflow-hidden">
@@ -625,9 +625,9 @@ export default function PerfilPage() {
             <div className="lg:col-span-7">
               <form
                 onSubmit={handleSaveProfile}
-                className="p-6 sm:p-8 rounded-2xl bg-surface-container-low border border-outline-variant/15 space-y-5 shadow-md"
+                className="p-6 sm:p-8 rounded-2xl bg-surface-container-low border border-white/8 space-y-5 "
               >
-                <div className="flex items-center gap-2.5 pb-2 border-b border-outline-variant/15">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-white/8">
                   <span className="material-symbols-outlined text-[#19D392] text-[22px]">
                     manage_accounts
                   </span>
@@ -730,7 +730,7 @@ export default function PerfilPage() {
                   <button
                     type="submit"
                     disabled={savingProfile || uploadingAvatar}
-                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined text-[18px]">
                       save

@@ -1,11 +1,12 @@
 "use client";
 
+import { MatchFreshness } from "./MatchFreshness";
 import React from "react";
 import type { MatchWithDetails } from "@/types/database";
 import {
   computeMatchTelemetry,
   formatMatchDateTimeLabel,
-  getOrGenerateMatchEvents,
+  getVerifiedMatchEvents,
   isMatchLive,
 } from "@/lib/date-utils";
 
@@ -30,7 +31,8 @@ export function MatchGridCard({
 }: MatchGridCardProps) {
   const isLive = isMatchLive(match.status);
   const isFinished = match.status === "FINISHED";
-  const isScheduled = !isLive && !isFinished;
+  const isUnavailable = match.status === "POSTPONED" || match.status === "CANCELLED";
+  const isScheduled = match.status === "SCHEDULED" || match.status === "TIMED";
 
   const { homePossession, awayPossession, homeXg, awayXg } =
     computeMatchTelemetry(match);
@@ -48,7 +50,7 @@ export function MatchGridCard({
           : `${match.elapsed_minute}' ${match.live_stats?.half_label ?? (match.status === "2H" ? "2T" : "1T")}`
         : "En Vivo";
 
-  const matchEvents = getOrGenerateMatchEvents(match);
+  const matchEvents = getVerifiedMatchEvents(match);
   const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
   const latestGoalEvent =
     goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
@@ -61,7 +63,7 @@ export function MatchGridCard({
           .slice(0, 3)
           .map((g) => `${g.player_name} ${g.minute}'`)
           .join(", ") + (goalEvents.length > 3 ? ` (+${goalEvents.length - 3})` : "")
-      : "Empate sin goles (0-0)";
+      : "Incidencias no disponibles";
 
   return (
     <div
@@ -74,12 +76,14 @@ export function MatchGridCard({
           onSelectMatch(match.id);
         }
       }}
-      className={`relative overflow-hidden p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm border border-outline-variant/15 flex flex-col justify-between space-y-4 ${
+      className={`relative overflow-hidden p-4 rounded-xl bg-surface-container-low hover:bg-surface-container transition-all  border border-white/8 flex flex-col justify-between space-y-4 ${
         onSelectMatch ? "cursor-pointer hover:border-brand-mint/40" : ""
       }`}
     >
+      <MatchFreshness match={match} />
       {/* Cabecera de Estado y Estadio */}
       <div className="flex items-center justify-between gap-2">
+        {isUnavailable && <span className="text-xs text-on-surface-variant">{match.status === "CANCELLED" ? "Cancelado" : "Aplazado"}</span>}
         {isFinished && (
           <span className="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
             Finalizado • {formatMatchDateTimeLabel(match.kickoff_at).split("•")[0].trim()}
@@ -87,7 +91,7 @@ export function MatchGridCard({
         )}
         {isLive && (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-mint/15 text-brand-mint border border-brand-mint/30 font-label-sm text-label-sm uppercase font-bold tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-ping"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse"></span>
             {minuteLabel}
           </span>
         )}
@@ -107,7 +111,7 @@ export function MatchGridCard({
         <div
           className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
             activeScoreboardGoalSide === "HOME"
-              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 shadow-[0_0_18px_rgba(25,211,146,0.3)]"
+              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 "
               : "py-0.5"
           }`}
         >
@@ -161,7 +165,7 @@ export function MatchGridCard({
               <span
                 className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
                   activeScoreboardGoalSide === "HOME"
-                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit shadow-[0_0_14px_rgba(25,211,146,0.7)]"
+                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit "
                     : "text-primary"
                 }`}
               >
@@ -175,7 +179,7 @@ export function MatchGridCard({
         <div
           className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
             activeScoreboardGoalSide === "AWAY"
-              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 shadow-[0_0_18px_rgba(25,211,146,0.3)]"
+              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 "
               : "py-0.5"
           }`}
         >
@@ -229,7 +233,7 @@ export function MatchGridCard({
               <span
                 className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
                   activeScoreboardGoalSide === "AWAY"
-                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit shadow-[0_0_14px_rgba(25,211,146,0.7)]"
+                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit "
                     : "text-on-surface-variant"
                 }`}
               >
@@ -246,20 +250,20 @@ export function MatchGridCard({
           {/* Barra de Posesión acorde al resultado */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession}%</span>
+              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
               <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
                 Posesión
               </span>
-              <span className="text-brand-mint font-bold">{awayPossession}%</span>
+              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
             </div>
             <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
               <div
                 className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${homePossession}%` }}
+                style={{ width: `${homePossession ?? 0}%` }}
               ></div>
               <div
                 className="h-full bg-brand-mint transition-all duration-500"
-                style={{ width: `${awayPossession}%` }}
+                style={{ width: `${awayPossession ?? 0}%` }}
               ></div>
             </div>
           </div>
@@ -282,20 +286,20 @@ export function MatchGridCard({
           {/* Barra de Posesión en Vivo que evoluciona con el minuto y el marcador */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession}%</span>
+              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
               <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
-                Posesión en Vivo • xG {homeXg.toFixed(2)} - {awayXg.toFixed(2)}
+                Posesión en Vivo • xG {homeXg?.toFixed(2) ?? "—"} - {awayXg?.toFixed(2) ?? "—"}
               </span>
-              <span className="text-brand-mint font-bold">{awayPossession}%</span>
+              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
             </div>
             <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
               <div
                 className="h-full bg-primary transition-all duration-700"
-                style={{ width: `${homePossession}%` }}
+                style={{ width: `${homePossession ?? 0}%` }}
               ></div>
               <div
                 className="h-full bg-brand-mint transition-all duration-700"
-                style={{ width: `${awayPossession}%` }}
+                style={{ width: `${awayPossession ?? 0}%` }}
               ></div>
             </div>
           </div>

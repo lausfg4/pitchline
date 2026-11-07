@@ -357,7 +357,7 @@ export function ClasificacionRealtimeView({
     >
       <div className="flex flex-col w-full space-y-5">
         {/* Top Command Ribbon & Sub-Tab Phase Switcher (Fase de Liga, Octavos, Cuartos, Semifinales, Final) */}
-        <section className="p-4 rounded-xl bg-surface-container shadow-sm border border-outline-variant/15 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <section className="p-4 rounded-xl bg-surface-container  border border-white/8 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           {/* Selector de Sub-pestañas Oficial (Requisito 1) */}
           <div
             role="tablist"
@@ -375,7 +375,7 @@ export function ClasificacionRealtimeView({
                   onClick={() => setActiveSubTab(tab.id)}
                   className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 min-h-10 sm:min-h-0 shrink-0 snap-start rounded-full font-label-md text-label-md whitespace-nowrap transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-brand-mint text-brand-navy font-bold shadow-[0_0_16px_rgba(25,211,146,0.35)]"
+                      ? "bg-brand-mint text-brand-navy font-bold "
                       : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
                 >
@@ -407,7 +407,7 @@ export function ClasificacionRealtimeView({
           <div className="flex items-center gap-2 flex-wrap justify-between xl:justify-end">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low border border-brand-mint/20">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-mint"></span>
               </span>
               <span className="font-label-sm text-label-sm text-brand-mint uppercase font-bold tracking-wider">
@@ -444,7 +444,7 @@ export function ClasificacionRealtimeView({
             <button
               type="button"
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 min-h-10 sm:min-h-0 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-brand-mint transition-all font-label-sm text-label-sm cursor-pointer border border-outline-variant/20"
+              className="flex items-center gap-1.5 px-3 py-1.5 min-h-10 sm:min-h-0 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface-variant hover:text-brand-mint transition-all font-label-sm text-label-sm cursor-pointer border border-white/10"
             >
               <span className="material-symbols-outlined text-[16px]">
                 sim_card_download
@@ -456,7 +456,7 @@ export function ClasificacionRealtimeView({
 
         {/* Key Metrics Strip (4 Tarjetas de Resumen Analítico de Stitch) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-white/8 ">
             <div className="p-2.5 rounded-lg bg-surface-container-high text-brand-mint shrink-0">
               <span className="material-symbols-outlined text-[20px]">
                 sports_soccer
@@ -475,7 +475,7 @@ export function ClasificacionRealtimeView({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-white/8 ">
             <div className="p-2.5 rounded-lg bg-surface-container-high text-primary shrink-0">
               <span className="material-symbols-outlined text-[20px]">
                 bolt
@@ -494,7 +494,7 @@ export function ClasificacionRealtimeView({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-white/8 ">
             <div className="p-2.5 rounded-lg bg-surface-container-high text-brand-mint shrink-0">
               <span className="material-symbols-outlined text-[20px]">
                 verified
@@ -512,7 +512,7 @@ export function ClasificacionRealtimeView({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15 shadow-sm">
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low border border-white/8 ">
             <div className="p-2.5 rounded-lg bg-surface-container-high text-error shrink-0">
               <span className="material-symbols-outlined text-[20px]">
                 local_fire_department
@@ -541,7 +541,7 @@ export function ClasificacionRealtimeView({
               } flex flex-col gap-3`}
             >
               {/* Classification Zone Legend Pill Bar & Fast Filter */}
-              <div className="p-3 bg-surface-container rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-sm border border-outline-variant/15">
+              <div className="p-3 bg-surface-container rounded-xl flex flex-wrap items-center justify-between gap-2  border border-white/8">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-label-sm text-label-sm uppercase text-on-surface-variant font-bold">
                     Zonas:
@@ -559,7 +559,7 @@ export function ClasificacionRealtimeView({
                         : "bg-surface-container-high text-on-surface hover:bg-surface-bright"
                     }`}
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#19D392] shadow-[0_0_8px_rgba(25,211,146,0.7)]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#19D392] "></span>
                     <span className="font-label-sm text-xs font-medium">
                       1-8 Octavos Directo
                     </span>
@@ -578,7 +578,7 @@ export function ClasificacionRealtimeView({
                         : "bg-surface-container-high text-on-surface-variant hover:bg-surface-bright"
                     }`}
                   >
-                    <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(152,203,255,0.6)]"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary "></span>
                     <span className="font-label-sm text-xs">
                       9-24 Playoffs
                     </span>
@@ -612,7 +612,7 @@ export function ClasificacionRealtimeView({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Filtrar club..."
                     aria-label="Filtrar club en la tabla"
-                    className="bg-surface-container-low text-on-surface text-base sm:text-xs px-3 py-1.5 rounded-lg placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-brand-mint w-full sm:w-44 border border-outline-variant/20"
+                    className="bg-surface-container-low text-on-surface text-base sm:text-xs px-3 py-1.5 rounded-lg placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-brand-mint w-full sm:w-44 border border-white/10"
                   />
                   <span className="font-label-sm text-label-sm text-brand-mint bg-surface-container-low px-2.5 py-1.5 rounded-lg uppercase font-bold border border-brand-mint/20 shrink-0">
                     36 Clubes
@@ -621,11 +621,11 @@ export function ClasificacionRealtimeView({
               </div>
 
               {/* Table Container Card (PJ, V, E, D, GF, GC, DG, Pts y Racha de últimos 5 partidos) */}
-              <div className="bg-surface-container-low rounded-xl overflow-hidden shadow-xl border border-outline-variant/15 flex flex-col">
+              <div className="bg-surface-container-low rounded-xl overflow-hidden  border border-white/8 flex flex-col">
                 <div className="overflow-x-auto no-scrollbar">
                   <div className="min-w-[620px] sm:min-w-[660px]">
                     {/* Standings Header Row */}
-                    <div className="grid grid-cols-12 px-3 py-2.5 bg-surface-container-high text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider items-center select-none border-b border-outline-variant/20">
+                    <div className="grid grid-cols-12 px-3 py-2.5 bg-surface-container-high text-on-surface-variant font-label-sm text-[11px] uppercase tracking-wider items-center select-none border-b border-white/10">
                       <div className="col-span-1 text-center font-bold">#</div>
                       <div className="col-span-3 pl-1">Club</div>
                       <div className="col-span-6 grid grid-cols-8 text-center items-center">
@@ -663,9 +663,9 @@ export function ClasificacionRealtimeView({
                           .slice(0, 5);
 
                         const zoneBarColor = isDirectR16
-                          ? "bg-[#19D392] shadow-[0_0_10px_rgba(25,211,146,0.8)]"
+                          ? "bg-[#19D392] "
                           : isPlayoff
-                            ? "bg-primary shadow-[0_0_8px_rgba(152,203,255,0.4)]"
+                            ? "bg-primary "
                             : "bg-error";
 
                         const rankTextColor = isDirectR16
@@ -839,7 +839,7 @@ export function ClasificacionRealtimeView({
                 </div>
 
                 {/* Table Footer Navigation / Status Bar */}
-                <div className="px-4 py-2.5 bg-surface-container flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant/15">
+                <div className="px-4 py-2.5 bg-surface-container flex flex-wrap items-center justify-between gap-2 border-t border-white/8">
                   <span className="text-on-surface-variant font-tabular-stats text-xs">
                     Mostrando {filteredStandings.length} de{" "}
                     {activeStandings.length} clubes cargados

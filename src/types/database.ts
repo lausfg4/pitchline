@@ -7,9 +7,15 @@ export type MatchStatus =
   | "2H"
   | "ET"
   | "PEN"
-  | "FINISHED";
+  | "FINISHED"
+  | "POSTPONED"
+  | "CANCELLED";
 
 export interface LiveStats {
+  source?: "football-data" | "api-football";
+  source_updated_at?: string;
+  provider_fixture_id?: number;
+  events_pending?: boolean;
   home_possession?: number;
   away_possession?: number;
   home_xg?: number;
@@ -54,6 +60,7 @@ export interface MatchRow {
 }
 
 export interface MatchEventRow {
+  source?: string | null;
   id: string;
   match_id: number;
   minute: number;

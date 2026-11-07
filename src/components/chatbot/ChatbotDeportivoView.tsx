@@ -1,4 +1,5 @@
 "use client";
+import { getVerifiedMatchEvents } from "@/lib/date-utils";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -11,11 +12,6 @@ import type {
   NewsArticleRow,
   PlayerInjuryRow,
 } from "@/types/database";
-import {
-  STITCH_REFERENCE_EVENTS,
-  STITCH_REFERENCE_MATCHES,
-} from "@/data/stitch-matches";
-import { STITCH_REFERENCE_INJURIES } from "@/data/stitch-news";
 import { PitchlineShell } from "@/components/layout/PitchlineShell";
 
 interface ChatbotDeportivoViewProps {
@@ -102,38 +98,8 @@ export function ChatbotDeportivoView({
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const msgSeqRef = useRef<number>(1);
 
-  // Asegurar que todos los partidos tengan sus incidencias de Jornada 3 (goles y asistencias)
-  const activeMatches = useMemo(() => {
-    const base =
-      dbMatches.length > 0 ? dbMatches : STITCH_REFERENCE_MATCHES;
-    const refEventsByMatch = new Map<number, MatchEventRow[]>();
-    for (const ev of STITCH_REFERENCE_EVENTS) {
-      const list = refEventsByMatch.get(ev.match_id) ?? [];
-      list.push(ev);
-      refEventsByMatch.set(ev.match_id, list);
-    }
-
-    return base.map((m) => ({
-      ...m,
-      events: refEventsByMatch.get(m.id) ?? m.events ?? [],
-    }));
-  }, [dbMatches]);
-
-  // Asegurar que el monitor de lesionados muestre solo las bajas activas actuales con sus clubes y logos correctos
-  const activeInjuries = useMemo(() => {
-    const hasOutdated = dbInjuries.some(
-      (inj) =>
-        inj.player_name.includes("Ter Stegen") ||
-        inj.player_name.includes("Carvajal") ||
-        inj.player_name.includes("De Bruyne") ||
-        inj.player_name.includes("Lamine Yamal") ||
-        inj.estimated_return.includes("Cuartos de Final")
-    );
-    if (dbInjuries.length === 0 || hasOutdated) {
-      return STITCH_REFERENCE_INJURIES;
-    }
-    return dbInjuries;
-  }, [dbInjuries]);
+  const activeMatches = useMemo(() => dbMatches.map(m => ({ ...m, events: getVerifiedMatchEvents(m) })), [dbMatches]);
+  const activeInjuries = dbInjuries;
 
   // Mostrar únicamente los partes médicos y bajas más recientes (última jornada)
   const filteredInjuries = useMemo(() => {
@@ -200,7 +166,7 @@ export function ChatbotDeportivoView({
         const evSource =
           eRes.data && eRes.data.length > 0
             ? (eRes.data as MatchEventRow[])
-            : STITCH_REFERENCE_EVENTS;
+            : [];
         for (const e of evSource) {
           const list = evtMap.get(e.match_id) ?? [];
           list.push(e);
@@ -484,7 +450,7 @@ export function ChatbotDeportivoView({
     >
       <div className="flex flex-col w-full space-y-6">
         {/* Cabecera limpia y deportiva */}
-        <section className="p-5 rounded-2xl bg-surface-container border border-outline-variant/15 shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <section className="p-5 rounded-2xl bg-surface-container border border-white/8  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold tracking-wider">
@@ -536,9 +502,9 @@ export function ChatbotDeportivoView({
         {/* Layout Principal de 2 Columnas: Chat (8 Cols) + Monitor de Lesionados y Marcadores (4 Cols) */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* COLUMNA IZQUIERDA (8 COLS XL): CHAT LIMPIO Y NATURAL */}
-          <section className="xl:col-span-8 rounded-2xl bg-surface-container-low border border-outline-variant/15 shadow-xl flex flex-col overflow-hidden">
+          <section className="xl:col-span-8 rounded-2xl bg-surface-container-low border border-white/8  flex flex-col overflow-hidden">
             {/* Cabecera superior de la ventana de chat */}
-            <div className="px-5 py-3.5 bg-surface-container border-b border-outline-variant/15 flex items-center justify-between gap-2">
+            <div className="px-5 py-3.5 bg-surface-container border-b border-white/8 flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">
                 <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/30 text-brand-mint">
                   <span className="material-symbols-outlined text-[20px]">
@@ -570,7 +536,7 @@ export function ChatbotDeportivoView({
                         smart_toy
                       </span>
                     </div>
-                    <div className="max-w-[88%] sm:max-w-[86%] rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-3 sm:px-4 sm:py-3.5 border border-outline-variant/15 shadow-sm space-y-1.5">
+                    <div className="max-w-[88%] sm:max-w-[86%] rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-3 sm:px-4 sm:py-3.5 border border-white/8  space-y-1.5">
                       <div className="flex items-center justify-between gap-4">
                         <span className="font-label-sm text-xs text-brand-mint font-bold">
                           Asistente Pitchline
@@ -589,7 +555,7 @@ export function ChatbotDeportivoView({
                     key={msg.id}
                     className="flex gap-2.5 sm:gap-3 items-start justify-end"
                   >
-                    <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary-container px-3.5 py-2.5 sm:px-4 sm:py-3 text-on-secondary-container shadow-md space-y-1">
+                    <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary-container px-3.5 py-2.5 sm:px-4 sm:py-3 text-on-secondary-container  space-y-1">
                       <div className="font-body-md text-sm sm:text-body-md whitespace-pre-line leading-relaxed">
                         {msg.content}
                       </div>
@@ -614,7 +580,7 @@ export function ChatbotDeportivoView({
                     </span>
                   </div>
                   <div className="rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-2.5 sm:px-4 sm:py-3 border border-brand-mint/30 flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-brand-mint animate-ping"></span>
+                    <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
                     <span className="font-body-md text-xs text-on-surface">
                       Analizando partidos y partes médicos de la Champions...
                     </span>
@@ -626,7 +592,7 @@ export function ChatbotDeportivoView({
             </div>
 
             {/* Sugerencias Rápidas de Preguntas */}
-            <div className="px-3.5 sm:px-5 py-2.5 sm:py-3 bg-surface-container/60 border-t border-outline-variant/15 space-y-2">
+            <div className="px-3.5 sm:px-5 py-2.5 sm:py-3 bg-surface-container/60 border-t border-white/8 space-y-2">
               <span className="font-label-sm text-[11px] uppercase tracking-wider text-on-surface-variant block">
                 Preguntas sugeridas:
               </span>
@@ -637,7 +603,7 @@ export function ChatbotDeportivoView({
                     type="button"
                     disabled={isLoading}
                     onClick={() => void handleSendQuestion(suggestion)}
-                    className="px-3.5 py-1.5 rounded-full bg-surface-container-high hover:bg-brand-mint hover:text-brand-navy text-on-surface font-label-md text-xs whitespace-nowrap transition-all cursor-pointer border border-outline-variant/20 shrink-0"
+                    className="px-3.5 py-1.5 rounded-full bg-surface-container-high hover:bg-brand-mint hover:text-brand-navy text-on-surface font-label-md text-xs whitespace-nowrap transition-all cursor-pointer border border-white/10 shrink-0"
                   >
                     {suggestion}
                   </button>
@@ -651,7 +617,7 @@ export function ChatbotDeportivoView({
                 e.preventDefault();
                 void handleSendQuestion(inputText);
               }}
-              className="p-3 sm:p-4 bg-surface-container border-t border-outline-variant/20"
+              className="p-3 sm:p-4 bg-surface-container border-t border-white/10"
             >
               <div className="flex items-center gap-2 bg-surface-container-low rounded-xl p-1 sm:p-1.5 border border-outline-variant/25 focus-within:border-brand-mint transition-colors">
                 <input
@@ -680,7 +646,7 @@ export function ChatbotDeportivoView({
           {/* COLUMNA DERECHA (4 COLS XL): MONITOR DE LESIONADOS RECIENTES Y PARTIDOS RECIENTES */}
           <aside className="xl:col-span-4 flex flex-col space-y-5">
             {/* Tarjeta 1: Partes Médicos y Bajas Más Recientes */}
-            <div className="rounded-2xl bg-surface-container-low border border-outline-variant/15 p-4 shadow-xl space-y-3.5">
+            <div className="rounded-2xl bg-surface-container-low border border-white/8 p-4  space-y-3.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-error text-[20px]">
@@ -711,7 +677,7 @@ export function ChatbotDeportivoView({
                           `¿Qué lesión tiene ${inj.player_name} (${inj.team_name}) y cuánto tiempo estimado estará fuera?`
                         )
                       }
-                      className="w-full text-left p-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/15 transition-all cursor-pointer space-y-1.5 group"
+                      className="w-full text-left p-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-white/8 transition-all cursor-pointer space-y-1.5 group"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -757,7 +723,7 @@ export function ChatbotDeportivoView({
             </div>
 
             {/* Tarjeta 2: Partidos Más Recientes */}
-            <div className="rounded-2xl bg-surface-container-low border border-outline-variant/15 p-4 shadow-xl space-y-3.5">
+            <div className="rounded-2xl bg-surface-container-low border border-white/8 p-4  space-y-3.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-brand-mint text-[20px]">
@@ -790,7 +756,7 @@ export function ChatbotDeportivoView({
                           `¿Qué pasó en el partido ${m.home_team_name} vs ${m.away_team_name} y quiénes metieron los goles?`
                         )
                       }
-                      className="w-full p-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-left transition-all cursor-pointer border border-outline-variant/15 space-y-1.5 group"
+                      className="w-full p-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-left transition-all cursor-pointer border border-white/8 space-y-1.5 group"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">

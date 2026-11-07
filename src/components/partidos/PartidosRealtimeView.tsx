@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useClientClock } from "@/lib/use-client-clock";
 import { createClient } from "@/lib/supabase/client";
 import type {
   MatchEventRow,
@@ -22,7 +23,6 @@ import {
   isMatchLive,
   type TournamentPhaseKey,
 } from "@/lib/date-utils";
-import { STITCH_REFERENCE_MATCHES } from "@/data/stitch-matches";
 import { PitchlineShell } from "@/components/layout/PitchlineShell";
 import { EmptyWeekCard } from "@/components/partidos/EmptyWeekCard";
 import { SpotlightMatchCard } from "@/components/partidos/SpotlightMatchCard";
@@ -39,20 +39,15 @@ export function PartidosRealtimeView({
 }: PartidosRealtimeViewProps) {
   const [dbMatches, setDbMatches] =
     useState<MatchWithDetails[]>(initialDbMatches);
-  const [referenceDate, setReferenceDate] = useState<Date>(
-    DEFAULT_REFERENCE_DATE
-  );
+  const now = useClientClock();
+  const referenceDate = useMemo(() => now === null ? DEFAULT_REFERENCE_DATE : new Date(now), [now]);
   const [selectedPhase, setSelectedPhase] = useState<TournamentPhaseKey>(() =>
     getActiveOrNextPhaseKey(
-      initialDbMatches.length > 0 ? initialDbMatches : STITCH_REFERENCE_MATCHES,
+      initialDbMatches,
       DEFAULT_REFERENCE_DATE
     )
   );
 
-  useEffect(() => {
-    const clientNow = new Date();
-    setReferenceDate(clientNow);
-  }, []);
   const [userChangedPhase, setUserChangedPhase] =
     useState<boolean>(false);
   const [selectedSpotlightId, setSelectedSpotlightId] = useState<number | null>(
@@ -131,7 +126,8 @@ export function PartidosRealtimeView({
           .order("minute", { ascending: true }),
       ]);
 
-      if (mRes.data && mRes.data.length > 0) {
+      if (mRes.error) return;
+      if (mRes.data) {
         const predMap = new Map<number, PredictionRow>();
         for (const p of (pRes.data ?? []) as PredictionRow[]) {
           predMap.set(p.match_id, p);
@@ -149,7 +145,13 @@ export function PartidosRealtimeView({
             events: evtMap.get(m.id) ?? [],
           })
         );
-        setDbMatches(merged);
+        setDbMatches(previous => {
+          const byId = new Map(previous.map(m => [m.id, m]));
+          return merged.map(m => {
+            const existing = byId.get(m.id);
+            return existing && Date.parse(existing.updated_at) > Date.parse(m.updated_at) ? existing : m;
+          });
+        });
       }
     } catch {
       // Ignorar errores de red temporales
@@ -267,52 +269,23 @@ export function PartidosRealtimeView({
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setRealtimeStatus("SUBSCRIBED");
-        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          void reloadFromSupabaseClient();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           setRealtimeStatus("ERROR");
         }
       });
 
-    // Disparar sincronización inmediata al montar para actualizar marcadores y eventos en vivo
-    const triggerSync = async () => {
-      try {
-        await fetch("/api/sync/champions", {
-          method: "POST",
-          headers: { "x-pitchline-sync": "true" },
-        });
-        await reloadFromSupabaseClient();
-      } catch {
-        // Ignorar errores de red temporales
-      }
-    };
-    void triggerSync();
-
-    // Polling de refresco rápido cada 10 segundos para detectar goles al instante
-    const intervalId = window.setInterval(() => {
-      void triggerSync();
-    }, 10_000);
-
-    // Reloj local cada 60s para avanzar el minuto en pantalla mientras el balón rueda (1H / 2H / IN_PLAY)
-    const minuteTickerId = window.setInterval(() => {
-      setDbMatches((prev) =>
-        prev.map((m) => {
-          if (
-            (m.status === "1H" || m.status === "2H" || m.status === "IN_PLAY") &&
-            m.elapsed_minute != null
-          ) {
-            const cap = m.status === "1H" ? 45 : 90;
-            if (m.elapsed_minute < cap) {
-              return { ...m, elapsed_minute: m.elapsed_minute + 1 };
-            }
-          }
-          return m;
-        })
-      );
-    }, 60_000);
+    // Read-only reconciliation: Realtime remains the primary delivery channel.
+    const refreshVisible = () => { if (document.visibilityState === "visible") void reloadFromSupabaseClient(); };
+    const intervalId = window.setInterval(refreshVisible, 60_000);
+    document.addEventListener("visibilitychange", refreshVisible);
+    window.addEventListener("online", refreshVisible);
 
     return () => {
       window.removeEventListener("pitchline:synced", handleCustomSync);
       window.clearInterval(intervalId);
-      window.clearInterval(minuteTickerId);
+      document.removeEventListener("visibilitychange", refreshVisible);
+      window.removeEventListener("online", refreshVisible);
       supabase.removeChannel(channel);
     };
   }, [reloadFromSupabaseClient]);
@@ -325,7 +298,7 @@ export function PartidosRealtimeView({
 
     for (const m of dbMatches) {
       const prev = prevMap[m.id];
-      if (prev) {
+      if (prev && isMatchLive(m.status) && m.live_stats?.source === "api-football" && Date.now() - Date.parse(m.live_stats.source_updated_at ?? "") < 10 * 60_000) {
         if (m.home_score > prev.home) {
           triggerGoalCelebration(m, "HOME");
         } else if (m.away_score > prev.away) {
@@ -350,7 +323,7 @@ export function PartidosRealtimeView({
   const nextMatchdayDate = useMemo(
     () =>
       getNextMatchdayDateLabel(
-        dbMatches.length > 0 ? dbMatches : STITCH_REFERENCE_MATCHES,
+        dbMatches,
         referenceDate
       ),
     [dbMatches, referenceDate]
@@ -359,7 +332,7 @@ export function PartidosRealtimeView({
   const upcomingMatchesSummary = useMemo(
     () =>
       getUpcomingPhaseMatchesSummary(
-        dbMatches.length > 0 ? dbMatches : STITCH_REFERENCE_MATCHES,
+        dbMatches,
         referenceDate
       ),
     [dbMatches, referenceDate]
@@ -370,8 +343,8 @@ export function PartidosRealtimeView({
     if (dbMatches.length > 0) {
       return dbMatches;
     }
-    return showingPreview ? STITCH_REFERENCE_MATCHES : [];
-  }, [dbMatches, showingPreview]);
+    return [];
+  }, [dbMatches]);
 
   // Fase o Jornada activa/próxima calculada dinámicamente (J1..J8 en Fase de Liga o R16/QF/SF/FINAL en Eliminatorias)
   const activeOrNextPhaseKey = useMemo(
@@ -525,11 +498,20 @@ export function PartidosRealtimeView({
       currentMatchdayLabel={phaseInfo.headerPillLabel}
     >
       <div className="flex flex-col w-full space-y-6">
+        <section className="flex flex-wrap items-end justify-between gap-4 pb-6 border-b border-white/8">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-on-surface-variant">UEFA Champions League</p>
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Cada partido. Cada momento.</h1>
+            <p className="text-body-md text-on-surface-variant">Sigue los marcadores y descubre lo que viene.</p>
+          </div>
+          <span className="text-xs text-brand-mint">{phaseInfo.headerPillLabel}</span>
+        </section>
+        <p className="text-xs text-on-surface-variant" role="status">Los marcadores gratuitos pueden llegar con retraso. La conexión en línea no garantiza datos recientes.</p>
         {/* Sub-header de Telemetría & Navegación de Jornada / Fase Eliminatoria */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl bg-surface-container shadow-sm border border-outline-variant/15">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl bg-surface-container  border border-white/8">
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Selector de Jornada (J1-J8) o Fase Eliminatoria (Octavos, Cuartos, Semis, Final) */}
-            <div className="flex items-center justify-between w-full sm:w-auto bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/15">
+            <div className="flex items-center justify-between w-full sm:w-auto bg-surface-container-low px-2 py-1 rounded-lg border border-white/8">
               <button
                 type="button"
                 onClick={() => {
@@ -621,7 +603,7 @@ export function PartidosRealtimeView({
                 type="button"
                 onClick={() => setActiveFilter("ALL")}
                 className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "ALL"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold shadow-sm"
+                    ? "bg-secondary-container text-on-secondary-container font-semibold "
                     : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
               >
@@ -631,18 +613,18 @@ export function PartidosRealtimeView({
                 type="button"
                 onClick={() => setActiveFilter("LIVE")}
                 className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${activeFilter === "LIVE"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold shadow-sm"
+                    ? "bg-secondary-container text-on-secondary-container font-semibold "
                     : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
               >
-                <span className="w-2 h-2 rounded-full bg-brand-mint animate-ping"></span>
+                <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
                 <span>En Vivo ({counts.live})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveFilter("FINISHED")}
                 className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "FINISHED"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold shadow-sm"
+                    ? "bg-secondary-container text-on-secondary-container font-semibold "
                     : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
               >
@@ -652,7 +634,7 @@ export function PartidosRealtimeView({
                 type="button"
                 onClick={() => setActiveFilter("PREDICTIONS")}
                 className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "PREDICTIONS"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold shadow-sm"
+                    ? "bg-secondary-container text-on-secondary-container font-semibold "
                     : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
                   }`}
               >
@@ -665,18 +647,18 @@ export function PartidosRealtimeView({
           <div className="flex items-center justify-between lg:justify-end gap-3 self-stretch lg:self-auto">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low border border-brand-mint/20">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
+                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-mint"></span>
               </span>
               <span className="font-label-sm text-label-sm text-brand-mint uppercase font-bold tracking-wider">
-                Tiempo Real
+                Conexión
               </span>
               <span className="text-outline-variant font-label-sm text-label-sm">
                 •
               </span>
               <span className="font-tabular-stats text-tabular-stats text-on-surface-variant">
                 {realtimeStatus === "SUBSCRIBED"
-                  ? "En directo"
+                  ? "Conectado"
                   : realtimeStatus === "CONNECTING"
                     ? "Conectando..."
                     : "Actualizado"}
@@ -747,7 +729,7 @@ export function PartidosRealtimeView({
               ))}
             </div>
           ) : activeSourceMatches.length === 0 && phaseInfo.isKnockout ? (
-            <div className="p-8 rounded-xl bg-surface-container-low border border-outline-variant/15 text-center space-y-2">
+            <div className="p-8 rounded-xl bg-surface-container-low border border-white/8 text-center space-y-2">
               <span className="material-symbols-outlined text-brand-mint text-[32px]">
                 account_tree
               </span>
@@ -759,7 +741,7 @@ export function PartidosRealtimeView({
               </p>
             </div>
           ) : (
-            <div className="p-8 rounded-xl bg-surface-container-low border border-outline-variant/15 text-center space-y-2">
+            <div className="p-8 rounded-xl bg-surface-container-low border border-white/8 text-center space-y-2">
               <span className="material-symbols-outlined text-brand-mint text-[32px]">
                 sports_soccer
               </span>

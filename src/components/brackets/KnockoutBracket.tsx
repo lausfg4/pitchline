@@ -535,12 +535,12 @@ export function KnockoutBracket({
     // No debe aparecer ningún cuadro ni predicción de llaves porque aún no ha empezado Octavos.
     if (mode === "simulator") {
       return (
-        <div className="p-8 sm:p-10 rounded-2xl bg-surface-container border border-outline-variant/20 shadow-xl flex flex-col items-center text-center max-w-3xl mx-auto my-4 space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-brand-mint/10 border border-brand-mint/30 flex items-center justify-center text-brand-mint shadow-[0_0_24px_rgba(25,211,146,0.2)]">
+        <div className="p-8 sm:p-10 rounded-2xl bg-surface-container border border-white/10  flex flex-col items-center text-center max-w-3xl mx-auto my-4 space-y-5">
+          <div className="w-16 h-16 rounded-2xl bg-brand-mint/10 border border-brand-mint/30 flex items-center justify-center text-brand-mint ">
             <span className="material-symbols-outlined text-[34px]">lock_clock</span>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/20 font-label-sm text-label-sm uppercase tracking-wider text-brand-mint font-bold">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container-high border border-white/10 font-label-sm text-label-sm uppercase tracking-wider text-brand-mint font-bold">
             <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
             Fase de Liga en Curso • Jornada {maxPlayed} de 8 Jugadas
           </div>
@@ -565,7 +565,7 @@ export function KnockoutBracket({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full text-left pt-2">
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15">
+            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
               <span className="font-label-sm text-[11px] uppercase text-brand-mint font-bold block">
                 Puestos 1 al 8
               </span>
@@ -576,7 +576,7 @@ export function KnockoutBracket({
                 En disputa (Jornadas 1–8)
               </span>
             </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15">
+            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
               <span className="font-label-sm text-[11px] uppercase text-primary font-bold block">
                 Puestos 9 al 24
               </span>
@@ -587,7 +587,7 @@ export function KnockoutBracket({
                 Definen los otros 8 cupos
               </span>
             </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/15">
+            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
               <span className="font-label-sm text-[11px] uppercase text-on-surface-variant font-bold block">
                 Octavos a la Final
               </span>
@@ -603,7 +603,7 @@ export function KnockoutBracket({
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
               href="/partidos"
-              className="px-5 py-2.5 rounded-xl bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all flex items-center gap-2 shadow-[0_0_18px_rgba(25,211,146,0.25)]"
+              className="px-5 py-2.5 rounded-xl bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all flex items-center gap-2 "
             >
               <span className="material-symbols-outlined text-[18px]">
                 analytics
@@ -612,7 +612,7 @@ export function KnockoutBracket({
             </Link>
             <Link
               href="/clasificacion"
-              className="px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center gap-2 border border-outline-variant/20"
+              className="px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center gap-2 border border-white/10"
             >
               <span className="material-symbols-outlined text-[18px] text-primary">
                 leaderboard
@@ -628,7 +628,7 @@ export function KnockoutBracket({
     if (compact) {
       return (
         <div className="flex flex-col gap-3">
-          <div className="p-3.5 bg-surface-container rounded-xl flex items-center justify-between shadow-sm border border-outline-variant/15">
+          <div className="p-3.5 bg-surface-container rounded-xl flex items-center justify-between  border border-white/8">
             <div className="flex items-center gap-2.5">
               <span className="material-symbols-outlined text-brand-mint text-[22px]">
                 account_tree
@@ -647,7 +647,7 @@ export function KnockoutBracket({
             </span>
           </div>
 
-          <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/15 flex flex-col items-center text-center space-y-3">
+          <div className="p-6 rounded-xl bg-surface-container-low border border-white/8 flex flex-col items-center text-center space-y-3">
             <div className="w-12 h-12 rounded-xl bg-brand-mint/10 border border-brand-mint/25 flex items-center justify-center text-brand-mint">
               <span className="material-symbols-outlined text-[26px]">
                 hourglass_top
@@ -680,7 +680,7 @@ export function KnockoutBracket({
     };
 
     return (
-      <div className="p-8 sm:p-10 rounded-2xl bg-surface-container border border-outline-variant/20 shadow-xl flex flex-col items-center text-center max-w-2xl mx-auto my-4 space-y-4">
+      <div className="p-8 sm:p-10 rounded-2xl bg-surface-container border border-white/10  flex flex-col items-center text-center max-w-2xl mx-auto my-4 space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-outline-variant/25 flex items-center justify-center text-brand-mint">
           <span className="material-symbols-outlined text-[30px]">
             event_busy
@@ -721,7 +721,7 @@ export function KnockoutBracket({
     return (
       <div className="flex flex-col gap-3">
         {/* Module Header Card */}
-        <div className="p-3.5 bg-surface-container rounded-xl flex items-center justify-between shadow-sm border border-outline-variant/15">
+        <div className="p-3.5 bg-surface-container rounded-xl flex items-center justify-between  border border-white/8">
           <div className="flex items-center gap-2.5">
             <span className="material-symbols-outlined text-brand-mint text-[22px]">
               account_tree
@@ -735,13 +735,13 @@ export function KnockoutBracket({
               </p>
             </div>
           </div>
-          <span className="font-label-sm text-label-sm uppercase bg-brand-mint text-brand-navy font-bold px-2.5 py-1 rounded-md shadow-[0_0_12px_rgba(25,211,146,0.3)]">
+          <span className="font-label-sm text-label-sm uppercase bg-brand-mint text-brand-navy font-bold px-2.5 py-1 rounded-md ">
             Allianz Arena
           </span>
         </div>
 
         {/* Munich Trophy Showcase Card */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-high p-5 shadow-lg flex items-center justify-between border border-outline-variant/15">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-high p-5  flex items-center justify-between border border-white/8">
           <div className="flex flex-col z-10 max-w-[68%]">
             <div className="flex items-center gap-1.5 text-brand-mint mb-1">
               <span className="material-symbols-outlined text-[16px]">
@@ -759,7 +759,7 @@ export function KnockoutBracket({
               superar el camino directo.
             </p>
           </div>
-          <div className="relative flex items-center justify-center p-3.5 rounded-full bg-brand-mint/10 shadow-[0_0_30px_rgba(25,211,146,0.2)] border border-brand-mint/20">
+          <div className="relative flex items-center justify-center p-3.5 rounded-full bg-brand-mint/10  border border-brand-mint/20">
             <span className="material-symbols-outlined text-brand-mint text-[48px] select-none">
               emoji_events
             </span>
@@ -767,7 +767,7 @@ export function KnockoutBracket({
         </div>
 
         {/* Selector Rápido de Fase dentro del Módulo Lateral */}
-        <div className="flex items-center justify-between gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant/15">
+        <div className="flex items-center justify-between gap-1 bg-surface-container-low p-1 rounded-lg border border-white/8">
           {(
             [
               { key: "R16", label: "Octavos (8)" },
@@ -784,7 +784,7 @@ export function KnockoutBracket({
                 onClick={() => setInternalRoundFilter(item.key)}
                 className={`flex-1 py-1.5 px-2 rounded-md font-label-sm text-label-sm transition-all cursor-pointer ${
                   active
-                    ? "bg-brand-mint text-brand-navy font-bold shadow-sm"
+                    ? "bg-brand-mint text-brand-navy font-bold "
                     : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container"
                 }`}
               >
@@ -795,7 +795,7 @@ export function KnockoutBracket({
         </div>
 
         {/* Visual Bracket Arena (Interactive Vertical/Horizontal Tree Canvas) */}
-        <div className="bg-surface-container-low rounded-xl p-3.5 shadow-inner border border-outline-variant/15 flex flex-col gap-3.5">
+        <div className="bg-surface-container-low rounded-xl p-3.5 shadow-inner border border-white/8 flex flex-col gap-3.5">
           <div className="flex flex-col gap-3 max-h-[380px] overflow-y-auto pr-1">
             {visibleTies.map((tie) => {
               const isHomeWinner = tie.winnerTeamId === tie.homeTeam?.team_id;
@@ -815,7 +815,7 @@ export function KnockoutBracket({
                     </span>
                     {isLive && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint/15 text-brand-mint font-label-sm text-[10px] font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-ping"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse"></span>
                         EN VIVO {tie.elapsed_minute}&apos;
                       </span>
                     )}
@@ -907,7 +907,7 @@ export function KnockoutBracket({
           </div>
 
           {/* Projected Quarter Final Clash */}
-          <div className="p-3 rounded-lg bg-surface-container-highest/80 flex flex-col gap-2 border border-outline-variant/20">
+          <div className="p-3 rounded-lg bg-surface-container-highest/80 flex flex-col gap-2 border border-white/10">
             <div className="flex items-center justify-between">
               <span className="font-label-sm text-label-sm text-brand-mint uppercase tracking-wider font-bold flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">
@@ -980,7 +980,7 @@ export function KnockoutBracket({
             <button
               type="button"
               onClick={() => onSelectRoundTab(compactStage)}
-              className="w-full py-3 px-4 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-body-md font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-outline-variant/20"
+              className="w-full py-3 px-4 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-body-md font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-white/10"
             >
               <span className="material-symbols-outlined text-[18px] text-primary">
                 open_in_full
@@ -990,7 +990,7 @@ export function KnockoutBracket({
           )}
           <Link
             href="/simulador"
-            className={`w-full py-3 px-4 rounded-xl bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-body-md font-bold transition-all duration-200 shadow-[0_0_20px_rgba(25,211,146,0.25)] flex items-center justify-center gap-2 ${
+            className={`w-full py-3 px-4 rounded-xl bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-body-md font-bold transition-all duration-200  flex items-center justify-center gap-2 ${
               onSelectRoundTab ? "" : "sm:col-span-2"
             }`}
           >
@@ -1096,7 +1096,7 @@ export function KnockoutBracket({
     <div className="flex flex-col space-y-6 w-full">
       {/* Cabecera de Control según el Modo ("live" vs "simulator") */}
       {mode === "simulator" ? (
-        <div className="p-5 rounded-xl bg-surface-container-low border border-brand-mint/25 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="p-5 rounded-xl bg-surface-container-low border border-brand-mint/25  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-brand-mint/15 text-brand-mint border border-brand-mint/30 font-label-sm text-label-sm uppercase font-bold tracking-wider flex items-center gap-1.5">
@@ -1141,7 +1141,7 @@ export function KnockoutBracket({
             <button
               type="button"
               onClick={handleAutoFillWithAI}
-              className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-label-md text-label-md font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-outline-variant/20 min-h-[40px]"
+              className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-primary font-label-md text-label-md font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer border border-white/10 min-h-[40px]"
             >
               <span className="material-symbols-outlined text-[18px]">
                 auto_awesome
@@ -1164,7 +1164,7 @@ export function KnockoutBracket({
               type="button"
               disabled={isSaving}
               onClick={handleSaveBracketToSupabase}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all shadow-[0_0_20px_rgba(25,211,146,0.3)] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 min-h-[44px]"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-brand-mint hover:brightness-110 text-brand-navy font-label-md text-label-md font-bold transition-all  flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60 min-h-[44px]"
             >
               <span className="material-symbols-outlined text-[18px]">
                 cloud_upload
@@ -1176,7 +1176,7 @@ export function KnockoutBracket({
           </div>
         </div>
       ) : (
-        <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 rounded-xl bg-surface-container-low border border-white/8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-mint/15 border border-brand-mint/30 flex items-center justify-center text-brand-mint shrink-0">
               <span className="material-symbols-outlined text-[22px]">
@@ -1203,7 +1203,7 @@ export function KnockoutBracket({
           <div className="flex items-center gap-2">
             <Link
               href="/simulador"
-              className="px-4 py-2 rounded-lg bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all shadow-md flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all  flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">
                 tune
@@ -1274,7 +1274,7 @@ export function KnockoutBracket({
                 return (
                   <div
                     key={`focus-${tie.slot}`}
-                    className="p-4 rounded-xl bg-surface-container-low border border-brand-mint/25 shadow-lg flex flex-col justify-between gap-3"
+                    className="p-4 rounded-xl bg-surface-container-low border border-brand-mint/25  flex flex-col justify-between gap-3"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-label-sm text-label-sm text-primary uppercase font-bold">
@@ -1282,7 +1282,7 @@ export function KnockoutBracket({
                       </span>
                       {isLive ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint/15 text-brand-mint font-label-sm text-[10px] font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-ping"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse"></span>
                           {tie.elapsed_minute}&apos; EN VIVO
                         </span>
                       ) : (
@@ -1400,7 +1400,7 @@ export function KnockoutBracket({
       </div>
 
       {/* ÁRBOL INTERACTIVO DE 4 COLUMNAS: OCTAVOS -> CUARTOS -> SEMIFINALES -> GRAN FINAL & CAMPEÓN */}
-      <div className="bg-surface-container-low rounded-2xl p-4 lg:p-6 shadow-xl border border-outline-variant/15 overflow-x-auto no-scrollbar">
+      <div className="bg-surface-container-low rounded-2xl p-4 lg:p-6  border border-white/8 overflow-x-auto no-scrollbar">
         <div className="min-w-[980px] grid grid-cols-12 gap-5 items-stretch">
           {/* COLUMNA 1: OCTAVOS DE FINAL (8 Llaves) - 3 Cols */}
           <div
@@ -1433,7 +1433,7 @@ export function KnockoutBracket({
                 return (
                   <div
                     key={tie.slot}
-                    className="rounded-xl bg-surface-container p-2.5 border border-outline-variant/15 shadow-sm space-y-1.5"
+                    className="rounded-xl bg-surface-container p-2.5 border border-white/8  space-y-1.5"
                   >
                     <div className="flex items-center justify-between text-[10px] font-label-sm">
                       <span className="text-primary uppercase">
@@ -1441,7 +1441,7 @@ export function KnockoutBracket({
                       </span>
                       {mode === "live" && isLive ? (
                         <span className="text-brand-mint font-bold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-ping"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-mint animate-pulse"></span>
                           {tie.elapsed_minute}&apos;
                         </span>
                       ) : mode === "live" && tie.homeAggregate !== null ? (
@@ -1609,7 +1609,7 @@ export function KnockoutBracket({
                 return (
                   <div
                     key={tie.slot}
-                    className="rounded-xl bg-surface-container p-3 border border-outline-variant/15 shadow-md space-y-2"
+                    className="rounded-xl bg-surface-container p-3 border border-white/8  space-y-2"
                   >
                     <div className="flex items-center justify-between text-[10px] font-label-sm">
                       <span className="text-primary uppercase">
@@ -1774,7 +1774,7 @@ export function KnockoutBracket({
                 return (
                   <div
                     key={tie.slot}
-                    className="rounded-xl bg-surface-container p-3.5 border border-outline-variant/15 shadow-lg space-y-2.5"
+                    className="rounded-xl bg-surface-container p-3.5 border border-white/8  space-y-2.5"
                   >
                     <div className="flex items-center justify-between text-[10px] font-label-sm">
                       <span className="text-brand-mint uppercase font-bold">
@@ -1925,7 +1925,7 @@ export function KnockoutBracket({
 
             <div className="flex flex-col justify-center flex-1 space-y-5">
               {/* Tarjeta de la Final */}
-              <div className="rounded-xl bg-gradient-to-b from-surface-container to-surface-container-high p-4 border border-brand-mint/30 shadow-xl space-y-3">
+              <div className="rounded-xl bg-gradient-to-b from-surface-container to-surface-container-high p-4 border border-brand-mint/30  space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-label-sm text-label-sm text-brand-mint uppercase font-bold flex items-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">
@@ -1966,8 +1966,8 @@ export function KnockoutBracket({
                           : "cursor-default"
                       } ${
                         isChamp
-                          ? "bg-brand-mint text-brand-navy font-bold shadow-[0_0_20px_rgba(25,211,146,0.35)]"
-                          : "bg-surface-container-low text-on-surface border border-outline-variant/20"
+                          ? "bg-brand-mint text-brand-navy font-bold "
+                          : "bg-surface-container-low text-on-surface border border-white/10"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -1997,7 +1997,7 @@ export function KnockoutBracket({
               </div>
 
               {/* Podio del Campeón Elegido / Proyectado */}
-              <div className="rounded-xl bg-surface-container p-5 border border-brand-mint/40 text-center space-y-3 shadow-[0_0_30px_rgba(25,211,146,0.12)]">
+              <div className="rounded-xl bg-surface-container p-5 border border-brand-mint/40 text-center space-y-3 ">
                 <div className="w-14 h-14 mx-auto rounded-full bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center text-brand-mint">
                   <span className="material-symbols-outlined text-[32px]">
                     emoji_events
@@ -2028,7 +2028,7 @@ export function KnockoutBracket({
 
       {/* Historial de Predicciones Guardadas por el Usuario */}
       {mode === "simulator" && savedBrackets.length > 0 && (
-        <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/15 space-y-3">
+        <div className="p-4 rounded-xl bg-surface-container-low border border-white/8 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-label-md text-label-md text-brand-white font-bold flex items-center gap-2">
               <span className="material-symbols-outlined text-brand-mint text-[18px]">
@@ -2054,7 +2054,7 @@ export function KnockoutBracket({
                     setFinalWinner(item.bracket_data.final ?? null);
                   }
                 }}
-                className="p-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 text-left transition-all cursor-pointer flex items-center justify-between"
+                className="p-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-white/10 text-left transition-all cursor-pointer flex items-center justify-between"
               >
                 <div>
                   <span className="font-label-md text-label-md text-brand-white font-bold block">

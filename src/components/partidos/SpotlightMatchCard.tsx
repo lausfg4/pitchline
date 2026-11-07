@@ -1,12 +1,13 @@
 "use client";
 
+import { MatchFreshness } from "./MatchFreshness";
 import React, { useState } from "react";
 import type { MatchWithDetails } from "@/types/database";
 import {
   computeMatchTelemetry,
   formatLocalKickoffTime,
   formatMatchDateTimeLabel,
-  getOrGenerateMatchEvents,
+  getVerifiedMatchEvents,
   getStageNameEs,
   isMatchLive,
 } from "@/lib/date-utils";
@@ -34,7 +35,8 @@ export function SpotlightMatchCard({
 
   const isLive = isMatchLive(match.status);
   const isFinished = match.status === "FINISHED";
-  const isScheduled = !isLive && !isFinished;
+  const isUnavailable = match.status === "POSTPONED" || match.status === "CANCELLED";
+  const isScheduled = match.status === "SCHEDULED" || match.status === "TIMED";
 
   const { homePossession, awayPossession, homeXg, awayXg } =
     computeMatchTelemetry(match);
@@ -45,7 +47,7 @@ export function SpotlightMatchCard({
 
   const minuteDisplay =
     match.status === "HT"
-      ? "ET"
+      ? "Descanso"
       : match.elapsed_minute
         ? match.extra_minute && match.extra_minute > 0
           ? `${match.elapsed_minute}+${match.extra_minute}'`
@@ -54,7 +56,7 @@ export function SpotlightMatchCard({
           ? "En Juego"
           : formatLocalKickoffTime(match.kickoff_at);
 
-  const events = getOrGenerateMatchEvents(match);
+  const events = getVerifiedMatchEvents(match);
   const goalEvents = events.filter((e) => e.event_type === "GOAL");
   const latestGoalEvent =
     goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
@@ -94,7 +96,8 @@ export function SpotlightMatchCard({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-surface-container-low shadow-xl border border-outline-variant/15">
+    <div className="relative overflow-hidden rounded-xl bg-surface-container-low  border border-white/8">
+      <MatchFreshness match={match} />
       {/* Luz ambiental sutil de fondo */}
       <div className="absolute -top-32 -left-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-20 w-96 h-96 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -114,11 +117,11 @@ export function SpotlightMatchCard({
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm uppercase font-bold tracking-wider">
-                Previa {getStageNameEs(match.stage, match.matchday ?? 4)} • {formatMatchDateTimeLabel(match.kickoff_at)}
+                {isUnavailable ? (match.status === "CANCELLED" ? "Cancelado" : "Aplazado") : "Previa"} {getStageNameEs(match.stage, match.matchday ?? 4)} • {formatMatchDateTimeLabel(match.kickoff_at)}
               </span>
             )}
             <span className="text-on-surface-variant font-label-md text-label-md hidden sm:inline">
-              {match.venue ?? "Estadio Santiago Bernabéu, Madrid"}
+              {match.venue ?? "Estadio no disponible"}
             </span>
           </div>
 
@@ -141,14 +144,14 @@ export function SpotlightMatchCard({
                 {match.home_team_name}
               </span>
               <span className="font-label-md text-xs sm:text-label-md text-on-surface-variant truncate">
-                {match.live_stats?.home_rank_label ?? "2° Lugar • 16 pts (+11)"}
+                {match.live_stats?.home_rank_label ?? "UEFA Champions League"}
               </span>
             </div>
             <div
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border transition-transform duration-500 ${
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
                 activeScoreboardGoalSide === "HOME"
                   ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
-                  : "border-outline-variant/20"
+                  : "border-white/10"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -171,7 +174,7 @@ export function SpotlightMatchCard({
             className={`relative overflow-hidden md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3.5 px-3 sm:px-4 rounded-xl shadow-inner border w-full transition-all duration-500 ${
               isGoalActive
                 ? "border-brand-mint animate-goal-card-glow bg-gradient-to-b from-brand-mint/15 via-surface-container to-surface-container cursor-pointer"
-                : "border-outline-variant/15"
+                : "border-white/8"
             }`}
           >
             {/* Barrido de luz y onda expansiva DENTRO del propio marcador */}
@@ -186,7 +189,7 @@ export function SpotlightMatchCard({
 
             {/* Píldora "¡GOOOOL!" integrada en la parte superior del marcador */}
             {isGoalActive && (
-              <div className="relative z-10 mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[11px] font-extrabold uppercase tracking-widest shadow-md animate-goal-banner">
+              <div className="relative z-10 mb-1.5 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[11px] font-extrabold uppercase tracking-widest  animate-goal-banner">
                 <span className="material-symbols-outlined text-[14px] animate-spin">
                   sports_soccer
                 </span>
@@ -206,8 +209,8 @@ export function SpotlightMatchCard({
                 <div
                   className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
                     activeScoreboardGoalSide === "HOME"
-                      ? "bg-brand-mint/25 border-2 border-brand-mint shadow-[0_0_24px_rgba(25,211,146,0.65)]"
-                      : "bg-surface-container-low/70 border border-outline-variant/15"
+                      ? "bg-brand-mint/25 border-2 border-brand-mint "
+                      : "bg-surface-container-low/70 border border-white/8"
                   }`}
                 >
                   {activeScoreboardGoalSide === "HOME" && (
@@ -237,8 +240,8 @@ export function SpotlightMatchCard({
                 <div
                   className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
                     activeScoreboardGoalSide === "AWAY"
-                      ? "bg-brand-mint/25 border-2 border-brand-mint shadow-[0_0_24px_rgba(25,211,146,0.65)]"
-                      : "bg-surface-container-low/70 border border-outline-variant/15"
+                      ? "bg-brand-mint/25 border-2 border-brand-mint "
+                      : "bg-surface-container-low/70 border border-white/8"
                   }`}
                 >
                   {activeScoreboardGoalSide === "AWAY" && (
@@ -302,20 +305,20 @@ export function SpotlightMatchCard({
             {(isLive || isFinished) && (
               <div className="w-full mt-3 space-y-1">
                 <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant text-xs">
-                  <span className="text-primary font-bold">{homePossession}%</span>
+                  <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
                   <span className="font-label-sm text-[10px] sm:text-label-sm uppercase">
                     Posesión
                   </span>
-                  <span className="text-brand-mint font-bold">{awayPossession}%</span>
+                  <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
                 </div>
                 <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
                   <div
                     className="h-full bg-primary transition-all duration-500"
-                    style={{ width: `${homePossession}%` }}
+                    style={{ width: `${homePossession ?? 0}%` }}
                   ></div>
                   <div
                     className="h-full bg-brand-mint transition-all duration-500"
-                    style={{ width: `${awayPossession}%` }}
+                    style={{ width: `${awayPossession ?? 0}%` }}
                   ></div>
                 </div>
               </div>
@@ -325,10 +328,10 @@ export function SpotlightMatchCard({
           {/* Visitante */}
           <div className="md:col-span-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 order-3">
             <div
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5 shadow-md shrink-0 border transition-transform duration-500 ${
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
                 activeScoreboardGoalSide === "AWAY"
                   ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
-                  : "border-outline-variant/20"
+                  : "border-white/10"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -343,7 +346,7 @@ export function SpotlightMatchCard({
                 {match.away_team_name}
               </span>
               <span className="font-label-md text-xs sm:text-label-md text-on-surface-variant truncate">
-                {match.live_stats?.away_rank_label ?? "3° Lugar • 15 pts (+14)"}
+                {match.live_stats?.away_rank_label ?? "UEFA Champions League"}
               </span>
             </div>
           </div>
@@ -360,7 +363,7 @@ export function SpotlightMatchCard({
                 Incidencias Clave del Encuentro
               </span>
               <span className="font-label-sm text-label-sm text-on-surface-variant">
-                xG Acumulado: {homeXg.toFixed(2)} vs {awayXg.toFixed(2)}
+                xG Acumulado: {homeXg?.toFixed(2) ?? "—"} vs {awayXg?.toFixed(2) ?? "—"}
               </span>
             </div>
 
@@ -413,14 +416,14 @@ export function SpotlightMatchCard({
               </div>
             ) : (
               <p className="font-body-md text-body-md text-on-surface-variant py-1">
-                Sin goles registrados en el tiempo reglamentario.
+                Incidencias no disponibles para este partido.
               </p>
             )}
           </div>
         )}
 
         {/* Motor de Pronósticos Predictivo (Solo para partidos no disputados; si ya se disputó, muestra únicamente si hubo predicción) */}
-        <div className="bg-surface-container-high rounded-xl p-5 space-y-4 shadow-md border border-outline-variant/20">
+        <div className="bg-surface-container-high rounded-xl p-5 space-y-4  border border-white/10">
           {isScheduled ? (
             <>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -429,7 +432,7 @@ export function SpotlightMatchCard({
                     psychology
                   </span>
                   <span className="font-headline-md text-headline-md text-brand-white">
-                    Algoritmo Predictivo • Distribución Poisson
+                    Pronóstico del partido
                   </span>
                 </div>
               </div>
@@ -481,7 +484,7 @@ export function SpotlightMatchCard({
               {/* Ponderación Matemática de Factores del Modelo (AGENTS.md: 30% / 30% / 25% / 15%) */}
               <div className="pt-2">
                 <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block mb-3">
-                  Ponderación de Variables del Modelo Analítico
+                  Factores del pronóstico
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="p-3 bg-surface-container-low rounded-lg space-y-1.5">
@@ -611,7 +614,7 @@ export function SpotlightMatchCard({
                 <button
                   type="button"
                   onClick={() => setEditingPrediction((v) => !v)}
-                  className="px-5 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold shadow-md hover:bg-primary transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md font-bold  hover:bg-primary transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     edit_note
@@ -645,7 +648,7 @@ export function SpotlightMatchCard({
                   </span>
                 </div>
               ) : (
-                <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-outline-variant/20">
+                <div className="px-4 py-2 rounded-lg bg-surface-container-low border border-white/10">
                   <span className="font-label-md text-label-md text-on-surface-variant">
                     No hubo predicción para este partido
                   </span>

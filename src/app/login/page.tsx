@@ -172,7 +172,7 @@ export default function LoginPage() {
           href="/partidos"
           className="inline-flex items-center gap-2.5 group min-w-0"
         >
-          <div className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-md border border-outline-variant/30">
+          <div className="w-10 h-10 shrink-0 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5  border border-outline-variant/30">
             <PitchlineLogo />
           </div>
           <div className="flex flex-col min-w-0">
@@ -191,7 +191,7 @@ export default function LoginPage() {
         <Link
           href="/partidos"
           aria-label="Volver a Marcadores"
-          className="shrink-0 inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 px-3 sm:px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-brand-white font-label-md text-label-md transition-colors border border-outline-variant/20"
+          className="shrink-0 inline-flex items-center justify-center gap-1.5 min-h-11 min-w-11 px-3 sm:px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-brand-white font-label-md text-label-md transition-colors border border-white/10"
         >
           <span className="material-symbols-outlined text-[18px]">
             arrow_back
@@ -202,10 +202,10 @@ export default function LoginPage() {
 
       {/* Contenedor central de Autenticación */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10">
-        <div className="w-full max-w-md rounded-2xl bg-surface-container-low/95 backdrop-blur-xl p-5 sm:p-8 shadow-2xl border border-outline-variant/20 space-y-5 sm:space-y-6">
+        <div className="w-full max-w-md rounded-2xl bg-surface-container-low/95 backdrop-blur-xl p-5 sm:p-8  border border-white/10 space-y-5 sm:space-y-6">
           {/* Identidad de Marca Pitchline */}
           <div className="flex flex-col items-center text-center space-y-2">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0A1124] flex items-center justify-center p-2.5 shadow-lg border border-[#19D392]/35">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#0A1124] flex items-center justify-center p-2.5  border border-[#19D392]/35">
               <PitchlineLogo />
             </div>
             <h1 className="font-headline-lg text-[24px] leading-8 sm:text-headline-lg text-brand-white font-bold tracking-tight text-balance">
@@ -224,7 +224,7 @@ export default function LoginPage() {
           <div
             role="tablist"
             aria-label="Modo de autenticación"
-            className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#0A1124] border border-outline-variant/20"
+            className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#0A1124] border border-white/10"
           >
             <button
               type="button"
@@ -237,7 +237,7 @@ export default function LoginPage() {
               }}
               className={`py-2.5 rounded-lg font-label-md text-label-md transition-all cursor-pointer ${
                 activeTab === "LOGIN"
-                  ? "bg-[#19D392] text-[#0A1124] font-bold shadow-[0_0_16px_rgba(25,211,146,0.3)]"
+                  ? "bg-[#19D392] text-[#0A1124] font-bold "
                   : "text-on-surface-variant hover:text-brand-white"
               }`}
             >
@@ -254,7 +254,7 @@ export default function LoginPage() {
               }}
               className={`py-2.5 rounded-lg font-label-md text-label-md transition-all cursor-pointer ${
                 activeTab === "REGISTER"
-                  ? "bg-[#19D392] text-[#0A1124] font-bold shadow-[0_0_16px_rgba(25,211,146,0.3)]"
+                  ? "bg-[#19D392] text-[#0A1124] font-bold "
                   : "text-on-surface-variant hover:text-brand-white"
               }`}
             >
@@ -267,7 +267,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full py-3 px-4 rounded-xl bg-brand-white hover:bg-brand-ice text-[#0A1124] font-label-md text-label-md font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60"
+            className="w-full py-3 px-4 rounded-xl bg-brand-white hover:bg-brand-ice text-[#0A1124] font-label-md text-label-md font-bold  hover: transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -295,11 +295,11 @@ export default function LoginPage() {
           </button>
 
           <div className="relative flex items-center justify-center">
-            <div className="border-t border-outline-variant/20 w-full"></div>
+            <div className="border-t border-white/10 w-full"></div>
             <span className="bg-surface-container-low px-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
               o con tu correo
             </span>
-            <div className="border-t border-outline-variant/20 w-full"></div>
+            <div className="border-t border-white/10 w-full"></div>
           </div>
 
           {/* Mensajes de Error o Éxito */}
@@ -398,7 +398,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full py-3 px-4 min-h-[46px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_20px_rgba(25,211,146,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full py-3 px-4 min-h-[46px] rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               <span className="material-symbols-outlined text-[18px]">
                 {activeTab === "LOGIN" ? "login" : "person_add"}

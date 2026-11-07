@@ -23,18 +23,6 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
       text: "¡Hola! Analizo los partidos, pronósticos y partes médicos de la UEFA Champions League 2026/27. ¿Qué deseas consultar?",
       timeLabel: "Hace 1 min",
     },
-    {
-      id: "msg-2",
-      role: "user",
-      text: "¿Cómo quedaron los partidazos de la Jornada 3 y quiénes anotaron?",
-      timeLabel: "Hace 30s",
-    },
-    {
-      id: "msg-3",
-      role: "assistant",
-      text: "En París, PSG venció 4-2 al Barça (Dembélé 12', Barcola 44', João Neves 76', Ramos 89'; Lewandowski 27', Raphinha 61'). En el Bernabéu, Real Madrid superó 4-1 a RB Leipzig, mientras que Bayern y Arsenal empataron 2-2.",
-      timeLabel: "Ahora mismo",
-    },
   ]);
 
   const handleAskQuestion = async (question: string) => {
@@ -107,7 +95,7 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
       </div>
 
       {/* Card Central Asistente RAG */}
-      <div className="rounded-xl bg-surface-container-low p-4 flex-1 flex flex-col justify-between space-y-4 shadow-xl border border-outline-variant/15">
+      <div className="rounded-xl bg-surface-container-low p-4 flex-1 flex flex-col justify-between space-y-4  border border-white/8">
         {/* Header Info del Asistente */}
         <div className="flex items-center justify-between pb-3 bg-surface-container rounded-lg p-2.5">
           <div className="flex items-center gap-2">
@@ -133,7 +121,7 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
                     smart_toy
                   </span>
                 </div>
-                <div className="p-3 rounded-xl bg-surface-container text-body-md font-body-md text-on-surface space-y-1 shadow-sm">
+                <div className="p-3 rounded-xl bg-surface-container text-body-md font-body-md text-on-surface space-y-1 ">
                   <p>{msg.text}</p>
                   <span className="font-label-sm text-label-sm text-on-surface-variant block">
                     {msg.timeLabel}
@@ -145,7 +133,7 @@ export function GeminiTacticalPanel({ matches }: GeminiTacticalPanelProps) {
                 key={msg.id}
                 className="flex gap-2.5 items-start justify-end"
               >
-                <div className="p-3 rounded-xl bg-secondary-container text-body-md font-body-md text-on-secondary-container space-y-1 shadow-sm max-w-[85%]">
+                <div className="p-3 rounded-xl bg-secondary-container text-body-md font-body-md text-on-secondary-container space-y-1  max-w-[85%]">
                   <p>{msg.text}</p>
                   <span className="font-label-sm text-label-sm text-on-secondary-container/70 block text-right">
                     {msg.timeLabel}

@@ -1,5 +1,5 @@
+import { getVerifiedMatchEvents } from "@/lib/date-utils";
 import { createClient } from "@/lib/supabase/server";
-import { STITCH_REFERENCE_EVENTS } from "@/data/stitch-matches";
 import type {
   MatchEventRow,
   MatchRow,
@@ -210,6 +210,7 @@ export async function fetchInitialMatchesWithDetails(): Promise<
       supabase
         .from("match_events")
         .select("*")
+        .eq("source", "api-football")
         .order("minute", { ascending: true }),
     ]);
 
@@ -228,7 +229,7 @@ export async function fetchInitialMatchesWithDetails(): Promise<
     const allEventsSource: MatchEventRow[] =
       eventsRes.data && eventsRes.data.length > 0
         ? (eventsRes.data as MatchEventRow[])
-        : STITCH_REFERENCE_EVENTS;
+        : [];
     for (const evt of allEventsSource) {
       const list = eventsByMatchId.get(evt.match_id) ?? [];
       list.push(evt);
@@ -238,7 +239,7 @@ export async function fetchInitialMatchesWithDetails(): Promise<
     return (matchesRes.data as MatchRow[]).map((match) => ({
       ...match,
       prediction: predictionsByMatchId.get(match.id) ?? null,
-      events: eventsByMatchId.get(match.id) ?? [],
+      events: getVerifiedMatchEvents({ ...match, events: eventsByMatchId.get(match.id) ?? [] }),
     }));
   } catch {
     return [];

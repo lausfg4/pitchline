@@ -24,7 +24,7 @@ export function EmptyWeekCard({
     <div
       role="status"
       aria-live="polite"
-      className="relative overflow-hidden rounded-xl bg-surface-container-low border border-brand-mint/30 p-5 lg:p-6 shadow-lg"
+      className="relative overflow-hidden rounded-xl bg-surface-container-low border border-brand-mint/30 p-5 lg:p-6 "
     >
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">

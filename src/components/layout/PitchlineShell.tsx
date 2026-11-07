@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { CircleDot, ChartNoAxesColumnIncreasing, GitBranch, Newspaper, Sparkles, CalendarDays, Search, X, UserRound, Settings, LogIn } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileRow } from "@/types/database";
 
@@ -64,7 +65,6 @@ export function PitchlineShell({
   searchPlaceholder = "Buscar club, llaves o estadísticas...",
 }: PitchlineShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [authUser, setAuthUser] = useState<{
     id: string;
     displayName: string;
@@ -175,53 +175,6 @@ export function PitchlineShell({
               ? "Playoffs"
               : "UCL 26/27";
 
-  // Sincronización automática en segundo plano (sin botones manuales)
-  useEffect(() => {
-    let active = true;
-    const AUTO_SYNC_KEY = "pitchline_auto_sync_ts";
-    const SYNC_INTERVAL_MS = 5 * 60 * 1000; // cada 5 minutos
-
-    const runSilentAutoSync = async (force = false) => {
-      try {
-        if (!force) {
-          const lastSync = Number(sessionStorage.getItem(AUTO_SYNC_KEY) ?? "0");
-          if (Date.now() - lastSync < SYNC_INTERVAL_MS) {
-            return;
-          }
-        }
-        sessionStorage.setItem(AUTO_SYNC_KEY, String(Date.now()));
-
-        await Promise.allSettled([
-          fetch("/api/sync/champions", {
-            method: "POST",
-            headers: { "x-pitchline-sync": "true" },
-          }),
-          fetch("/api/sync/news", {
-            method: "POST",
-            headers: { "x-pitchline-sync": "true" },
-          }),
-        ]);
-
-        if (active) {
-          window.dispatchEvent(new CustomEvent("pitchline:synced"));
-          router.refresh();
-        }
-      } catch {
-        // Ignorar errores de red en segundo plano
-      }
-    };
-
-    void runSilentAutoSync(false);
-    const intervalId = window.setInterval(() => {
-      void runSilentAutoSync(true);
-    }, SYNC_INTERVAL_MS);
-
-    return () => {
-      active = false;
-      window.clearInterval(intervalId);
-    };
-  }, [router]);
-
   const isPartidosActive =
     pathname === "/" || pathname.startsWith("/partidos");
   const isClasificacionActive = pathname.startsWith("/clasificacion");
@@ -230,16 +183,17 @@ export function PitchlineShell({
   const isChatbotActive = pathname.startsWith("/chatbot");
 
   const activeNavClass =
-    "flex items-center gap-3.5 px-3 py-2.5 transition-colors bg-secondary-container text-on-secondary-container font-semibold rounded-lg shadow-[0_0_16px_rgba(0,163,255,0.2)]";
+    "flex items-center gap-3.5 px-3 py-3 transition-colors bg-brand-mint/8 text-brand-mint font-medium rounded-lg";
   const inactiveNavClass =
     "flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md";
 
   return (
-    <div className="min-h-screen bg-brand-navy text-on-surface">
+    <div className="pitchline-app min-h-screen bg-brand-navy text-on-surface">
+      <a href="#contenido" className="skip-link">Saltar al contenido</a>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low/90 backdrop-blur-xl z-50 flex-col py-6 px-4 shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-r border-outline-variant/15">
-        <div className="flex items-center gap-3 px-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5 shadow-sm border border-outline-variant/30 shrink-0">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 pitchline-sidebar bg-brand-navy z-50 flex-col py-8 px-5  border-r border-white/8">
+        <div className="flex items-center gap-3 px-3 mb-12">
+          <div className="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5  border border-outline-variant/30 shrink-0">
             <PitchlineLogo />
           </div>
           <div className="flex flex-col">
@@ -249,8 +203,8 @@ export function PitchlineShell({
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-brand-mint"></span>
             </div>
-            <span className="font-label-sm text-label-sm uppercase text-brand-mint tracking-wider font-semibold text-[10px]">
-              UCL Predict &amp; AI
+            <span className="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider font-medium text-[10px]">
+              Champions League
             </span>
           </div>
         </div>
@@ -258,14 +212,12 @@ export function PitchlineShell({
         <div className="px-3 mb-6">
           <div className="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[18px]">
-                event_available
-              </span>
+              <CalendarDays size={18} strokeWidth={1.6} aria-hidden="true" className="text-primary " />
               <span className="font-label-md text-label-md text-on-surface">
                 {sidebarStageTitle}
               </span>
             </div>
-            <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-bold">
+            <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/5 text-on-surface-variant font-bold">
               {sidebarMatchdayBadge}
             </span>
           </div>
@@ -277,49 +229,39 @@ export function PitchlineShell({
             href="/partidos"
             className={isPartidosActive ? activeNavClass : inactiveNavClass}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              sports_soccer
-            </span>
-            <span>Marcadores en Vivo</span>
+            <CircleDot size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
+            <span>Partidos</span>
           </Link>
           <Link
             aria-current={isClasificacionActive ? "page" : undefined}
             href="/clasificacion"
             className={isClasificacionActive ? activeNavClass : inactiveNavClass}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              leaderboard
-            </span>
-            <span>Tabla y Clasificación</span>
+            <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
+            <span>Clasificación</span>
           </Link>
           <Link
             aria-current={isSimuladorActive ? "page" : undefined}
             href="/simulador"
             className={isSimuladorActive ? activeNavClass : inactiveNavClass}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              account_tree
-            </span>
-            <span>Arma tu Champions</span>
+            <GitBranch size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
+            <span>Simulador</span>
           </Link>
           <Link
             aria-current={isNoticiasActive ? "page" : undefined}
             href="/noticias"
             className={isNoticiasActive ? activeNavClass : inactiveNavClass}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              newspaper
-            </span>
-            <span>Noticias Exclusivas</span>
+            <Newspaper size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
+            <span>Noticias</span>
           </Link>
           <Link
             aria-current={isChatbotActive ? "page" : undefined}
             href="/chatbot"
             className={isChatbotActive ? activeNavClass : inactiveNavClass}
           >
-            <span className="material-symbols-outlined text-brand-mint text-[20px]">
-              neurology
-            </span>
+            <Sparkles size={18} strokeWidth={1.6} aria-hidden="true" className="text-brand-mint " />
             <span className="text-brand-mint font-medium">Asistente IA</span>
           </Link>
         </nav>
@@ -328,7 +270,7 @@ export function PitchlineShell({
           {authUser ? (
             <Link
               href="/perfil"
-              className="p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors flex items-center justify-between group border border-outline-variant/15"
+              className="p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors flex items-center justify-between group border border-white/8"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
@@ -340,9 +282,7 @@ export function PitchlineShell({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-[#19D392] text-[18px]">
-                      person
-                    </span>
+                    <UserRound size={18} strokeWidth={1.6} aria-hidden="true" className="text-[#19D392] " />
                   )}
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -354,18 +294,14 @@ export function PitchlineShell({
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface text-[20px]">
-                settings
-              </span>
+              <Settings size={18} strokeWidth={1.6} aria-hidden="true" className="text-on-surface-variant group-hover:text-on-surface " />
             </Link>
           ) : (
             <Link
               href="/login"
-              className="w-full py-2.5 px-4 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_16px_rgba(25,211,146,0.25)] transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-[18px]">
-                login
-              </span>
+              <LogIn size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
               <span>Iniciar Sesión</span>
             </Link>
           )}
@@ -375,7 +311,7 @@ export function PitchlineShell({
       {/* Main Content Area */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top Header */}
-        <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-brand-navy/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.2)] border-b border-outline-variant/10 pt-[env(safe-area-inset-top)]">
+        <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 pitchline-header bg-brand-navy/95 backdrop-blur-md  border-b border-outline-variant/10 pt-[env(safe-area-inset-top)]">
           <div className="h-16 w-full px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
             {/* Mobile Logo */}
             <Link
@@ -383,7 +319,7 @@ export function PitchlineShell({
               aria-label="Inicio Pitchline"
               className="flex items-center gap-2 sm:gap-3 lg:hidden shrink-0"
             >
-              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shadow-sm shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1  shrink-0">
                 <PitchlineLogo />
               </div>
               <div
@@ -405,9 +341,7 @@ export function PitchlineShell({
             {/* Jornada / Fase Pill (Solo en Marcadores y Clasificación) */}
             {!isSimuladorActive && !isNoticiasActive && !isChatbotActive && (
               <div className="hidden md:flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full">
-                <span className="material-symbols-outlined text-primary text-[18px]">
-                  calendar_month
-                </span>
+                <CalendarDays size={18} strokeWidth={1.6} aria-hidden="true" className="text-primary " />
                 <span className="font-label-md text-label-md text-on-surface-variant">
                   {isKnockoutLabel ? "Fase:" : "Jornada:"}
                 </span>
@@ -421,9 +355,7 @@ export function PitchlineShell({
             <div className="flex items-center gap-2 sm:gap-3 ml-auto min-w-0">
               {!isPartidosActive && !isSimuladorActive && !isChatbotActive && (
                 <div className="relative flex items-center min-w-0 flex-1 sm:flex-none rounded-full bg-surface-container hover:bg-surface-container-high transition-colors px-3 py-2 sm:py-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant mr-1.5 shrink-0">
-                    search
-                  </span>
+                  <Search size={18} strokeWidth={1.6} aria-hidden="true" className=" text-on-surface-variant mr-1.5 shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}
@@ -438,18 +370,16 @@ export function PitchlineShell({
                       aria-label="Limpiar búsqueda"
                       className="text-on-surface-variant hover:text-on-surface ml-1"
                     >
-                      <span className="material-symbols-outlined text-[16px]">
-                        close
-                      </span>
+                      <X size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
                     </button>
                   )}
                 </div>
               )}
 
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-mint/10 border border-brand-mint/25 shrink-0">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-transparent shrink-0">
                 <div className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></div>
                 <span className="hidden sm:inline font-label-sm text-label-sm text-brand-mint uppercase font-bold">
-                  En Directo
+                  Champions
                 </span>
               </div>
 
@@ -457,7 +387,7 @@ export function PitchlineShell({
                 <Link
                   href="/perfil"
                   aria-label="Perfil de usuario"
-                  className="flex items-center gap-2 p-1 sm:pl-1.5 sm:pr-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline-variant/20 transition-colors shrink-0"
+                  className="flex items-center gap-2 p-1 sm:pl-1.5 sm:pr-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-white/10 transition-colors shrink-0"
                 >
                   <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
                     {authUser.avatarUrl ? (
@@ -468,9 +398,7 @@ export function PitchlineShell({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="material-symbols-outlined text-[#19D392] text-[16px]">
-                        person
-                      </span>
+                      <UserRound size={18} strokeWidth={1.6} aria-hidden="true" className="text-[#19D392] " />
                     )}
                   </div>
                   <span className="font-label-md text-label-md text-brand-white font-semibold max-w-[120px] truncate hidden sm:inline">
@@ -481,11 +409,9 @@ export function PitchlineShell({
                 <Link
                   href="/login"
                   aria-label="Iniciar Sesión"
-                  className="inline-flex items-center justify-center gap-1.5 h-10 w-10 sm:h-auto sm:w-auto sm:px-3.5 sm:py-1.5 rounded-full bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold shadow-[0_0_12px_rgba(25,211,146,0.25)] transition-all shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 h-10 w-10 sm:h-auto sm:w-auto sm:px-3.5 sm:py-1.5 rounded-full bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all shrink-0"
                 >
-                  <span className="material-symbols-outlined text-[18px] sm:text-[16px]">
-                    login
-                  </span>
+                  <LogIn size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
                   <span className="hidden sm:inline">Iniciar Sesión</span>
                 </Link>
               )}
@@ -494,7 +420,7 @@ export function PitchlineShell({
         </header>
 
         {/* Page Main Container */}
-        <main className="flex-1 pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10 w-full min-w-0 px-3 sm:px-4 lg:px-8 bg-brand-navy">
+        <main id="contenido" className="pitchline-content flex-1 mx-auto max-w-[1520px] pt-[calc(6rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10 w-full min-w-0 px-3 sm:px-4 lg:px-8 bg-brand-navy">
           {children}
         </main>
       </div>
@@ -502,7 +428,7 @@ export function PitchlineShell({
       {/* Mobile Bottom Navigation Bar (5 Official Tabs) */}
       <nav
         aria-label="Navegación principal móvil"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.5)] border-t border-outline-variant/15 flex items-stretch justify-around pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] px-1"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pitchline-mobile-nav bg-brand-navy/95 backdrop-blur-md  border-t border-white/8 flex items-stretch justify-around pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] px-1"
       >
         <Link
           aria-current={isPartidosActive ? "page" : undefined}
@@ -513,9 +439,7 @@ export function PitchlineShell({
               : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
-            sports_soccer
-          </span>
+          <CircleDot size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
           <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">En Vivo</span>
         </Link>
         <Link
@@ -527,10 +451,8 @@ export function PitchlineShell({
               : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
-            leaderboard
-          </span>
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Tabla 36</span>
+          <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
+          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Tabla</span>
         </Link>
         <Link
           aria-current={isSimuladorActive ? "page" : undefined}
@@ -541,9 +463,7 @@ export function PitchlineShell({
               : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
-            account_tree
-          </span>
+          <GitBranch size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
           <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Simulador</span>
         </Link>
         <Link
@@ -555,9 +475,7 @@ export function PitchlineShell({
               : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px]">
-            newspaper
-          </span>
+          <Newspaper size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
           <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Noticias</span>
         </Link>
         <Link
@@ -569,11 +487,9 @@ export function PitchlineShell({
               : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
-          <span className="material-symbols-outlined text-[22px] text-brand-mint">
-            neurology
-          </span>
+          <Sparkles size={18} strokeWidth={1.6} aria-hidden="true" className=" text-brand-mint" />
           <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate text-brand-mint">
-            Gemini IA
+            Asistente IA
           </span>
         </Link>
       </nav>

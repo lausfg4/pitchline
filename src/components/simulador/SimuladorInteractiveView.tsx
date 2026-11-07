@@ -26,7 +26,7 @@ export function SimuladorInteractiveView({
     >
       <div className="flex flex-col w-full space-y-5">
         {/* Barra Superior de Contexto Pestaña 3 */}
-        <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/15 flex flex-wrap items-center justify-between gap-3">
+        <div className="p-4 rounded-xl bg-surface-container border border-white/8 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold">
               <span className="material-symbols-outlined text-[16px]">

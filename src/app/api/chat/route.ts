@@ -1,3 +1,4 @@
+import { getVerifiedMatchEvents } from "@/lib/date-utils";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -11,16 +12,6 @@ import type {
   PlayerInjuryRow,
   StandingRow,
 } from "@/types/database";
-import {
-  STITCH_REFERENCE_EVENTS,
-  STITCH_REFERENCE_MATCHES,
-} from "@/data/stitch-matches";
-import { STITCH_REFERENCE_STANDINGS } from "@/data/stitch-standings";
-import {
-  STITCH_REFERENCE_INJURIES,
-  STITCH_REFERENCE_NEWS,
-} from "@/data/stitch-news";
-
 interface ChatRequestPayload {
   message: string;
   history?: { role: "user" | "assistant"; content: string }[];
@@ -35,7 +26,8 @@ function buildDeterministicRagAnswer(
   matches: MatchRow[],
   events: MatchEventRow[],
   injuries: PlayerInjuryRow[],
-  news: NewsArticleRow[]
+  news: NewsArticleRow[],
+  standings: StandingRow[]
 ): string {
   const q = question.toLowerCase();
 
@@ -120,7 +112,7 @@ function buildDeterministicRagAnswer(
         : sourceMatches.slice(0, 6);
 
     const matchLines = targetList.map((m) => {
-      const mEvents = events.filter((e) => e.match_id === m.id);
+      const mEvents = events.filter((e) => e.source === "api-football" && e.match_id === m.id);
       const goalsStr =
         mEvents.length > 0
           ? mEvents
@@ -130,14 +122,14 @@ function buildDeterministicRagAnswer(
               )
               .join(", ")
           : m.status === "SCHEDULED"
-            ? "Partido programado para el 3–4 de noviembre"
+            ? "Partido programado"
             : "Marcador oficial registrado";
       const statusLabel = ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(
         m.status
       )
         ? m.status === "HT"
           ? "En Vivo (Descanso)"
-          : `En Vivo (${m.elapsed_minute ?? 65}')`
+          : `En Vivo (${m.elapsed_minute ?? "—"}')`
         : m.status === "FINISHED"
           ? `Finalizado • Jornada ${m.matchday ?? 3}`
           : `Próximo • Jornada ${m.matchday ?? 4}`;
@@ -172,7 +164,7 @@ function buildDeterministicRagAnswer(
     q.includes("líder") ||
     q.includes("puntos")
   ) {
-    const top8 = STITCH_REFERENCE_STANDINGS.slice(0, 8)
+    const top8 = standings.slice(0, 8)
       .map(
         (t) =>
           `${t.rank}. **${t.team_name}** — ${t.points} pts (DG ${t.goal_diff > 0 ? `+${t.goal_diff}` : t.goal_diff}, Racha: ${t.form})`
@@ -225,29 +217,31 @@ export async function POST(request: NextRequest) {
     const ragMatches: MatchRow[] =
       matchesRes.data && matchesRes.data.length > 0
         ? (matchesRes.data as MatchRow[])
-        : STITCH_REFERENCE_MATCHES;
+        : [];
 
-    const ragEvents: MatchEventRow[] =
+    const collectedEvents: MatchEventRow[] =
       eventsRes.data && eventsRes.data.length > 0
-        ? (eventsRes.data as MatchEventRow[])
-        : STITCH_REFERENCE_EVENTS;
+        ? (eventsRes.data as MatchEventRow[]).filter(e => e.source === "api-football")
+        : [];
+
+    const ragEvents = ragMatches.flatMap(m => getVerifiedMatchEvents({ ...m, events: collectedEvents.filter(e => e.match_id === m.id) }));
 
     const ragInjuries: PlayerInjuryRow[] =
-      injuriesData.length > 0 ? injuriesData : STITCH_REFERENCE_INJURIES;
+      injuriesData;
 
     const ragNews: NewsArticleRow[] =
-      newsData.length > 0 ? newsData : STITCH_REFERENCE_NEWS;
+      newsData;
 
     const ragStandings: StandingRow[] =
       standingsRes.data && standingsRes.data.length > 0
         ? (standingsRes.data as StandingRow[])
-        : STITCH_REFERENCE_STANDINGS.slice(0, 12);
+        : [];
 
     // 2. Construir el bloque de contexto del sistema (System Instruction) para Gemini 2.5 Flash
     const matchesContext = ragMatches
       .map((m) => {
         const evts = ragEvents
-          .filter((e) => e.match_id === m.id)
+          .filter((e) => e.source === "api-football" && e.match_id === m.id)
           .map(
             (e) =>
               `${e.minute}' Gol de ${e.player_name}${e.assist_or_sub_name ? ` (Asist: ${e.assist_or_sub_name})` : ""}${e.detail ? ` - ${e.detail}` : ""}`
@@ -288,7 +282,8 @@ export async function POST(request: NextRequest) {
       )
       .join("\n");
 
-    const systemInstructionText = `Eres el Asistente IA Deportivo Oficial de Pitchline para la UEFA Champions League 2026/27.
+    const systemInstructionText = `No inventes goles, minutos, estadísticas ni plazos médicos. Si faltan datos, dilo. Las fechas updated_at indican la última consulta y los planes gratuitos tienen retraso.
+Eres el Asistente IA Deportivo Oficial de Pitchline para la UEFA Champions League 2026/27.
 Responde siempre en español de manera amable, clara, natural y bien estructurada (como un periodista o analista deportivo profesional).
 Basa tus respuestas en la siguiente información oficial actualizada de la temporada 2026/27:
 
@@ -373,7 +368,8 @@ Reglas estrictas de formato:
         ragMatches,
         ragEvents,
         ragInjuries,
-        ragNews
+        ragNews,
+        ragStandings
       );
       modelUsed = "gemini-2.5-flash (RAG Engine)";
     }
