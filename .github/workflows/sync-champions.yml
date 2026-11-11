@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 5
 
     env:
-      APP_URL: ${{ secrets.PITCHLINE_APP_URL || vars.PITCHLINE_APP_URL || 'http://localhost:3000' }}
+      APP_URL: ${{ secrets.PITCHLINE_APP_URL || vars.PITCHLINE_APP_URL || 'https://pitchline-snowy.vercel.app' }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
 
     steps:
