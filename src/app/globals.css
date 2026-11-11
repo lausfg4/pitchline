@@ -5,6 +5,8 @@
   --brand-mint: #19D392;
   --brand-ice: #EEF2F8;
   --brand-white: #FFFFFF;
+  --font-chivo: "Chivo";
+  --font-space-grotesk: "Space Grotesk";
 }
 
 @theme inline {

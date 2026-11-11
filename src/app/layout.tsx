@@ -1,18 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Chivo, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-
-const chivo = Chivo({
-  variable: "--font-chivo",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Pitchline — UEFA Champions League Live Scores & AI Predictions",
@@ -34,11 +21,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="es"
-      className={`dark ${chivo.variable} ${spaceGrotesk.variable} h-full antialiased`}
-    >
+    <html lang="es" className="dark h-full antialiased">
       <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap"
+        />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
