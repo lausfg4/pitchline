@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CircleDot, ChartNoAxesColumnIncreasing, GitBranch, Newspaper, Sparkles, CalendarDays, Search, X, UserRound, Settings, LogIn } from "lucide-react";
+import { CircleDot, ChartNoAxesColumnIncreasing, GitBranch, Newspaper, Sparkles, Search, X, UserRound, LogIn } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfileRow } from "@/types/database";
@@ -66,9 +66,7 @@ export function PitchlineShell({
 }: PitchlineShellProps) {
   const pathname = usePathname();
   const [authUser, setAuthUser] = useState<{
-    id: string;
     displayName: string;
-    username: string | null;
     avatarUrl: string | null;
   } | null>(null);
 
@@ -89,10 +87,6 @@ export function PitchlineShell({
         (user.user_metadata?.name as string | undefined) ??
         user.email?.split("@")[0] ??
         "Analista Pitchline";
-      const fallbackUsername =
-        (user.user_metadata?.username as string | undefined) ??
-        user.email?.split("@")[0] ??
-        null;
       const fallbackAvatar =
         (user.user_metadata?.avatar_url as string | undefined) ??
         (user.user_metadata?.picture as string | undefined) ??
@@ -107,16 +101,16 @@ export function PitchlineShell({
       if (profileData) {
         const row = profileData as ProfileRow;
         setAuthUser({
-          id: user.id,
+
           displayName: row.full_name || row.username || fallbackName,
-          username: row.username ?? fallbackUsername,
+
           avatarUrl: row.avatar_url || fallbackAvatar,
         });
       } else {
         setAuthUser({
-          id: user.id,
+
           displayName: fallbackName,
-          username: fallbackUsername,
+
           avatarUrl: fallbackAvatar,
         });
       }
@@ -155,343 +149,85 @@ export function PitchlineShell({
       );
     };
   }, [loadSessionProfile]);
-  const matchdayNumMatch = currentMatchdayLabel.match(/J(\d+)/);
-  const isKnockoutLabel =
-    /Octavos|Cuartos|Semifinal|Gran Final|Playoffs/i.test(
-      currentMatchdayLabel
-    );
-  const sidebarStageTitle = isKnockoutLabel ? "Eliminatorias" : "Fase Liga";
-  const sidebarMatchdayBadge = matchdayNumMatch
-    ? `J${matchdayNumMatch[1]} / 8`
-    : /Gran Final/i.test(currentMatchdayLabel)
-      ? "Final"
-      : /Semifinal/i.test(currentMatchdayLabel)
-        ? "Semis"
-        : /Cuartos/i.test(currentMatchdayLabel)
-          ? "Cuartos"
-          : /Octavos/i.test(currentMatchdayLabel)
-            ? "Octavos"
-            : /Playoffs/i.test(currentMatchdayLabel)
-              ? "Playoffs"
-              : "UCL 26/27";
-
-  const isPartidosActive =
-    pathname === "/" || pathname.startsWith("/partidos");
-  const isClasificacionActive = pathname.startsWith("/clasificacion");
-  const isSimuladorActive = pathname.startsWith("/simulador");
-  const isNoticiasActive = pathname.startsWith("/noticias");
-  const isChatbotActive = pathname.startsWith("/chatbot");
-
-  const activeNavClass =
-    "flex items-center gap-3.5 px-3 py-3 transition-colors bg-brand-mint/8 text-brand-mint font-medium rounded-lg";
-  const inactiveNavClass =
-    "flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md";
+  const navigation = [
+    { href: "/partidos", label: "Partidos", icon: CircleDot },
+    { href: "/clasificacion", label: "Clasificación", mobileLabel: "Tabla", icon: ChartNoAxesColumnIncreasing },
+    { href: "/simulador", label: "Simulador", icon: GitBranch },
+    { href: "/noticias", label: "Noticias", icon: Newspaper },
+    { href: "/chatbot", label: "Asistente IA", mobileLabel: "Asistente", icon: Sparkles },
+  ];
+  const current = navigation.find(({ href }) => pathname === href || pathname.startsWith(href + "/")) ?? (pathname === "/" ? navigation[0] : undefined);
+  const showSearch = !current || current.href === "/clasificacion" || current.href === "/noticias";
+  const accountHref = authUser ? "/perfil" : "/login";
+  const accountLabel = authUser?.displayName ?? "Iniciar sesión";
+  const accountIcon = authUser?.avatarUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={authUser.avatarUrl} alt="" className="size-7 rounded-full object-cover" />
+  ) : authUser ? <UserRound size={18} aria-hidden="true" /> : <LogIn size={18} aria-hidden="true" />;
 
   return (
-    <div className="pitchline-app min-h-screen bg-brand-navy text-on-surface">
+    <div className="min-h-screen bg-brand-navy text-on-surface">
       <a href="#contenido" className="skip-link">Saltar al contenido</a>
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 pitchline-sidebar bg-brand-navy z-50 flex-col py-8 px-5  border-r border-white/8">
-        <div className="flex items-center gap-3 px-3 mb-12">
-          <div className="w-9 h-9 rounded-xl bg-surface-container-high flex items-center justify-center p-1.5  border border-outline-variant/30 shrink-0">
-            <PitchlineLogo />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold leading-none">
-                pitchline
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-mint"></span>
-            </div>
-            <span className="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-wider font-medium text-[10px]">
-              Champions League
-            </span>
-          </div>
-        </div>
-
-        <div className="px-3 mb-6">
-          <div className="bg-surface-container rounded-lg p-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CalendarDays size={18} strokeWidth={1.6} aria-hidden="true" className="text-primary " />
-              <span className="font-label-md text-label-md text-on-surface">
-                {sidebarStageTitle}
-              </span>
-            </div>
-            <span className="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-white/5 text-on-surface-variant font-bold">
-              {sidebarMatchdayBadge}
-            </span>
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-1.5 px-1">
-          <Link
-            aria-current={isPartidosActive ? "page" : undefined}
-            href="/partidos"
-            className={isPartidosActive ? activeNavClass : inactiveNavClass}
-          >
-            <CircleDot size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-            <span>Partidos</span>
-          </Link>
-          <Link
-            aria-current={isClasificacionActive ? "page" : undefined}
-            href="/clasificacion"
-            className={isClasificacionActive ? activeNavClass : inactiveNavClass}
-          >
-            <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-            <span>Clasificación</span>
-          </Link>
-          <Link
-            aria-current={isSimuladorActive ? "page" : undefined}
-            href="/simulador"
-            className={isSimuladorActive ? activeNavClass : inactiveNavClass}
-          >
-            <GitBranch size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-            <span>Simulador</span>
-          </Link>
-          <Link
-            aria-current={isNoticiasActive ? "page" : undefined}
-            href="/noticias"
-            className={isNoticiasActive ? activeNavClass : inactiveNavClass}
-          >
-            <Newspaper size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-            <span>Noticias</span>
-          </Link>
-          <Link
-            aria-current={isChatbotActive ? "page" : undefined}
-            href="/chatbot"
-            className={isChatbotActive ? activeNavClass : inactiveNavClass}
-          >
-            <Sparkles size={18} strokeWidth={1.6} aria-hidden="true" className="text-brand-mint " />
-            <span className="text-brand-mint font-medium">Asistente IA</span>
-          </Link>
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-50 w-56 flex-col overflow-y-auto border-r border-white/8 bg-surface-container-low px-4 py-6">
+        <Link href="/partidos" className="mb-9 flex items-center gap-2.5 px-2 text-brand-white">
+          <PitchlineLogo className="size-9 shrink-0" />
+          <span className="font-headline-md text-xl font-bold tracking-tight">pitchline</span>
+        </Link>
+        <nav aria-label="Navegación principal" className="space-y-1">
+          {navigation.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} aria-current={current?.href === href ? "page" : undefined} className="pitchline-nav-link flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm">
+              <Icon size={18} strokeWidth={1.7} aria-hidden="true" />
+              {label}
+            </Link>
+          ))}
         </nav>
-
-        <div className="mt-auto pt-4 px-2">
-          {authUser ? (
-            <Link
-              href="/perfil"
-              className="p-3 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors flex items-center justify-between group border border-white/8"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
-                  {authUser.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={authUser.avatarUrl}
-                      alt={authUser.displayName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <UserRound size={18} strokeWidth={1.6} aria-hidden="true" className="text-[#19D392] " />
-                  )}
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-label-md text-label-md text-brand-white font-semibold truncate group-hover:text-[#19D392] transition-colors">
-                    {authUser.displayName}
-                  </span>
-                  <span className="font-label-sm text-label-sm text-brand-mint truncate">
-                    {authUser.username ? `@${authUser.username}` : "Ver perfil"}
-                  </span>
-                </div>
-              </div>
-              <Settings size={18} strokeWidth={1.6} aria-hidden="true" className="text-on-surface-variant group-hover:text-on-surface " />
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="w-full py-2.5 px-4 rounded-xl bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all flex items-center justify-center gap-2"
-            >
-              <LogIn size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-              <span>Iniciar Sesión</span>
-            </Link>
-          )}
-        </div>
+        <Link href={accountHref} className="mt-auto flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm text-on-surface-variant hover:bg-white/5 hover:text-brand-white">
+          <span className="shrink-0">{accountIcon}</span>
+          <span className="truncate">{accountLabel}</span>
+        </Link>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Top Header */}
-        <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 pitchline-header bg-brand-navy/95 backdrop-blur-md  border-b border-outline-variant/10 pt-[env(safe-area-inset-top)]">
-          <div className="h-16 w-full px-3 sm:px-4 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
-            {/* Mobile Logo */}
-            <Link
-              href="/partidos"
-              aria-label="Inicio Pitchline"
-              className="flex items-center gap-2 sm:gap-3 lg:hidden shrink-0"
-            >
-              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1  shrink-0">
-                <PitchlineLogo />
-              </div>
-              <div
-                className={`items-center gap-2 ${
-                  !isPartidosActive && !isSimuladorActive && !isChatbotActive
-                    ? "hidden min-[400px]:flex"
-                    : "flex"
-                }`}
-              >
-                <span className="font-headline-md text-headline-md tracking-tight text-brand-white lowercase font-bold">
-                  pitchline
-                </span>
-                <span className="hidden sm:inline font-label-sm text-label-sm uppercase text-brand-mint font-bold px-1.5 py-0.5 rounded bg-surface-container text-[9px]">
-                  UCL AI
-                </span>
-              </div>
+      <div className="min-h-screen lg:pl-56">
+        <header className="fixed inset-x-0 top-0 z-40 border-b border-white/8 bg-brand-navy/95 pt-[env(safe-area-inset-top)] backdrop-blur-md lg:left-56">
+          <div className="mx-auto flex h-16 max-w-[1360px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
+            <Link href="/partidos" aria-label="Inicio Pitchline" className="flex shrink-0 items-center gap-2 lg:hidden">
+              <PitchlineLogo className="size-8" />
+              <span className={`font-headline-md text-lg font-bold tracking-tight text-brand-white ${showSearch ? "hidden min-[420px]:inline" : ""}`}>pitchline</span>
             </Link>
-
-            {/* Jornada / Fase Pill (Solo en Marcadores y Clasificación) */}
-            {!isSimuladorActive && !isNoticiasActive && !isChatbotActive && (
-              <div className="hidden md:flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full">
-                <CalendarDays size={18} strokeWidth={1.6} aria-hidden="true" className="text-primary " />
-                <span className="font-label-md text-label-md text-on-surface-variant">
-                  {isKnockoutLabel ? "Fase:" : "Jornada:"}
-                </span>
-                <span className="font-label-md text-label-md text-primary font-bold">
-                  {currentMatchdayLabel}
-                </span>
-              </div>
-            )}
-
-            {/* Search & Live Status */}
-            <div className="flex items-center gap-2 sm:gap-3 ml-auto min-w-0">
-              {!isPartidosActive && !isSimuladorActive && !isChatbotActive && (
-                <div className="relative flex items-center min-w-0 flex-1 sm:flex-none rounded-full bg-surface-container hover:bg-surface-container-high transition-colors px-3 py-2 sm:py-1.5">
-                  <Search size={18} strokeWidth={1.6} aria-hidden="true" className=" text-on-surface-variant mr-1.5 shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    placeholder={searchPlaceholder}
-                    aria-label="Buscar equipos o estadísticas"
-                    className="bg-transparent text-on-surface placeholder:text-on-surface-variant font-label-md text-base sm:text-label-md focus:outline-none w-full min-w-0 sm:w-48"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => onSearchChange("")}
-                      aria-label="Limpiar búsqueda"
-                      className="text-on-surface-variant hover:text-on-surface ml-1"
-                    >
-                      <X size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-transparent shrink-0">
-                <div className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></div>
-                <span className="hidden sm:inline font-label-sm text-label-sm text-brand-mint uppercase font-bold">
-                  Champions
-                </span>
-              </div>
-
-              {authUser ? (
-                <Link
-                  href="/perfil"
-                  aria-label="Perfil de usuario"
-                  className="flex items-center gap-2 p-1 sm:pl-1.5 sm:pr-3 rounded-full bg-surface-container hover:bg-surface-container-high border border-white/10 transition-colors shrink-0"
-                >
-                  <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-[#0A1124] border border-[#19D392]/60 flex items-center justify-center shrink-0 overflow-hidden">
-                    {authUser.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={authUser.avatarUrl}
-                        alt={authUser.displayName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <UserRound size={18} strokeWidth={1.6} aria-hidden="true" className="text-[#19D392] " />
-                    )}
-                  </div>
-                  <span className="font-label-md text-label-md text-brand-white font-semibold max-w-[120px] truncate hidden sm:inline">
-                    {authUser.displayName}
-                  </span>
-                </Link>
-              ) : (
-                <Link
-                  href="/login"
-                  aria-label="Iniciar Sesión"
-                  className="inline-flex items-center justify-center gap-1.5 h-10 w-10 sm:h-auto sm:w-auto sm:px-3.5 sm:py-1.5 rounded-full bg-[#19D392] hover:bg-[#19D392]/90 text-[#0A1124] font-label-md text-label-md font-bold  transition-all shrink-0"
-                >
-                  <LogIn size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-                  <span className="hidden sm:inline">Iniciar Sesión</span>
-                </Link>
+            <div className="hidden min-w-0 items-center gap-3 text-sm lg:flex">
+              <span className="shrink-0 font-medium text-brand-white">{current?.label ?? "Mi cuenta"}</span>
+              {(current?.href === "/partidos" || current?.href === "/clasificacion") && (
+                <span className="truncate border-l border-white/10 pl-3 text-on-surface-variant">{currentMatchdayLabel}</span>
               )}
             </div>
+            {showSearch && (
+              <div className="ml-auto flex min-w-0 max-w-72 flex-1 items-center gap-2 rounded-lg border border-white/8 bg-surface-container-low px-3 focus-within:border-brand-mint/50">
+                <Search size={16} aria-hidden="true" className="shrink-0 text-on-surface-variant" />
+                <input type="text" value={searchQuery} onChange={event => onSearchChange(event.target.value)} placeholder={searchPlaceholder} aria-label={searchPlaceholder} className="h-10 min-w-0 w-full bg-transparent text-base outline-none sm:text-sm" />
+                {searchQuery && (
+                  <button type="button" onClick={() => onSearchChange("")} aria-label="Limpiar búsqueda" className="grid size-8 shrink-0 place-items-center text-on-surface-variant hover:text-brand-white">
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            )}
+            <Link href={accountHref} aria-label={authUser ? "Mi perfil" : accountLabel} className="grid size-10 shrink-0 place-items-center rounded-lg border border-white/8 text-on-surface-variant hover:bg-white/5 hover:text-brand-white lg:hidden">
+              {accountIcon}
+            </Link>
           </div>
         </header>
-
-        {/* Page Main Container */}
-        <main id="contenido" className="pitchline-content flex-1 mx-auto max-w-[1520px] pt-[calc(6rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-10 w-full min-w-0 px-3 sm:px-4 lg:px-8 bg-brand-navy">
+        <main id="contenido" className="pitchline-content mx-auto min-w-0 max-w-[1360px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-6 lg:px-10 lg:pb-12 lg:pt-24">
           {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (5 Official Tabs) */}
-      <nav
-        aria-label="Navegación principal móvil"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pitchline-mobile-nav bg-brand-navy/95 backdrop-blur-md  border-t border-white/8 flex items-stretch justify-around pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] px-1"
-      >
-        <Link
-          aria-current={isPartidosActive ? "page" : undefined}
-          href="/partidos"
-          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
-            isPartidosActive
-              ? "text-brand-mint font-bold"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          <CircleDot size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">En Vivo</span>
-        </Link>
-        <Link
-          aria-current={isClasificacionActive ? "page" : undefined}
-          href="/clasificacion"
-          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
-            isClasificacionActive
-              ? "text-brand-mint font-bold"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          <ChartNoAxesColumnIncreasing size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Tabla</span>
-        </Link>
-        <Link
-          aria-current={isSimuladorActive ? "page" : undefined}
-          href="/simulador"
-          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
-            isSimuladorActive
-              ? "text-brand-mint font-bold"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          <GitBranch size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Simulador</span>
-        </Link>
-        <Link
-          aria-current={isNoticiasActive ? "page" : undefined}
-          href="/noticias"
-          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
-            isNoticiasActive
-              ? "text-brand-mint font-bold"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          <Newspaper size={18} strokeWidth={1.6} aria-hidden="true" className="shrink-0" />
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate">Noticias</span>
-        </Link>
-        <Link
-          aria-current={isChatbotActive ? "page" : undefined}
-          href="/chatbot"
-          className={`flex-1 min-w-0 min-h-[52px] flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 rounded-lg transition-colors ${
-            isChatbotActive
-              ? "text-brand-mint font-bold"
-              : "text-on-surface-variant hover:text-on-surface"
-          }`}
-        >
-          <Sparkles size={18} strokeWidth={1.6} aria-hidden="true" className=" text-brand-mint" />
-          <span className="font-label-sm text-[10px] min-[380px]:text-label-sm max-w-full truncate text-brand-mint">
-            Asistente IA
-          </span>
-        </Link>
+      <nav aria-label="Navegación principal móvil" className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-white/8 bg-surface-container-low/95 px-2 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden">
+        {navigation.map(({ href, label, mobileLabel, icon: Icon }) => (
+          <Link key={href} href={href} aria-label={label} aria-current={current?.href === href ? "page" : undefined} className="pitchline-nav-link flex min-h-13 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-0.5 text-[10px] sm:text-xs">
+            <Icon size={19} strokeWidth={1.7} aria-hidden="true" />
+            <span className="max-w-full truncate">{mobileLabel ?? label}</span>
+          </Link>
+        ))}
       </nav>
     </div>
   );

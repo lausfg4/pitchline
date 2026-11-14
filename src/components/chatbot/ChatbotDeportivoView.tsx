@@ -31,6 +31,8 @@ const CHAT_STORAGE_KEY = "pitchline_chat_history_v2";
 
 const QUICK_SUGGESTIONS = [
   "¿Cuáles fueron los resultados y goles de la última jornada?",
+  "¿Quiénes dieron asistencias en el último partido del Real Madrid?",
+  "¿Cómo jugó Mbappé en su último partido de Champions?",
   "¿Qué jugadores están lesionados y cuánto tiempo estarán fuera?",
   "¿Qué partidos se juegan en la próxima jornada?",
   "¿Cómo va el Top 8 de la tabla de clasificación?",
@@ -78,7 +80,6 @@ export function ChatbotDeportivoView({
   const [inputText, setInputText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
 
   const [dbMatches, setDbMatches] =
     useState<MatchWithDetails[]>(initialMatches);
@@ -90,7 +91,7 @@ export function ChatbotDeportivoView({
       id: "welcome-msg",
       role: "assistant",
       content:
-        "¡Hola! Soy tu Asistente Deportivo de Pitchline para la UEFA Champions League 2026/27.\n\nPuedes preguntarme cómo quedaron los partidos, quiénes anotaron los goles, qué encuentros vienen en la próxima jornada o cuánto tiempo estimado estará fuera cualquier jugador lesionado.",
+        "¡Hola! Soy el asistente de Pitchline para la Champions. Pregúntame por un partido, un jugador o lo que quieras entender de la competición. También puedes hacerme preguntas de seguimiento.",
       timeLabel: "En línea",
     },
   ]);
@@ -232,7 +233,6 @@ export function ChatbotDeportivoView({
 
         if (!user) {
           setAuthUserId(null);
-          setAuthEmail(null);
 
           const cached = localStorage.getItem(CHAT_STORAGE_KEY);
           if (cached) {
@@ -245,7 +245,6 @@ export function ChatbotDeportivoView({
         }
 
         setAuthUserId(user.id);
-        setAuthEmail(user.email ?? "Analista");
 
         const { data, error } = await supabase
           .from("chat_messages")
@@ -377,7 +376,7 @@ export function ChatbotDeportivoView({
         },
         body: JSON.stringify({
           message: trimmed,
-          history: updatedHistory.slice(-6).map((m) => ({
+          history: messages.slice(-8).map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -450,31 +449,10 @@ export function ChatbotDeportivoView({
     >
       <div className="flex flex-col w-full space-y-6">
         {/* Cabecera limpia y deportiva */}
-        <section className="p-5 rounded-2xl bg-surface-container border border-white/8  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold tracking-wider">
-                <span className="material-symbols-outlined text-[15px]">
-                  auto_awesome
-                </span>
-                Asistente Deportivo IA
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">
-                UEFA Champions League 2026/27
-              </span>
-              {authEmail && (
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm max-w-full truncate">
-                  {authEmail}
-                </span>
-              )}
-            </div>
-            <h1 className="font-headline-lg text-headline-md sm:text-headline-lg text-brand-white">
-              Analista Conversacional de Partidos y Partes Médicos
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Pregunta al instante por resultados, goleadores, próximas jornadas y
-              tiempos de recuperación de jugadores lesionados.
-            </p>
+        <section className="flex flex-wrap items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Asistente IA</h1>
+            <p className="text-sm text-on-surface-variant">Consulta resultados, goleadores, próximas jornadas y bajas.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
@@ -502,41 +480,18 @@ export function ChatbotDeportivoView({
         {/* Layout Principal de 2 Columnas: Chat (8 Cols) + Monitor de Lesionados y Marcadores (4 Cols) */}
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* COLUMNA IZQUIERDA (8 COLS XL): CHAT LIMPIO Y NATURAL */}
-          <section className="xl:col-span-8 rounded-2xl bg-surface-container-low border border-white/8  flex flex-col overflow-hidden">
-            {/* Cabecera superior de la ventana de chat */}
-            <div className="px-5 py-3.5 bg-surface-container border-b border-white/8 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
-                <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/30 text-brand-mint">
-                  <span className="material-symbols-outlined text-[20px]">
-                    sports_soccer
-                  </span>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand-mint ring-2 ring-surface-container"></span>
-                </div>
-                <div>
-                  <span className="font-label-md text-body-md font-bold text-brand-white block leading-tight">
-                    Pitchline AI
-                  </span>
-                  <span className="font-label-sm text-[11px] text-brand-mint">
-                    En línea • Temporada 2026/27
-                  </span>
-                </div>
-              </div>
-              <span className="font-label-sm text-xs text-on-surface-variant hidden sm:inline">
-                Respuestas en tiempo real
-              </span>
-            </div>
-
+          <section className="xl:col-span-8 rounded-xl bg-surface-container-low border border-white/8 flex flex-col overflow-hidden">
             {/* Historial de Mensajes */}
             <div className="p-3.5 sm:p-5 space-y-4 overflow-y-auto h-[420px] sm:h-[520px]">
               {messages.map((msg) =>
                 msg.role === "assistant" ? (
                   <div key={msg.id} className="flex gap-2.5 sm:gap-3 items-start">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint mt-0.5">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-brand-mint/8 flex items-center justify-center shrink-0 text-brand-mint mt-0.5">
                       <span className="material-symbols-outlined text-[17px] sm:text-[19px]">
                         smart_toy
                       </span>
                     </div>
-                    <div className="max-w-[88%] sm:max-w-[86%] rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-3 sm:px-4 sm:py-3.5 border border-white/8  space-y-1.5">
+                    <div className="max-w-[88%] sm:max-w-[86%] rounded-xl rounded-tl-sm bg-white/4 px-3.5 py-3 sm:px-4 sm:py-3.5 border border-white/8  space-y-1.5">
                       <div className="flex items-center justify-between gap-4">
                         <span className="font-label-sm text-xs text-brand-mint font-bold">
                           Asistente Pitchline
@@ -555,7 +510,7 @@ export function ChatbotDeportivoView({
                     key={msg.id}
                     className="flex gap-2.5 sm:gap-3 items-start justify-end"
                   >
-                    <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl rounded-tr-sm bg-secondary-container px-3.5 py-2.5 sm:px-4 sm:py-3 text-on-secondary-container  space-y-1">
+                    <div className="max-w-[85%] sm:max-w-[80%] rounded-xl rounded-tr-sm bg-secondary-container px-3.5 py-2.5 sm:px-4 sm:py-3 text-on-secondary-container  space-y-1">
                       <div className="font-body-md text-sm sm:text-body-md whitespace-pre-line leading-relaxed">
                         {msg.content}
                       </div>
@@ -574,12 +529,12 @@ export function ChatbotDeportivoView({
 
               {isLoading && (
                 <div className="flex gap-2.5 sm:gap-3 items-start">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-brand-mint/15 border border-brand-mint/40 flex items-center justify-center shrink-0 text-brand-mint animate-pulse">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-brand-mint/8 flex items-center justify-center shrink-0 text-brand-mint animate-pulse">
                     <span className="material-symbols-outlined text-[17px] sm:text-[19px]">
                       smart_toy
                     </span>
                   </div>
-                  <div className="rounded-2xl rounded-tl-sm bg-surface-container px-3.5 py-2.5 sm:px-4 sm:py-3 border border-brand-mint/30 flex items-center gap-2.5">
+                  <div className="rounded-xl rounded-tl-sm bg-surface-container px-3.5 py-2.5 sm:px-4 sm:py-3 border border-brand-mint/30 flex items-center gap-2.5">
                     <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
                     <span className="font-body-md text-xs text-on-surface">
                       Analizando partidos y partes médicos de la Champions...
@@ -625,7 +580,7 @@ export function ChatbotDeportivoView({
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   disabled={isLoading}
-                  placeholder="Escribe tu pregunta sobre un partido, goleador o lesionado..."
+                  placeholder="Pregunta sobre la Champions..."
                   aria-label="Escribe tu pregunta para el asistente deportivo"
                   className="w-full bg-transparent px-3 py-2 text-brand-white placeholder:text-on-surface-variant focus:outline-none font-body-md text-base sm:text-body-md min-w-0"
                 />
@@ -646,7 +601,7 @@ export function ChatbotDeportivoView({
           {/* COLUMNA DERECHA (4 COLS XL): MONITOR DE LESIONADOS RECIENTES Y PARTIDOS RECIENTES */}
           <aside className="xl:col-span-4 flex flex-col space-y-5">
             {/* Tarjeta 1: Partes Médicos y Bajas Más Recientes */}
-            <div className="rounded-2xl bg-surface-container-low border border-white/8 p-4  space-y-3.5">
+            <div className="border-t border-white/8 pt-4 space-y-3.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-error text-[20px]">
@@ -656,14 +611,8 @@ export function ChatbotDeportivoView({
                     Partes Médicos y Bajas
                   </h2>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full bg-error/15 text-error font-label-sm text-[10px] uppercase font-bold">
-                  Más recientes
-                </span>
               </div>
 
-              <p className="font-body-md text-xs text-on-surface-variant">
-                Últimas bajas reportadas tras la jornada más reciente:
-              </p>
 
               <div className="space-y-2.5">
                 {filteredInjuries.map((inj) => {
@@ -723,7 +672,7 @@ export function ChatbotDeportivoView({
             </div>
 
             {/* Tarjeta 2: Partidos Más Recientes */}
-            <div className="rounded-2xl bg-surface-container-low border border-white/8 p-4  space-y-3.5">
+            <div className="border-t border-white/8 pt-4 space-y-3.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-brand-mint text-[20px]">

@@ -16,6 +16,12 @@ export interface LiveStats {
   source_updated_at?: string;
   provider_fixture_id?: number;
   events_pending?: boolean;
+  player_stats_checked_at?: string;
+  player_stats?: {
+    updated_at: string;
+    final: boolean;
+    players: MatchPlayerStats[];
+  };
   home_possession?: number;
   away_possession?: number;
   home_xg?: number;
@@ -28,6 +34,25 @@ export interface LiveStats {
   away_odds?: string;
   half_label?: string;
   is_spotlight?: boolean;
+}
+
+export interface MatchPlayerStats {
+  name: string;
+  team: string;
+  minutes?: number;
+  position?: string;
+  rating?: string;
+  goals?: number;
+  assists?: number;
+  shots?: number;
+  shots_on_target?: number;
+  passes?: number;
+  key_passes?: number;
+  tackles?: number;
+  interceptions?: number;
+  saves?: number;
+  yellow_cards?: number;
+  red_cards?: number;
 }
 
 export interface MatchRow {

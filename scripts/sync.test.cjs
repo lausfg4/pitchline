@@ -12,7 +12,7 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], existingSource = 'api-football', env = {}, fdStatus = 'TIMED' } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, existingSource = 'api-football', env = {}, fdStatus = 'TIMED' } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
   const writes = [], calls = [], reservations = [], replacements = [];
@@ -33,6 +33,9 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
       if (failure) throw Error('offline');
       if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: 0, away: 0 } } }] }) };
       if (url.includes('/events?')) return { ok: true, json: async () => ({ response: eventSnapshot }) };
+      if (url.includes('?ids=') && playerGroups) return { ok: true, json: async () => ({
+        response: [{ fixture: { id: 88, status: { short: '1H' } }, players: playerGroups }],
+      }) };
       return { ok: true, json: async () => ({ response: [{ fixture: { id: 88, date: now, status: { short: '1H', elapsed: 21 } }, teams: { home: { id: 10, name: 'Arsenal' }, away: { id: 20, name: 'Bayern' } }, goals: { home: score, away: 0 } }] }) };
     },
   };
@@ -41,12 +44,46 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
   return { route, request, existing, writes, calls, reservations, replacements };
 }
 
+test('club questions and their follow-ups stay scoped to the named club', () => {
+  const { selectMatchContext } = load('src/lib/chat/match-context.ts', { '@/lib/date-utils': {} });
+  const next = { id: 4, home_team_id: 81, home_team_name: 'Barça', away_team_id: 7, away_team_name: 'Arsenal', status: 'TIMED', kickoff_at: '2026-11-20' };
+  const other = { id: 3, home_team_id: 9, home_team_name: 'Como', away_team_id: 7, away_team_name: 'Arsenal', status: 'FINISHED', kickoff_at: '2026-11-04' };
+  const last = { ...next, id: 2, status: 'FINISHED', kickoff_at: '2026-11-03' };
+  const previous = { ...last, id: 1, kickoff_at: '2026-10-22' };
+  const matches = [next, other, last, previous];
+  const question = 'como quedo el ultimo partido del barcelona en champions?';
+  for (const result of [
+    selectMatchContext(matches, [], question, []),
+    selectMatchContext(matches, [], 'la ultima jornada jugada', [question]),
+  ]) {
+    assert.equal(result.focused.id, last.id);
+    assert.equal(result.scopedClubs.join(','), '81');
+    assert.ok(result.recent.every(match => match.home_team_id === 81));
+    assert.ok(result.detailed.every(match => match.home_team_id === 81 && match.status === 'FINISHED'));
+  }
+  assert.equal(selectMatchContext(matches, [], 'y el proximo?', [question]).focused.id, next.id);
+  assert.equal(selectMatchContext(matches, [], 'resultados de la jornada completa', [question]).recent[0].id, other.id);
+});
+
 test('a browser header cannot authorize writes', async () => {
   const h = harness();
   const result = await h.route.POST(h.request({ 'x-pitchline-sync': 'true' }));
   assert.equal(result.status, 401);
   assert.equal(h.calls.length, 0);
   assert.equal(h.reservations.length, 0);
+});
+
+test('player snapshots keep recorded zeroes and omit missing metrics', async () => {
+  const h = harness({ playerGroups: [{ team: { name: 'Arsenal' }, players: [
+    { player: { name: 'Example Player' }, statistics: [{ games: { minutes: 21 }, goals: { total: 0, assists: null }, passes: { key: 2 } }] },
+  ] }] });
+  await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  const snapshot = h.writes.find(w => w.table === 'matches').rows[0].live_stats.player_stats;
+  assert.equal(snapshot.final, false);
+  assert.equal(snapshot.players[0].minutes, 21);
+  assert.equal(snapshot.players[0].goals, 0);
+  assert.equal(snapshot.players[0].assists, undefined);
+  assert.equal(snapshot.players[0].key_passes, 2);
 });
 
 test('VAR can lower the score and an empty event snapshot clears a cancelled goal', async () => {

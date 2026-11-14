@@ -97,26 +97,21 @@ export function SpotlightMatchCard({
 
   return (
     <div className="relative overflow-hidden rounded-xl bg-surface-container-low  border border-white/8">
-      <MatchFreshness match={match} />
-      {/* Luz ambiental sutil de fondo */}
-      <div className="absolute -top-32 -left-20 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-32 -right-20 w-96 h-96 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none"></div>
-
       <div className="relative z-10 flex flex-col p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
-        {/* Top Meta Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
+        <MatchFreshness match={match} />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/8 pb-4">
+          <div className="flex flex-wrap items-center gap-2.5">
             {isLive ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-mint/15 text-brand-mint border border-brand-mint/30 font-label-sm text-label-sm uppercase font-bold tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
                 En Vivo
               </span>
             ) : isFinished ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm uppercase font-bold tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant">
                 Finalizado • {formatMatchDateTimeLabel(match.kickoff_at)}
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm uppercase font-bold tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant">
                 {isUnavailable ? (match.status === "CANCELLED" ? "Cancelado" : "Aplazado") : "Previa"} {getStageNameEs(match.stage, match.matchday ?? 4)} • {formatMatchDateTimeLabel(match.kickoff_at)}
               </span>
             )}
@@ -125,14 +120,7 @@ export function SpotlightMatchCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[18px]">
-              sports
-            </span>
-            <span className="font-label-md text-label-md text-on-surface font-semibold">
-              Árbitro: {match.referee ?? "F. Letexier (FRA)"}
-            </span>
-          </div>
+          {match.referee && <span className="text-xs text-on-surface-variant">Árbitro · {match.referee}</span>}
         </div>
 
         {/* Live Match Scoreboard Hub */}
@@ -148,7 +136,7 @@ export function SpotlightMatchCard({
               </span>
             </div>
             <div
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/4 flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
                 activeScoreboardGoalSide === "HOME"
                   ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
                   : "border-white/10"
@@ -171,10 +159,10 @@ export function SpotlightMatchCard({
                 ? "Haz clic en el marcador para repetir la animación del gol"
                 : undefined
             }
-            className={`relative overflow-hidden md:col-span-3 flex flex-col items-center justify-center order-2 bg-surface-container py-3.5 px-3 sm:px-4 rounded-xl shadow-inner border w-full transition-all duration-500 ${
+            className={`relative overflow-hidden md:col-span-3 flex flex-col items-center justify-center order-2 py-3.5 px-2 rounded-xl border w-full transition-all duration-500 ${
               isGoalActive
                 ? "border-brand-mint animate-goal-card-glow bg-gradient-to-b from-brand-mint/15 via-surface-container to-surface-container cursor-pointer"
-                : "border-white/8"
+                : "border-transparent"
             }`}
           >
             {/* Barrido de luz y onda expansiva DENTRO del propio marcador */}
@@ -210,7 +198,7 @@ export function SpotlightMatchCard({
                   className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
                     activeScoreboardGoalSide === "HOME"
                       ? "bg-brand-mint/25 border-2 border-brand-mint "
-                      : "bg-surface-container-low/70 border border-white/8"
+                      : "border border-transparent"
                   }`}
                 >
                   {activeScoreboardGoalSide === "HOME" && (
@@ -222,7 +210,7 @@ export function SpotlightMatchCard({
                   )}
                   <span
                     key={`h-${match.home_score}-${manualReplaySide ?? ""}`}
-                    className={`font-score-display text-3xl sm:text-score-display tracking-tight ${
+                    className={`font-score-display text-4xl tabular-nums tracking-tight ${
                       activeScoreboardGoalSide === "HOME"
                         ? "text-brand-mint animate-scoreboard-digit"
                         : "text-primary"
@@ -241,7 +229,7 @@ export function SpotlightMatchCard({
                   className={`relative px-3 py-1 rounded-xl transition-all duration-500 ${
                     activeScoreboardGoalSide === "AWAY"
                       ? "bg-brand-mint/25 border-2 border-brand-mint "
-                      : "bg-surface-container-low/70 border border-white/8"
+                      : "border border-transparent"
                   }`}
                 >
                   {activeScoreboardGoalSide === "AWAY" && (
@@ -253,7 +241,7 @@ export function SpotlightMatchCard({
                   )}
                   <span
                     key={`a-${match.away_score}-${manualReplaySide ?? ""}`}
-                    className={`font-score-display text-3xl sm:text-score-display tracking-tight ${
+                    className={`font-score-display text-4xl tabular-nums tracking-tight ${
                       activeScoreboardGoalSide === "AWAY"
                         ? "text-brand-mint animate-scoreboard-digit"
                         : "text-primary"
@@ -328,7 +316,7 @@ export function SpotlightMatchCard({
           {/* Visitante */}
           <div className="md:col-span-4 flex items-center justify-between sm:justify-start gap-3 sm:gap-4 order-3">
             <div
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-surface-container-high flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
+              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-white/4 flex items-center justify-center p-2 sm:p-2.5  shrink-0 border transition-transform duration-500 ${
                 activeScoreboardGoalSide === "AWAY"
                   ? "border-brand-mint ring-2 ring-brand-mint/60 scale-105"
                   : "border-white/10"

@@ -293,15 +293,12 @@ body { font-feature-settings: "ss01" on; }
 ::selection { background: #19D392; color: #0A1124; }
 .skip-link { position: fixed; top: -80px; left: 16px; z-index: 100; padding: 12px 20px; background: var(--brand-mint); color: var(--brand-navy); border-radius: 8px; }
 .skip-link:focus { top: 12px; }
-.pitchline-sidebar { border-right-color: rgba(255,255,255,.06); }
-.pitchline-header { box-shadow: none; border-bottom-color: rgba(255,255,255,.06); }
-.pitchline-sidebar nav a { font-size: 13px; min-height: 46px; }
-.pitchline-sidebar nav a[aria-current="page"] { background: rgba(25,211,146,.08); color: var(--brand-mint); }
-.pitchline-sidebar nav a:not([aria-current]) { color: #9AA7BB; }
-.pitchline-sidebar nav a:not([aria-current]) span { color: inherit; }
+.pitchline-nav-link { color: #9AA7BB; transition: color .15s, background-color .15s; }
+.pitchline-nav-link:hover { color: var(--brand-white); background: rgb(255 255 255 / .04); }
+.pitchline-nav-link[aria-current="page"] { color: var(--brand-mint); background: rgb(25 211 146 / .09); }
 .pitchline-content h1 { letter-spacing: -.035em; font-weight: 600; }
 .pitchline-content h2, .pitchline-content h3 { letter-spacing: -.02em; }
-.pitchline-content section:has(h1) { background: transparent; border: 0; border-radius: 0; padding: 0 0 24px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.pitchline-content section:has(h1) { background: transparent; border: 0; border-radius: 0; padding: 0 0 18px; }
 .pitchline-content :is(article, section) { scroll-margin-top: 100px; }
 .pitchline-content input::placeholder, .pitchline-content textarea::placeholder { color: #8997AC; }
 .pitchline-content :is(input, textarea, select) { accent-color: var(--brand-mint); }
@@ -315,4 +312,24 @@ body { font-feature-settings: "ss01" on; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+.pitchline-tab {
+  border-bottom: 2px solid transparent;
+  color: #9AA7BB;
+  cursor: pointer;
+}
+.pitchline-tab:hover { color: var(--brand-white); }
+.pitchline-tab[aria-selected="true"] {
+  border-bottom-color: var(--brand-mint);
+  color: var(--brand-mint);
+}
+
+@media (width < 40rem) {
+  .standings-compact .standings-row { grid-template-columns: 2rem minmax(0, 1fr) 7rem; }
+  .standings-compact .standings-team,
+  .standings-compact .standings-stats { grid-column: span 1 / span 1; }
+  .standings-compact .standings-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .standings-compact .standings-stats > :nth-child(n+2):nth-child(-n+6),
+  .standings-compact .standings-form { display: none; }
 }

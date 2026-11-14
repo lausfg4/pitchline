@@ -200,37 +200,15 @@ export function NoticiasExclusivasView({
     >
       <div className="flex flex-col w-full space-y-6">
         {/* Cabecera Editorial (Sincronización Automática en Tiempo Real) */}
-        <section className="p-5 rounded-xl bg-surface-container border border-white/8  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold tracking-wider">
-                <span className="material-symbols-outlined text-[15px]">
-                  newspaper
-                </span>
-                Noticias Exclusivas UCL
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm">
-                UEFA Champions League 2026/27
-              </span>
-            </div>
-            <h1 className="font-headline-lg text-headline-md sm:text-headline-lg text-brand-white">
-              Actualidad Verificada de la UEFA Champions League
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Crónicas de la última jornada, análisis táctico xG y partes médicos actualizados automáticamente en tiempo real.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-surface-container-low border border-brand-mint/25 shrink-0 self-start lg:self-auto">
-            <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
-            <span className="font-label-sm text-xs text-brand-mint font-bold uppercase tracking-wider">
-              Actualizado en directo
-            </span>
+        <section>
+          <div className="space-y-1">
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Noticias</h1>
+            <p className="text-sm text-on-surface-variant">Crónicas y actualidad de la Champions League.</p>
           </div>
         </section>
 
         {/* Barra Doble de Filtros: Categoría y Club */}
-        <section className="p-3.5 sm:p-4 rounded-xl bg-surface-container-low border border-white/8 space-y-3">
+        <section className="border-y border-white/8 py-3 space-y-3">
           {/* Filtro por Categoría */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 sm:mx-0 sm:px-0">
             <span className="font-label-sm text-label-sm uppercase text-on-surface-variant shrink-0 mr-1">
@@ -245,8 +223,8 @@ export function NoticiasExclusivasView({
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3.5 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-all cursor-pointer ${
                     active
-                      ? "bg-brand-mint text-brand-navy font-bold "
-                      : "bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                      ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
                 >
                   {cat}
@@ -269,8 +247,8 @@ export function NoticiasExclusivasView({
                   onClick={() => setSelectedClub(club)}
                   className={`px-3 py-1 rounded-lg font-label-sm text-label-sm whitespace-nowrap transition-all cursor-pointer ${
                     active
-                      ? "bg-secondary-container text-on-secondary-container font-bold"
-                      : "bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                      ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
                 >
                   {club}
@@ -283,7 +261,7 @@ export function NoticiasExclusivasView({
         {/* Noticia Principal Destacada (Hero Card) */}
         {heroArticle ? (
           <article className="relative overflow-hidden rounded-2xl bg-surface-container-low border border-white/10  grid grid-cols-1 lg:grid-cols-12">
-            <div className="lg:col-span-7 relative min-h-[260px] sm:min-h-[340px] bg-surface-container-highest overflow-hidden">
+            <div className="lg:col-span-7 relative min-h-[200px] sm:min-h-[280px] bg-surface-container-highest overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={
@@ -293,7 +271,6 @@ export function NoticiasExclusivasView({
                 alt={heroArticle.title}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/30 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-surface-container-low"></div>
               <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-brand-mint text-brand-navy font-label-sm text-label-sm uppercase font-bold ">
                   {heroArticle.category ?? "Destacado UCL"}
@@ -434,7 +411,7 @@ export function NoticiasExclusivasView({
                     </div>
                   </div>
 
-                  <div className="px-4 py-3 bg-surface-container/60 border-t border-outline-variant/10 flex items-center justify-between">
+                  <div className="px-4 py-3 border-t border-white/8 flex items-center justify-between">
                     <span className="font-label-sm text-[10px] text-on-surface-variant uppercase">
                       UEFA Champions League
                     </span>

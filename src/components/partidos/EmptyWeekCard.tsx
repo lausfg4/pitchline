@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { CalendarDays } from "lucide-react";
 
 interface EmptyWeekCardProps {
   weekRangeLabel: string;
@@ -21,36 +21,14 @@ export function EmptyWeekCard({
   upcomingMatchesSummary,
 }: EmptyWeekCardProps) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="relative overflow-hidden rounded-xl bg-surface-container-low border border-brand-mint/30 p-5 lg:p-6 "
-    >
-      <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-mint/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-brand-mint/15 border border-brand-mint/30 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-brand-mint text-[26px]">
-              event_busy
-            </span>
-          </div>
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-brand-mint font-label-sm text-label-sm uppercase tracking-wider">
-                Detector de Semana Activo ({weekRangeLabel})
-              </span>
-            </div>
-            <h2 className="font-headline-md text-headline-md text-brand-white">
-              No hay partidos para esta semana — Próxima jornada:{" "}
-              <span className="text-brand-mint capitalize">{nextMatchdayDate}</span>
-            </h2>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              {upcomingMatchesSummary ??
-                "El calendario oficial de la UEFA Champions League no registra encuentros entre lunes y domingo de la semana en curso."}
-            </p>
-          </div>
-        </div>
+    <section aria-label="Calendario semanal" className="flex items-start gap-3 rounded-xl border border-white/8 bg-surface-container-low px-4 py-4 sm:px-5">
+      <CalendarDays size={20} strokeWidth={1.7} aria-hidden="true" className="mt-0.5 shrink-0 text-on-surface-variant" />
+      <div className="space-y-1">
+        <p className="text-xs text-on-surface-variant">{weekRangeLabel}</p>
+        <h2 className="font-headline-md text-base font-semibold text-brand-white">No hay partidos para esta semana</h2>
+        <p className="text-sm text-on-surface-variant">Próxima jornada · <span className="text-brand-white">{nextMatchdayDate}</span></p>
+        {upcomingMatchesSummary && <p className="text-sm text-on-surface-variant">{upcomingMatchesSummary}</p>}
       </div>
-    </div>
+    </section>
   );
 }

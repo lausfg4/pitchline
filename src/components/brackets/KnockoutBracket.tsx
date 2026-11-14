@@ -122,7 +122,6 @@ export function KnockoutBracket({
   const [finalWinner, setFinalWinner] = useState<number | null>(null);
 
   const [authUserId, setAuthUserId] = useState<string | null>(null);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
   const [savedBrackets, setSavedBrackets] = useState<UserBracketRow[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveFeedback, setSaveFeedback] = useState<{
@@ -153,12 +152,10 @@ export function KnockoutBracket({
 
         if (!user) {
           setAuthUserId(null);
-          setAuthEmail(null);
           return;
         }
 
         setAuthUserId(user.id);
-        setAuthEmail(user.email ?? "Usuario Autenticado");
 
         const { data, error } = await supabase
           .from("user_brackets")
@@ -535,72 +532,16 @@ export function KnockoutBracket({
     // No debe aparecer ningún cuadro ni predicción de llaves porque aún no ha empezado Octavos.
     if (mode === "simulator") {
       return (
-        <div className="p-8 sm:p-10 rounded-2xl bg-surface-container border border-white/10  flex flex-col items-center text-center max-w-3xl mx-auto my-4 space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-brand-mint/10 border border-brand-mint/30 flex items-center justify-center text-brand-mint ">
-            <span className="material-symbols-outlined text-[34px]">lock_clock</span>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container-high border border-white/10 font-label-sm text-label-sm uppercase tracking-wider text-brand-mint font-bold">
-            <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
-            Fase de Liga en Curso • Jornada {maxPlayed} de 8 Jugadas
-          </div>
-
+        <div className="mx-auto my-4 max-w-3xl space-y-5 rounded-xl border border-white/8 bg-surface-container-low px-5 py-8 sm:px-8">
           <div className="space-y-2">
-            <h1 className="font-headline-lg text-headline-md sm:text-headline-lg text-brand-white font-bold">
-              Predicciones de Eliminatorias aún no disponibles
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto leading-relaxed">
-              La UEFA Champions League 2026/27 se encuentra actualmente en la{" "}
-              <strong className="text-brand-white">Fase de Liga</strong> (próxima:{" "}
-              <strong className="text-brand-mint">
-                {nextPhaseDateLabel}
-              </strong>
-              ). Como aún no han comenzado los Octavos de Final ni están definidas
-              las llaves, el simulador de eliminatorias se abrirá en cuanto se
-              definan los 16 clubes clasificados.
-            </p>
-            <p className="font-label-md text-label-md text-brand-mint pt-1">
-              {upcomingPhaseText}
-            </p>
+            <p className="text-xs text-on-surface-variant">Fase de liga · {maxPlayed} de 8 jornadas jugadas</p>
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Arma tu Champions</h1>
+            <p className="text-sm text-on-surface-variant">El simulador se abre cuando se definan los cruces de octavos.</p>
+            <p className="text-sm text-on-surface-variant">Próxima jornada · <span className="text-brand-white">{nextPhaseDateLabel}</span></p>
+            {upcomingPhaseText && <p className="text-sm text-on-surface-variant">{upcomingPhaseText}</p>}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full text-left pt-2">
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
-              <span className="font-label-sm text-[11px] uppercase text-brand-mint font-bold block">
-                Puestos 1 al 8
-              </span>
-              <span className="font-body-md text-label-md text-brand-white font-semibold block mt-0.5">
-                Pase directo a Octavos
-              </span>
-              <span className="font-label-sm text-[11px] text-on-surface-variant block mt-0.5">
-                En disputa (Jornadas 1–8)
-              </span>
-            </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
-              <span className="font-label-sm text-[11px] uppercase text-primary font-bold block">
-                Puestos 9 al 24
-              </span>
-              <span className="font-body-md text-label-md text-brand-white font-semibold block mt-0.5">
-                Playoffs Eliminatorios
-              </span>
-              <span className="font-label-sm text-[11px] text-on-surface-variant block mt-0.5">
-                Definen los otros 8 cupos
-              </span>
-            </div>
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-white/8">
-              <span className="font-label-sm text-[11px] uppercase text-on-surface-variant font-bold block">
-                Octavos a la Final
-              </span>
-              <span className="font-body-md text-label-md text-brand-white font-semibold block mt-0.5">
-                Llaves por definir
-              </span>
-              <span className="font-label-sm text-[11px] text-on-surface-variant block mt-0.5">
-                Se habilita tras el sorteo UEFA
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 border-t border-white/8 pt-4">
             <Link
               href="/partidos"
               className="px-5 py-2.5 rounded-xl bg-brand-mint text-brand-navy font-label-md text-label-md font-bold hover:brightness-110 transition-all flex items-center gap-2 "
@@ -741,7 +682,7 @@ export function KnockoutBracket({
         </div>
 
         {/* Munich Trophy Showcase Card */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-high p-5  flex items-center justify-between border border-white/8">
+        <div className="relative overflow-hidden rounded-xl bg-surface-container-low p-5  flex items-center justify-between border border-white/8">
           <div className="flex flex-col z-10 max-w-[68%]">
             <div className="flex items-center gap-1.5 text-brand-mint mb-1">
               <span className="material-symbols-outlined text-[16px]">
@@ -1096,31 +1037,11 @@ export function KnockoutBracket({
     <div className="flex flex-col space-y-6 w-full">
       {/* Cabecera de Control según el Modo ("live" vs "simulator") */}
       {mode === "simulator" ? (
-        <div className="p-5 rounded-xl bg-surface-container-low border border-brand-mint/25  flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-brand-mint/15 text-brand-mint border border-brand-mint/30 font-label-sm text-label-sm uppercase font-bold tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[15px]">
-                  tune
-                </span>
-                Simulador Interactivo • Arma tu Champions
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
-                {completedDecisionsCount} / 15 llaves decididas
-              </span>
-              {authEmail && (
-                <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
-                  {authEmail}
-                </span>
-              )}
-            </div>
-            <h1 className="font-headline-lg text-headline-md sm:text-headline-lg text-brand-white">
-              Elige a tus ganadores desde Octavos hasta el Campeón en Múnich
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Haz clic sobre cualquier club en cada cruce para clasificarlo a la
-              siguiente ronda y guarda tu predicción oficial.
-            </p>
+        <div className="flex flex-col gap-4 border-b border-white/8 pb-5">
+          <div className="space-y-1">
+            <p className="text-xs text-on-surface-variant">{completedDecisionsCount} de 15 cruces decididos</p>
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Arma tu Champions</h1>
+            <p className="text-sm text-on-surface-variant">Elige al ganador de cada cruce y guarda tu predicción.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
@@ -1925,7 +1846,7 @@ export function KnockoutBracket({
 
             <div className="flex flex-col justify-center flex-1 space-y-5">
               {/* Tarjeta de la Final */}
-              <div className="rounded-xl bg-gradient-to-b from-surface-container to-surface-container-high p-4 border border-brand-mint/30  space-y-3">
+              <div className="rounded-xl bg-surface-container-low p-4 border border-brand-mint/30  space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-label-sm text-label-sm text-brand-mint uppercase font-bold flex items-center gap-1">
                     <span className="material-symbols-outlined text-[14px]">

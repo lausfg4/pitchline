@@ -5,6 +5,7 @@ import { calculatePoissonMatchPrediction } from "@/lib/predictions/poisson";
 import type {
   LiveStats,
   MatchEventRow,
+  MatchPlayerStats,
   MatchRow,
   MatchStatus,
   PredictionRow,
@@ -93,6 +94,46 @@ interface FootballDataMatchesResponse {
   matches?: FootballDataMatchItem[];
 }
 
+interface ApiFootballPlayerGroup {
+  team: { name: string };
+  players: {
+    player: { name: string };
+    statistics: {
+      games?: { minutes?: number | null; position?: string | null; rating?: string | null };
+      goals?: { total?: number | null; assists?: number | null; saves?: number | null };
+      shots?: { total?: number | null; on?: number | null };
+      passes?: { total?: number | null; key?: number | null };
+      tackles?: { total?: number | null; interceptions?: number | null };
+      cards?: { yellow?: number | null; red?: number | null };
+    }[];
+  }[];
+}
+
+function readPlayerStats(groups: ApiFootballPlayerGroup[]): MatchPlayerStats[] {
+  return groups.flatMap(({ team, players }) => players.flatMap(({ player, statistics }) => {
+    const s = statistics[0];
+    if (!player.name || !s || !(Number(s.games?.minutes) > 0)) return [];
+    return [{
+      name: player.name,
+      team: team.name,
+      minutes: s.games?.minutes ?? undefined,
+      position: s.games?.position ?? undefined,
+      rating: s.games?.rating ?? undefined,
+      goals: s.goals?.total ?? undefined,
+      assists: s.goals?.assists ?? undefined,
+      saves: s.goals?.saves ?? undefined,
+      shots: s.shots?.total ?? undefined,
+      shots_on_target: s.shots?.on ?? undefined,
+      passes: s.passes?.total ?? undefined,
+      key_passes: s.passes?.key ?? undefined,
+      tackles: s.tackles?.total ?? undefined,
+      interceptions: s.tackles?.interceptions ?? undefined,
+      yellow_cards: s.cards?.yellow ?? undefined,
+      red_cards: s.cards?.red ?? undefined,
+    }];
+  }));
+}
+
 interface ApiFootballLiveFixture {
   fixture: {
     id: number;
@@ -153,6 +194,7 @@ interface ApiFootballLiveFixture {
       value: number | string | null;
     }[];
   }[];
+  players?: ApiFootballPlayerGroup[];
 }
 
 function mapFootballDataStatusAndMinute(
@@ -351,6 +393,8 @@ async function handleChampionsSync(request: NextRequest) {
   let matchesToSync: MatchRow[] = [];
   const apiUpdatedIds = new Set<number>();
   const authoritativeEvents = new Set<number>();
+  const playerSnapshots = new Map<number, NonNullable<LiveStats["player_stats"]>>();
+  const playerStatsChecked = new Set<number>();
   const eventsToSync: MatchEventRow[] = [];
 
   let standingsSource = "UNCHANGED";
@@ -691,6 +735,53 @@ async function handleChampionsSync(request: NextRequest) {
     } catch (error) { console.error("API-Football sync failed", error); warnings.push("api-football: cuota, cobertura o red no disponible; se conserva la última lectura"); }
   }
 
+  // Enrich existing fixtures in batches, using the remaining shared daily budget.
+  if (apiFootballKey) {
+    const storedById = new Map(storedMatches.map(m => [m.id, m]));
+    const candidates = matchesToSync.flatMap(match => {
+      const previous = storedById.get(match.id)?.live_stats;
+      const fixtureId = match.live_stats?.provider_fixture_id ?? previous?.provider_fixture_id;
+      const snapshot = previous?.player_stats;
+      const checkedAt = previous?.player_stats_checked_at;
+      const final = match.status === "FINISHED";
+      const live = ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(match.status);
+      if (!fixtureId || (!final && !live) || snapshot?.final) return [];
+      if (snapshot && !final && Date.now() - Date.parse(snapshot.updated_at) < 5 * 60_000) return [];
+      return [{ match, fixtureId, checkedAt }];
+    }).sort((a, b) =>
+      Number(b.match.status === "FINISHED") - Number(a.match.status === "FINISHED") ||
+      (a.checkedAt ?? "").localeCompare(b.checkedAt ?? "") ||
+      b.match.kickoff_at.localeCompare(a.match.kickoff_at)
+    ).slice(0, 20);
+
+    try {
+      if (candidates.length && await reserve("api-football-player-stats", 300, 5)) {
+        const ids = candidates.map(({ fixtureId }) => fixtureId).join("-");
+        const response = await fetch(`https://v3.football.api-sports.io/fixtures?ids=${ids}`, {
+          headers: { "x-apisports-key": apiFootballKey.trim() },
+          cache: "no-store",
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!response.ok) throw new Error(`API-Football HTTP ${response.status}`);
+        const body = await response.json();
+        if (Object.keys(body.errors ?? {}).length || !Array.isArray(body.response)) throw new Error("Respuesta de estadísticas no disponible");
+        for (const fixture of body.response as ApiFootballLiveFixture[]) {
+          const candidate = candidates.find(({ fixtureId }) => fixtureId === fixture.fixture.id);
+          if (!candidate) continue;
+          playerStatsChecked.add(candidate.match.id);
+          const players = readPlayerStats(fixture.players ?? []);
+          if (players.length) playerSnapshots.set(candidate.match.id, {
+            updated_at: nowIso,
+            final: mapApiFootballStatus(fixture.fixture.status.short) === "FINISHED",
+            players,
+          });
+        }
+      }
+    } catch {
+      warnings.push("api-football: estadísticas individuales no disponibles; se conserva la última lectura");
+    }
+  }
+
   // ============================================================================
   // 3. MOTOR DE PRONÓSTICOS ALGORÍTMICOS POISSON (30% / 30% / 25% / 15%)
   // ============================================================================
@@ -740,6 +831,19 @@ async function handleChampionsSync(request: NextRequest) {
       if (apiUpdatedIds.has(m.id)) return m; // Authoritative corrections may lower the score (VAR).
       if (prev?.live_stats?.source === "api-football" && !(m.status === "FINISHED" && Date.now() - Date.parse(prev.live_stats.source_updated_at ?? prev.updated_at) > 15 * 60_000)) return { ...m, status: prev.status, home_score: prev.home_score, away_score: prev.away_score, elapsed_minute: prev.elapsed_minute, extra_minute: prev.extra_minute, live_stats: prev.live_stats, updated_at: prev.updated_at };
       return m;
+    });
+    matchesToSync = matchesToSync.map(m => {
+      const previous = existingById.get(m.id)?.live_stats;
+      const fixtureId = m.live_stats?.provider_fixture_id ?? previous?.provider_fixture_id;
+      const playerStats = playerSnapshots.get(m.id) ?? previous?.player_stats;
+      if (!fixtureId) return m;
+      const checkedAt = playerStatsChecked.has(m.id) ? nowIso : previous?.player_stats_checked_at;
+      return { ...m, live_stats: {
+        ...m.live_stats,
+        provider_fixture_id: fixtureId,
+        ...(playerStats ? { player_stats: playerStats } : {}),
+        ...(checkedAt ? { player_stats_checked_at: checkedAt } : {}),
+      } };
     });
     matchesToSync = matchesToSync.filter(m => JSON.stringify(m) !== JSON.stringify(existingById.get(m.id)));
     const { error: mErr } = matchesToSync.length ? await adminSupabase

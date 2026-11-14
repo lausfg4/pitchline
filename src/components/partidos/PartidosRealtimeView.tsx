@@ -498,20 +498,20 @@ export function PartidosRealtimeView({
       currentMatchdayLabel={phaseInfo.headerPillLabel}
     >
       <div className="flex flex-col w-full space-y-6">
-        <section className="flex flex-wrap items-end justify-between gap-4 pb-6 border-b border-white/8">
-          <div className="space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-on-surface-variant">UEFA Champions League</p>
-            <h1 className="font-headline-lg text-headline-lg text-brand-white">Cada partido. Cada momento.</h1>
-            <p className="text-body-md text-on-surface-variant">Sigue los marcadores y descubre lo que viene.</p>
+        <section className="flex flex-wrap items-end justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-xs text-on-surface-variant">UEFA Champions League</p>
+            <h1 className="font-headline-lg text-headline-lg text-brand-white">Partidos</h1>
           </div>
-          <span className="text-xs text-brand-mint">{phaseInfo.headerPillLabel}</span>
+          <p className="text-xs text-on-surface-variant" role="status">
+            {realtimeStatus === "SUBSCRIBED" ? "Conexión activa" : realtimeStatus === "CONNECTING" ? "Conectando…" : "Conexión interrumpida"}
+            <span className="ml-2 border-l border-white/10 pl-2">Los marcadores pueden llegar con retraso.</span>
+          </p>
         </section>
-        <p className="text-xs text-on-surface-variant" role="status">Los marcadores gratuitos pueden llegar con retraso. La conexión en línea no garantiza datos recientes.</p>
-        {/* Sub-header de Telemetría & Navegación de Jornada / Fase Eliminatoria */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-xl bg-surface-container  border border-white/8">
+        <div className="border-y border-white/8 py-3">
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Selector de Jornada (J1-J8) o Fase Eliminatoria (Octavos, Cuartos, Semis, Final) */}
-            <div className="flex items-center justify-between w-full sm:w-auto bg-surface-container-low px-2 py-1 rounded-lg border border-white/8">
+            <div className="flex items-center justify-between w-full sm:w-auto px-1 rounded-lg border border-white/8">
               <button
                 type="button"
                 onClick={() => {
@@ -522,7 +522,7 @@ export function PartidosRealtimeView({
                   setActiveFilter("ALL");
                 }}
                 aria-label="Fase o jornada anterior"
-                className="p-1 min-w-10 min-h-10 sm:min-w-0 sm:min-h-0 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                className="p-1 min-w-10 min-h-10 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   chevron_left
@@ -549,7 +549,7 @@ export function PartidosRealtimeView({
                   setActiveFilter("ALL");
                 }}
                 aria-label="Fase o jornada siguiente"
-                className="p-1 min-w-10 min-h-10 sm:min-w-0 sm:min-h-0 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
+                className="p-1 min-w-10 min-h-10 shrink-0 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">
                   chevron_right
@@ -558,7 +558,7 @@ export function PartidosRealtimeView({
             </div>
 
             {/* Botones rápidos dinámicos: J1..J8 en Fase de Liga, y Octavos/Cuartos/Semis/Final en Eliminatorias */}
-            <div className="hidden sm:flex items-center gap-1 bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
+            <div className="hidden sm:flex items-center gap-1 flex-wrap">
               {(phaseInfo.isKnockout || leagueStageCompleted) && (
                 <button
                   type="button"
@@ -602,9 +602,9 @@ export function PartidosRealtimeView({
               <button
                 type="button"
                 onClick={() => setActiveFilter("ALL")}
-                className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "ALL"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold "
-                    : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                className={`px-3 py-2 rounded-lg font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "ALL"
+                    ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
               >
                 Todos ({counts.all})
@@ -612,20 +612,20 @@ export function PartidosRealtimeView({
               <button
                 type="button"
                 onClick={() => setActiveFilter("LIVE")}
-                className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${activeFilter === "LIVE"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold "
-                    : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                className={`px-3 py-2 rounded-lg font-label-md text-label-md whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${activeFilter === "LIVE"
+                    ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
               >
-                <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
+                {counts.live > 0 && <span className="size-1.5 rounded-full bg-brand-mint" />}
                 <span>En Vivo ({counts.live})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveFilter("FINISHED")}
-                className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "FINISHED"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold "
-                    : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                className={`px-3 py-2 rounded-lg font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "FINISHED"
+                    ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
               >
                 Finalizados ({counts.finished})
@@ -633,9 +633,9 @@ export function PartidosRealtimeView({
               <button
                 type="button"
                 onClick={() => setActiveFilter("PREDICTIONS")}
-                className={`px-3 py-1.5 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "PREDICTIONS"
-                    ? "bg-secondary-container text-on-secondary-container font-semibold "
-                    : "bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                className={`px-3 py-2 rounded-lg font-label-md text-label-md whitespace-nowrap transition-colors cursor-pointer ${activeFilter === "PREDICTIONS"
+                    ? "bg-brand-mint/10 text-brand-mint font-semibold"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
                   }`}
               >
                 Pronósticos ({counts.predicted})
@@ -643,28 +643,6 @@ export function PartidosRealtimeView({
             </div>
           </div>
 
-          {/* Status en Tiempo Real */}
-          <div className="flex items-center justify-between lg:justify-end gap-3 self-stretch lg:self-auto">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-low border border-brand-mint/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-brand-mint opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-mint"></span>
-              </span>
-              <span className="font-label-sm text-label-sm text-brand-mint uppercase font-bold tracking-wider">
-                Conexión
-              </span>
-              <span className="text-outline-variant font-label-sm text-label-sm">
-                •
-              </span>
-              <span className="font-tabular-stats text-tabular-stats text-on-surface-variant">
-                {realtimeStatus === "SUBSCRIBED"
-                  ? "Conectado"
-                  : realtimeStatus === "CONNECTING"
-                    ? "Conectando..."
-                    : "Actualizado"}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* DETECTOR DE SEMANA VACÍA (AGENTS.md Regla de Negocio Pestaña 2) */}

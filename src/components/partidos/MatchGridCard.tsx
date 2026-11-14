@@ -85,7 +85,7 @@ export function MatchGridCard({
       <div className="flex items-center justify-between gap-2">
         {isUnavailable && <span className="text-xs text-on-surface-variant">{match.status === "CANCELLED" ? "Cancelado" : "Aplazado"}</span>}
         {isFinished && (
-          <span className="px-2.5 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
+          <span className="px-2.5 py-0.5 rounded-md bg-white/5 text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
             Finalizado • {formatMatchDateTimeLabel(match.kickoff_at).split("•")[0].trim()}
           </span>
         )}
@@ -96,7 +96,7 @@ export function MatchGridCard({
           </span>
         )}
         {isScheduled && (
-          <span className="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
+          <span className="px-2.5 py-0.5 rounded-md bg-white/5 text-on-surface-variant font-label-sm text-label-sm font-bold uppercase tracking-wider">
             {formatMatchDateTimeLabel(match.kickoff_at)}
           </span>
         )}

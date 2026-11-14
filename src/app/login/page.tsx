@@ -163,8 +163,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen min-h-dvh bg-[#0A1124] text-on-surface flex flex-col justify-between relative overflow-hidden">
       {/* Luces ambientales con paleta oficial de Pitchline (#0A1124 y #19D392) */}
-      <div className="absolute -top-40 -left-32 w-96 h-96 bg-[#19D392]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-32 w-96 h-96 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
 
       {/* Barra superior de retorno */}
       <header className="relative z-10 w-full max-w-6xl mx-auto px-3 sm:px-8 pt-[max(1rem,env(safe-area-inset-top))] sm:pt-6 flex items-center justify-between gap-3">
