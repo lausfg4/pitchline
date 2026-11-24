@@ -12,7 +12,7 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, dataSports, omitBoardClock = false, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, dataSports, dataSportsMatch = {}, dataSportsIncidents = [], omitBoardClock = false, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
   existing.live_stats.source_updated_at = new Date(Date.parse(now) - snapshotAge).toISOString();
@@ -42,9 +42,10 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
             periodStartedAt: new Date(Date.parse(now) - 45 * 60_000).toISOString(),
             periodOffsetSeconds: 2700, periodEndSeconds: 5400, maxExtraSeconds: 300,
           },
+          ...dataSportsMatch,
         };
-        const data = url.includes('/livescores') ? [{ ...fixture, clock: omitBoardClock ? null : fixture.clock }]
-          : url.endsWith('/fixtures/44') ? fixture : dataSports;
+        const data = url.includes('/fixtures?date=') ? [{ ...fixture, clock: omitBoardClock ? null : fixture.clock }]
+          : url.endsWith('/fixtures/44') ? fixture : url.endsWith('/events') ? dataSportsIncidents : dataSports;
         return { ok: true, json: async () => ({ data }) };
       }
       if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: fdScore, away: 0 }, halfTime: fdHalfTime } }] }) };
@@ -249,7 +250,7 @@ test('DataSportsAPI enriches Football-Data possession without changing its match
   const { computeMatchTelemetry } = load('src/lib/date-utils.ts');
   assert.equal(computeMatchTelemetry(match).homePossession, 38);
   assert.equal(computeMatchTelemetry(match).awayPossession, 62);
-  assert.equal(h.reservations.filter(args => args.bucket_name === 'datasports-requests').length, 2);
+  assert.equal(h.reservations.filter(args => args.bucket_name === 'datasports-requests').length, 3);
 });
 
 test('a rejected DataSportsAPI key does not block score synchronization', async () => {
@@ -294,4 +295,54 @@ test('DataSportsAPI looks up the detailed clock when the live list omits it', as
   const match = h.writes.find(w => w.table === 'matches').rows[0];
   assert.equal(match.live_stats.datasports_clock.period_offset_seconds, 2700);
   assert.ok(h.calls.some(url => url.endsWith('/fixtures/44')));
+});
+
+test('a stale calendar cannot turn an in-play or finished fixture back into a scheduled match', async () => {
+  for (const status of ['2H', 'FINISHED']) {
+    const h = harness({
+      existingSource: 'football-data',
+      env: { FOOTBALL_DATA_KEY: 'test-fd-key', API_FOOTBALL_KEY: undefined },
+      fdStatus: 'TIMED',
+      fdScore: null,
+    });
+    h.existing.status = status;
+    await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+    assert.equal(h.writes.some(w => w.table === 'matches'), false);
+  }
+});
+
+test('a confirmed DataSportsAPI final beats a stale calendar and includes verified stats and incidents', async () => {
+  const h = harness({
+    existingSource: 'football-data',
+    env: { FOOTBALL_DATA_KEY: 'test-fd-key', API_FOOTBALL_KEY: undefined, DATASPORTSAPI_API_KEY: 'test-stats-key' },
+    fdStatus: 'TIMED',
+    dataSportsMatch: { status: { phase: 'finished' }, homeScore: { current: 1 }, awayScore: { current: 0 } },
+    dataSports: { periods: [{ period: 'all', groups: [{ items: [
+      { key: 'ballPossession', home: { value: 55 }, away: { value: 45 } },
+      { key: 'expectedGoals', home: { value: 1.25 }, away: { value: 0 } },
+      { key: 'totalShots', home: { value: 9 }, away: { value: 3 } },
+    ] }] }] },
+    dataSportsIncidents: [
+      { type: 'goal', side: 'home', minute: 90, addedMinute: 2, playerName: 'Scorer' },
+      { type: 'goal', side: 'away', minute: 88, playerName: 'Cancelled', rescinded: true },
+      { type: 'card', detail: 'secondYellow', side: 'away', minute: 76, playerName: 'Defender' },
+      { type: 'substitution', side: 'home', minute: 82, playerIn: { name: 'Incoming' }, playerOut: { name: 'Outgoing' } },
+    ],
+  });
+  const result = await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  assert.equal(result.status, 200);
+  const match = h.writes.find(w => w.table === 'matches').rows[0];
+  assert.equal(match.status, 'FINISHED');
+  assert.equal(match.home_score, 1);
+  assert.equal(match.away_score, 0);
+  assert.equal(match.live_stats.source, 'datasportsapi');
+  const { computeMatchTelemetry, getVerifiedMatchEvents } = load('src/lib/date-utils.ts');
+  const stats = computeMatchTelemetry(match);
+  assert.equal(stats.homePossession, 55);
+  assert.equal(stats.awayXg, 0);
+  assert.equal(stats.shots.join(','), '9,3');
+  const incidents = getVerifiedMatchEvents(match);
+  assert.equal(incidents.map(e => e.event_type).join(','), 'RED_CARD,SUBSTITUTION,GOAL');
+  assert.equal(incidents[2].extra_minute, 2);
+  assert.equal(match.live_stats.datasports_clock, undefined);
 });

@@ -720,8 +720,10 @@ export function getMatchMinuteLabel(match: MatchWithDetails, now: number | null)
 
 export function computeMatchTelemetry(match: MatchWithDetails): {
   homePossession: number | null; awayPossession: number | null; homeXg: number | null; awayXg: number | null;
+  shots?: [number, number]; corners?: [number, number];
 } {
   const stats = match.live_stats?.source === "api-football" ? match.live_stats : null;
+  const telemetry = match.live_stats?.datasports_statistics;
   const possession = match.live_stats?.datasports_possession;
   const value = (n: unknown, max = Infinity) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= max ? n : null;
   const home = value(possession?.home, 100);
@@ -729,13 +731,33 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   const useDataSports = home != null && away != null &&
     (stats?.home_possession == null || stats.away_possession == null ||
       Date.parse(possession?.updated_at ?? "") >= Date.parse(stats.source_updated_at ?? ""));
-  return { homePossession: useDataSports ? home : value(stats?.home_possession, 100), awayPossession: useDataSports ? away : value(stats?.away_possession, 100), homeXg: value(stats?.home_xg), awayXg: value(stats?.away_xg) };
+  return { homePossession: useDataSports ? home : value(stats?.home_possession, 100), awayPossession: useDataSports ? away : value(stats?.away_possession, 100),
+    homeXg: value(telemetry?.xg?.[0]) ?? value(stats?.home_xg),
+    awayXg: value(telemetry?.xg?.[1]) ?? value(stats?.away_xg), shots: telemetry?.shots, corners: telemetry?.corners };
+}
+
+export function getMatchEventLabel(type: string): string {
+  switch (type) {
+    case "GOAL": return "Gol";
+    case "YELLOW_CARD": return "Amarilla";
+    case "RED_CARD": return "Roja";
+    case "SUBSTITUTION": return "Cambio";
+    default: return "Incidencia";
+  }
 }
 
 /** Returns verified provider events only; missing events remain unknown. */
 export function getVerifiedMatchEvents(match: MatchWithDetails): MatchEventRow[] {
-  const verified = (match.events ?? []).filter(e => e.source === "api-football");
-  const goals = verified.filter(e => e.event_type === "GOAL");
-  const scoresAgree = goals.filter(e => e.team_id === match.home_team_id).length === match.home_score && goals.filter(e => e.team_id === match.away_team_id).length === match.away_score;
-  return verified.filter(e => e.event_type !== "GOAL" || scoresAgree).sort((a,b) => a.minute - b.minute || (a.extra_minute ?? 0) - (b.extra_minute ?? 0));
+  const apiFootball = (match.events ?? []).filter(e => e.source === "api-football");
+  const dataSports = (match.live_stats?.datasports_events?.rows ?? []).filter(e => e.source === "datasportsapi");
+  const scoresAgree = (events: MatchEventRow[]) => {
+    const goals = events.filter(e => e.event_type === "GOAL");
+    return goals.filter(e => e.team_id === match.home_team_id).length === match.home_score &&
+      goals.filter(e => e.team_id === match.away_team_id).length === match.away_score;
+  };
+  const verified = match.live_stats?.source === "api-football" && apiFootball.length && scoresAgree(apiFootball)
+    ? apiFootball : dataSports.length && (scoresAgree(dataSports) || !apiFootball.length || !scoresAgree(apiFootball))
+      ? dataSports : apiFootball;
+  return verified.filter(e => e.event_type !== "GOAL" || scoresAgree(verified))
+    .sort((a,b) => a.minute - b.minute || (a.extra_minute ?? 0) - (b.extra_minute ?? 0));
 }

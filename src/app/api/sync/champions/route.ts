@@ -374,7 +374,9 @@ type DataSportsFixture = {
   startTime: string;
   home: { name: string; shortName?: string };
   away: { name: string; shortName?: string };
-  status?: { phase?: string };
+  status?: { phase?: string; code?: number; period?: string | null; finish?: string | null };
+  homeScore?: { current?: number | null; penalties?: number | null };
+  awayScore?: { current?: number | null; penalties?: number | null };
   clock?: {
     periodStartedAt?: string | null;
     periodOffsetSeconds?: number | null;
@@ -409,6 +411,54 @@ type DataSportsStatistics = {
   }[];
 };
 
+type DataSportsIncident = {
+  type: string;
+  detail?: string | null;
+  side?: string | null;
+  minute?: number | null;
+  addedMinute?: number | null;
+  rescinded?: boolean;
+  period?: string | null;
+  player?: { name: string } | null;
+  playerName?: string | null;
+  playerIn?: { name: string } | null;
+  playerOut?: { name: string } | null;
+  assists?: { name: string }[];
+};
+
+function dataSportsStatus(fixture: DataSportsFixture): MatchStatus | undefined {
+  const status = fixture.status;
+  if (status?.phase === "finished") return "FINISHED";
+  if (status?.phase === "break") return status.code === 31 ? "HT" : undefined;
+  if (status?.phase !== "inprogress") return undefined;
+  if (status.period === "period1") return "1H";
+  if (status.period === "period2") return "2H";
+  if (status.period === "penalties" || [50, 51, 52].includes(status.code ?? 0)) return "PEN";
+  if (status.period?.startsWith("extra") || [40, 41, 42].includes(status.code ?? 0)) return "ET";
+  return "IN_PLAY";
+}
+
+function readDataSportsEvents(events: DataSportsIncident[], match: MatchRow, now: string): MatchEventRow[] {
+  const cards: Record<string, string> = { yellow: "YELLOW_CARD", red: "RED_CARD", secondYellow: "RED_CARD" };
+  const rows = new Map<string, MatchEventRow>();
+  for (const event of events) {
+    if (event.rescinded || event.period === "penalties" || (event.side !== "home" && event.side !== "away") ||
+        event.minute == null || !Number.isInteger(event.minute) || event.minute < 0) continue;
+    const type = event.type === "goal" ? "GOAL" : event.type === "substitution" ? "SUBSTITUTION"
+      : event.type === "card" ? cards[event.detail ?? ""] : undefined;
+    if (!type || (type === "GOAL" && /cancel|miss|disallow/i.test(event.detail ?? ""))) continue;
+    const player = type === "SUBSTITUTION" ? event.playerIn?.name : event.playerName ?? event.player?.name;
+    const other = type === "SUBSTITUTION" ? event.playerOut?.name : event.assists?.[0]?.name;
+    if (!player) continue;
+    const teamId = event.side === "home" ? match.home_team_id : match.away_team_id;
+    const id = createHash("sha256").update(JSON.stringify([match.id, teamId, type, event.minute, event.addedMinute, player, other])).digest("hex");
+    rows.set(id, { id, source: "datasportsapi", match_id: match.id, minute: event.minute,
+      extra_minute: event.addedMinute ?? null, team_id: teamId, player_name: player,
+      assist_or_sub_name: other ?? null, event_type: type, detail: null, created_at: now });
+  }
+  return [...rows.values()];
+}
+
 async function fetchDataSports<T>(path: string, key: string): Promise<T> {
   const response = await fetch(`https://api.datasportsapi.com/v2/${path}`, {
     headers: { authorization: `Bearer ${key}` },
@@ -430,6 +480,21 @@ function readDataSportsPossession(stats: DataSportsStatistics, updatedAt: string
       !(home >= 0 && home <= 100 && away >= 0 && away <= 100) ||
       Math.abs(home + away - 100) > 1) return undefined;
   return { home, away, updated_at: updatedAt };
+}
+
+function readDataSportsStatistics(stats: DataSportsStatistics, updatedAt: string, final: boolean): LiveStats["datasports_statistics"] {
+  const items = stats.periods?.find(period => period.period === "all")?.groups.flatMap(group => group.items);
+  const pair = (key: string): [number, number] | undefined => {
+    const item = items?.find(stat => stat.key === key);
+    const home = item?.home?.value;
+    const away = item?.away?.value;
+    if (typeof home === "number" && Number.isFinite(home) && home >= 0 &&
+        typeof away === "number" && Number.isFinite(away) && away >= 0) return [home, away];
+  };
+  const xg = pair("expectedGoals");
+  const shots = pair("totalShots");
+  const corners = pair("cornerKicks");
+  if (xg || shots || corners || readDataSportsPossession(stats, updatedAt)) return { xg, shots, corners, updated_at: updatedAt, final };
 }
 
 let cachedStandingsToSync: StandingRow[] = [];
@@ -476,6 +541,9 @@ async function handleChampionsSync(request: NextRequest) {
   const apiFootballKey = process.env.API_FOOTBALL_KEY;
   const dataSportsKey = process.env.DATASPORTSAPI_API_KEY?.trim();
   const possessionSnapshots = new Map<number, NonNullable<LiveStats["datasports_possession"]>>();
+  const dataSportsStatistics = new Map<number, NonNullable<LiveStats["datasports_statistics"]>>();
+  const dataSportsEvents = new Map<number, NonNullable<LiveStats["datasports_events"]>>();
+  const dataSportsMatches = new Map<number, { fixture: DataSportsFixture; status: MatchStatus }>();
   const clockSnapshots = new Map<number, NonNullable<LiveStats["datasports_clock"]>>();
   let dataSportsBoardRead = false;
 
@@ -786,8 +854,9 @@ async function handleChampionsSync(request: NextRequest) {
 
   if (dataSportsKey && hasMatchesInPlayOrToday) {
     try {
-      if (await reserve("datasports-possession-cycle", 900, 24) && await reserve("datasports-requests", 0, 45)) {
-        const fixtures = await fetchDataSports<DataSportsFixture[]>("livescores?sport=football", dataSportsKey);
+      if (await reserve("datasports-possession-cycle", 600, 45) && await reserve("datasports-requests", 0, 90)) {
+        const date = nowIso.slice(0, 10);
+        const fixtures = await fetchDataSports<DataSportsFixture[]>(`fixtures?date=${date}&league=4409`, dataSportsKey);
         if (!Array.isArray(fixtures)) throw new Error("Listado de partidos inválido");
         dataSportsBoardRead = true;
         const observedAt = new Date().toISOString();
@@ -795,25 +864,26 @@ async function handleChampionsSync(request: NextRequest) {
         const storedById = new Map(storedMatches.map(match => [match.id, match]));
         const candidates = fixtures.flatMap(fixture => {
           if (fixture.league?.name !== "UEFA Champions League" || !Number.isSafeInteger(fixture.id) || fixture.id < 1) return [];
-          const matching = matchesToSync.filter(match => match.status !== "FINISHED" &&
+          const status = dataSportsStatus(fixture);
+          if (!status) return [];
+          const matching = matchesToSync.filter(match =>
             Math.abs(Date.parse(match.kickoff_at) - Date.parse(fixture.startTime)) <= 60 * 60_000 &&
             (teamsMatch(match.home_team_name, fixture.home.name) || teamsMatch(match.home_team_name, fixture.home.shortName ?? "")) &&
             (teamsMatch(match.away_team_name, fixture.away.name) || teamsMatch(match.away_team_name, fixture.away.shortName ?? "")));
           if (matching.length !== 1) return [];
           const [match] = matching;
+          dataSportsMatches.set(match.id, { fixture, status });
           const clock = readDataSportsClock(fixture, observedAt);
           if (clock) clockSnapshots.set(match.id, clock);
           else if (fixture.status?.phase === "inprogress") {
             missingClocks.push({ matchId: match.id, fixtureId: fixture.id });
           }
-          const updatedAt = storedById.get(match.id)?.live_stats?.datasports_possession?.updated_at ?? "";
-          if (Date.now() - Date.parse(updatedAt) < 30 * 60_000) return [];
-          return [{ fixture, match, updatedAt }];
-        }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) || a.match.id - b.match.id);
+          return [{ fixture, match, status, previous: storedById.get(match.id)?.live_stats }];
+        });
 
         const requests = [];
         for (const { matchId, fixtureId } of missingClocks.slice(0, 2)) {
-          if (!(await reserve("datasports-requests", 0, 45))) break;
+          if (!(await reserve("datasports-detail-budget", 0, 45)) || !(await reserve("datasports-requests", 0, 90))) break;
           requests.push(fetchDataSports<DataSportsFixture>(`fixtures/${fixtureId}`, dataSportsKey)
             .then(fixture => {
               if (fixture.id !== fixtureId) return;
@@ -823,15 +893,36 @@ async function handleChampionsSync(request: NextRequest) {
               warnings.push("datasportsapi: reloj detallado del partido no disponible");
             }));
         }
-        for (const { fixture, match } of candidates.slice(0, 6)) {
-          if (!(await reserve("datasports-requests", 0, 45))) break;
-          requests.push(fetchDataSports<DataSportsStatistics>(`fixtures/${fixture.id}/statistics`, dataSportsKey)
-            .then(stats => {
-              const possession = readDataSportsPossession(stats, new Date().toISOString());
+        const details = candidates.flatMap(({ fixture, match, status, previous }) => {
+          const final = status === "FINISHED";
+          const stats = previous?.datasports_statistics;
+          const events = previous?.datasports_events;
+          const requests = [];
+          if (final ? !stats?.final : !(Date.now() - Date.parse(stats?.updated_at ?? "") < 30 * 60_000)) {
+            requests.push({ kind: "statistics", fixture, match, final, updatedAt: stats?.updated_at ?? "" });
+          }
+          if (final ? !events?.final : !(Date.now() - Date.parse(events?.updated_at ?? "") < 20 * 60_000)) {
+            requests.push({ kind: "events", fixture, match, final, updatedAt: events?.updated_at ?? "" });
+          }
+          return requests;
+        }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) || a.match.id - b.match.id);
+        for (const { kind, fixture, match, final } of details.slice(0, 6)) {
+          if (!(await reserve("datasports-detail-budget", 0, 45)) || !(await reserve("datasports-requests", 0, 90))) break;
+          const base = `fixtures/${fixture.id}/${kind}`;
+          const detail = kind === "statistics"
+            ? fetchDataSports<DataSportsStatistics>(base, dataSportsKey).then(stats => {
+              const updatedAt = new Date().toISOString();
+              const possession = readDataSportsPossession(stats, updatedAt);
+              const telemetry = readDataSportsStatistics(stats, updatedAt, final);
               if (possession) possessionSnapshots.set(match.id, possession);
-            }).catch(() => {
-              warnings.push("datasportsapi: estadísticas del partido no disponibles");
-            }));
+              if (telemetry) dataSportsStatistics.set(match.id, telemetry);
+            })
+            : fetchDataSports<DataSportsIncident[]>(base, dataSportsKey).then(events => {
+              if (!Array.isArray(events)) return;
+              const updatedAt = new Date().toISOString();
+              dataSportsEvents.set(match.id, { rows: readDataSportsEvents(events, match, updatedAt), updated_at: updatedAt, final });
+            });
+          requests.push(detail.catch(() => { warnings.push(`datasportsapi: ${kind} del partido no disponible`); }));
         }
         await Promise.all(requests);
       }
@@ -936,6 +1027,24 @@ async function handleChampionsSync(request: NextRequest) {
     const existingById = new Map(storedMatches.map(m => [m.id, m]));
     matchesToSync = matchesToSync.map(m => {
       const prev = existingById.get(m.id);
+      const hasConfirmedFinal = m.status === "FINISHED" &&
+        (apiUpdatedIds.has(m.id) || footballDataScoreIds.has(m.id));
+      const dataSports = dataSportsMatches.get(m.id);
+      const home = dataSports?.fixture.homeScore?.current;
+      const away = dataSports?.fixture.awayScore?.current;
+      if (dataSports && !hasConfirmedFinal &&
+          (dataSports.status === "FINISHED" || (!apiUpdatedIds.has(m.id) && prev?.status !== "FINISHED")) &&
+          typeof home === "number" && Number.isInteger(home) && home >= 0 &&
+          typeof away === "number" && Number.isInteger(away) && away >= 0) {
+        return { ...m, status: dataSports.status, home_score: home, away_score: away,
+          elapsed_minute: null, extra_minute: null, updated_at: nowIso,
+          penalty_home_score: dataSports.fixture.homeScore?.penalties ?? m.penalty_home_score,
+          penalty_away_score: dataSports.fixture.awayScore?.penalties ?? m.penalty_away_score,
+          live_stats: { ...m.live_stats, source: "datasportsapi" as const, source_updated_at: nowIso } };
+      }
+      if (prev?.status === "FINISHED" && !hasConfirmedFinal) return prev;
+      if (prev && ["SCHEDULED", "TIMED"].includes(m.status) &&
+          ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(prev.status)) return prev;
       if (apiUpdatedIds.has(m.id)) return m; // Authoritative corrections may lower the score (VAR).
       if (prev?.live_stats?.source !== "api-football") return m;
 
@@ -952,6 +1061,9 @@ async function handleChampionsSync(request: NextRequest) {
       const previous = existingById.get(m.id)?.live_stats;
       const possession = possessionSnapshots.get(m.id) ?? previous?.datasports_possession;
       if (possession) m = { ...m, live_stats: { ...m.live_stats, datasports_possession: possession } };
+      const statistics = dataSportsStatistics.get(m.id) ?? previous?.datasports_statistics;
+      const incidents = dataSportsEvents.get(m.id) ?? previous?.datasports_events;
+      if (statistics || incidents) m = { ...m, live_stats: { ...m.live_stats, datasports_statistics: statistics, datasports_events: incidents } };
       const clock = clockSnapshots.get(m.id) ?? (dataSportsBoardRead ? undefined : previous?.datasports_clock);
       if (clock || m.live_stats?.datasports_clock) {
         m = { ...m, live_stats: { ...m.live_stats, datasports_clock: clock } };

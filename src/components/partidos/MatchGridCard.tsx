@@ -11,6 +11,7 @@ import {
   isMatchLive,
   getLiveMatchPhase,
   getMatchMinuteLabel,
+  getMatchEventLabel,
 } from "@/lib/date-utils";
 
 interface MatchGridCardProps {
@@ -55,12 +56,12 @@ export function MatchGridCard({
 
   const activeScoreboardGoalSide = goalAnimationSide;
 
-  const goalsSummary =
-    goalEvents.length > 0
-      ? goalEvents
+  const eventsSummary =
+    matchEvents.length > 0
+      ? matchEvents
           .slice(0, 3)
-          .map((g) => `${g.player_name} ${g.minute}'`)
-          .join(", ") + (goalEvents.length > 3 ? ` (+${goalEvents.length - 3})` : "")
+          .map(event => `${getMatchEventLabel(event.event_type)} · ${event.player_name} ${event.minute}${event.extra_minute ? `+${event.extra_minute}` : ""}'`)
+          .join(", ") + (matchEvents.length > 3 ? ` (+${matchEvents.length - 3})` : "")
       : "Incidencias no disponibles";
 
   return (
@@ -274,7 +275,7 @@ export function MatchGridCard({
 
           <div className="flex items-center justify-between pt-1 border-t border-outline-variant/10">
             <span className="text-brand-mint font-label-sm text-label-sm font-medium truncate">
-              {goalsSummary}
+              {eventsSummary}
             </span>
             <span className="font-label-sm text-[11px] text-on-surface-variant shrink-0 ml-2">
               {userPrediction
@@ -320,7 +321,7 @@ export function MatchGridCard({
                 insights
               </span>
               <span className="font-label-sm text-label-sm text-brand-mint truncate">
-                {goalEvents.length > 0 ? goalsSummary : "Pronóstico Vivo:"}
+                {matchEvents.length > 0 ? eventsSummary : "Pronóstico Vivo:"}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-2">

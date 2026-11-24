@@ -11,7 +11,7 @@ export function MatchFreshness({ match }: { match: MatchRow }) {
   const age = now !== null && Number.isFinite(fetched) ? Math.max(0, Math.floor((now - fetched) / 60_000)) : null;
   return (
     <p className="text-[11px] text-on-surface-variant" role="status">
-      {match.live_stats?.source === "api-football" ? "Actualización cada 5 min" : "Fuente gratuita · marcador con retraso"}
+      {match.live_stats?.source === "api-football" ? "API-Football" : match.live_stats?.source === "datasportsapi" ? "DataSportsAPI" : "Fuente gratuita · marcador con retraso"}
       {age === null ? " · Sin actualización verificada" : ` · Consultado ${age === 0 ? "hace menos de 1 min" : `hace ${age} min`}`}
       {age !== null && age >= 10 ? " · Datos atrasados" : ""}
     </p>

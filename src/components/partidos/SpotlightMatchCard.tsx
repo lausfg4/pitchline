@@ -13,6 +13,7 @@ import {
   isMatchLive,
   getLiveMatchPhase,
   getMatchMinuteLabel,
+  getMatchEventLabel,
 } from "@/lib/date-utils";
 
 interface SpotlightMatchCardProps {
@@ -41,7 +42,7 @@ export function SpotlightMatchCard({
   const isUnavailable = match.status === "POSTPONED" || match.status === "CANCELLED";
   const isScheduled = match.status === "SCHEDULED" || match.status === "TIMED";
 
-  const { homePossession, awayPossession, homeXg, awayXg } =
+  const { homePossession, awayPossession, homeXg, awayXg, shots, corners } =
     computeMatchTelemetry(match);
 
   const homeWinProb = match.prediction?.home_win_prob ?? 38;
@@ -350,9 +351,15 @@ export function SpotlightMatchCard({
                 Incidencias Clave del Encuentro
               </span>
               <span className="font-label-sm text-label-sm text-on-surface-variant">
-                xG Acumulado: {homeXg?.toFixed(2) ?? "—"} vs {awayXg?.toFixed(2) ?? "—"}
+                {homeXg != null && awayXg != null && `xG: ${homeXg.toFixed(2)} – ${awayXg.toFixed(2)}`}
               </span>
             </div>
+            {(shots || corners) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-on-surface-variant">
+                {shots && <span>Tiros: {shots[0]} – {shots[1]}</span>}
+                {corners && <span>Córners: {corners[0]} – {corners[1]}</span>}
+              </div>
+            )}
 
             {events.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
@@ -380,21 +387,16 @@ export function SpotlightMatchCard({
                               : "text-brand-mint"
                         }`}
                       >
-                        {evt.event_type === "YELLOW_CARD" ||
-                        evt.event_type === "RED_CARD"
-                          ? "style"
-                          : "sports_soccer"}
+                        {evt.event_type === "SUBSTITUTION" ? "swap_horiz"
+                          : evt.event_type === "YELLOW_CARD" || evt.event_type === "RED_CARD" ? "style" : "sports_soccer"}
                       </span>
                       <div className="flex flex-col min-w-0">
                         <span className="font-label-sm text-label-sm text-on-surface truncate font-bold">
                           {evt.player_name} ({minStr})
                         </span>
                         <span className="font-tabular-stats text-[11px] text-on-surface-variant truncate">
-                          {teamShort} •{" "}
-                          {evt.detail ??
-                            (evt.assist_or_sub_name
-                              ? `Asist: ${evt.assist_or_sub_name}`
-                              : "Incidencia")}
+                          {teamShort} · {getMatchEventLabel(evt.event_type)}
+                          {evt.assist_or_sub_name && ` · ${evt.event_type === "SUBSTITUTION" ? "Sale" : "Asist."}: ${evt.assist_or_sub_name}`}
                         </span>
                       </div>
                     </div>

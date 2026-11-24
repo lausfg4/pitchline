@@ -2,8 +2,8 @@ name: Pitchline — Automated UEFA Champions League Sync
 
 on:
   schedule:
-    # Sincronización intensiva cada 15 minutos en horario de partidos UCL (Martes, Miércoles y Jueves 16:00-23:59 UTC)
-    - cron: "*/15 16-23 * * 2,3,4"
+    # GitHub Actions permite programar una ejecución cada cinco minutos.
+    - cron: "*/5 16-23 * * 2,3,4"
     # Sincronización periódica general cada 6 horas (Clasificación, Pronósticos Poisson, Lesionados y Noticias RSS)
     - cron: "0 */6 * * *"
   workflow_dispatch:
@@ -40,6 +40,7 @@ jobs:
           fi
 
       - name: 2. Sincronizar Feed RSS Oficial UEFA (/api/sync/news)
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 */6 * * *'
         run: |
           echo "Disparando sincronización de noticias exclusivas UCL en public.news_articles..."
           HTTP_STATUS=$(curl -sS -o /tmp/news_sync.json -w "%{http_code}" \

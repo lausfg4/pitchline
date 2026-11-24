@@ -12,7 +12,7 @@ export type MatchStatus =
   | "CANCELLED";
 
 export interface LiveStats {
-  source?: "football-data" | "api-football";
+  source?: "football-data" | "api-football" | "datasportsapi";
   source_updated_at?: string;
   provider_fixture_id?: number;
   datasports_clock?: {
@@ -26,6 +26,18 @@ export interface LiveStats {
     home: number;
     away: number;
     updated_at: string;
+  };
+  datasports_statistics?: {
+    xg?: [number, number];
+    shots?: [number, number];
+    corners?: [number, number];
+    updated_at: string;
+    final: boolean;
+  };
+  datasports_events?: {
+    rows: MatchEventRow[];
+    updated_at: string;
+    final: boolean;
   };
   events_pending?: boolean;
   player_stats_checked_at?: string;
