@@ -679,6 +679,17 @@ export function formatMatchDateTimeLabel(
   }
 }
 
+export function getLiveMatchPhase(status: string): string {
+  switch (status) {
+    case "1H": return "Primer tiempo";
+    case "HT": return "Medio tiempo";
+    case "2H": return "Segundo tiempo";
+    case "ET": return "Prórroga";
+    case "PEN": return "Penales";
+    default: return "En juego";
+  }
+}
+
 export function computeMatchTelemetry(match: MatchWithDetails): {
   homePossession: number | null; awayPossession: number | null; homeXg: number | null; awayXg: number | null;
 } {

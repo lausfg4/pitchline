@@ -197,6 +197,24 @@ interface ApiFootballLiveFixture {
   players?: ApiFootballPlayerGroup[];
 }
 
+
+function readTeamTelemetry(fixture: ApiFootballLiveFixture, teams = fixture.teams) {
+  const read = (teamId: number, type: RegExp, max = Infinity) => {
+    const stats = fixture.statistics?.find(group => group.team.id === teamId)?.statistics;
+    const value = stats?.find(stat => type.test(stat.type))?.value;
+    if (value == null) return undefined;
+    const cleaned = String(value).replace(/%$/, "").trim();
+    const number = Number(cleaned);
+    return cleaned && Number.isFinite(number) && number >= 0 && number <= max ? number : undefined;
+  };
+  return {
+    home_possession: read(teams.home.id, /^ball possession$/i, 100),
+    away_possession: read(teams.away.id, /^ball possession$/i, 100),
+    home_xg: read(teams.home.id, /^expected[_ ]goals$/i),
+    away_xg: read(teams.away.id, /^expected[_ ]goals$/i),
+  };
+}
+
 function mapFootballDataStatusAndMinute(
   rawStatus: string,
   utcDate: string,
@@ -217,7 +235,8 @@ function mapApiFootballStatus(shortStatus: string): MatchStatus {
   const upper = shortStatus.toUpperCase();
   if (upper === "1H") return "1H";
   if (upper === "HT") return "HT";
-  if (upper === "2H" || upper === "LIVE") return "2H";
+  if (upper === "2H") return "2H";
+  if (upper === "LIVE") return "IN_PLAY";
   if (upper === "ET" || upper === "BT") return "ET";
   if (upper === "P") return "PEN";
   if (["FT", "AET", "PEN"].includes(upper)) return "FINISHED";
@@ -394,6 +413,7 @@ async function handleChampionsSync(request: NextRequest) {
   const footballDataScoreIds = new Set<number>();
   const apiUpdatedIds = new Set<number>();
   const authoritativeEvents = new Set<number>();
+  const teamSnapshots = new Map<number, ReturnType<typeof readTeamTelemetry>>();
   const playerSnapshots = new Map<number, NonNullable<LiveStats["player_stats"]>>();
   const playerStatsChecked = new Set<number>();
   const eventsToSync: MatchEventRow[] = [];
@@ -622,57 +642,12 @@ async function handleChampionsSync(request: NextRequest) {
               const matchId = matchesToSync[existingIdx].id;
 
 
-              let apiHomePoss: number | undefined;
-              let apiAwayPoss: number | undefined;
-              let apiHomeXg: number | undefined;
-              let apiAwayXg: number | undefined;
-
-              if (Array.isArray(item.statistics) && item.statistics.length >= 2) {
-                const homeStatGroup = item.statistics[0]?.statistics ?? [];
-                const awayStatGroup = item.statistics[1]?.statistics ?? [];
-
-                const parsePoss = (
-                  stats: { type: string; value: number | string | null }[]
-                ) => {
-                  const found = stats.find((s) =>
-                    s.type.toLowerCase().includes("possession")
-                  );
-                  if (!found || found.value == null) return undefined;
-                  const num = Number(String(found.value).replace("%", "").trim());
-                  return Number.isFinite(num) ? num : undefined;
-                };
-
-                const parseXg = (
-                  stats: { type: string; value: number | string | null }[]
-                ) => {
-                  const found = stats.find((s) =>
-                    s.type.toLowerCase().includes("expected_goals")
-                  );
-                  if (!found || found.value == null) return undefined;
-                  const num = Number(found.value);
-                  return Number.isFinite(num) ? num : undefined;
-                };
-
-                apiHomePoss = parsePoss(homeStatGroup);
-                apiAwayPoss = parsePoss(awayStatGroup);
-                apiHomeXg = parseXg(homeStatGroup);
-                apiAwayXg = parseXg(awayStatGroup);
-              }
-
+              const status = mapApiFootballStatus(item.fixture.status.short);
               const liveStatsObj: LiveStats = {
+                ...readTeamTelemetry(item),
                 source: "api-football",
                 source_updated_at: nowIso,
                 provider_fixture_id: item.fixture.id,
-                ...(apiHomePoss !== undefined ? { home_possession: apiHomePoss } : {}),
-                ...(apiAwayPoss !== undefined ? { away_possession: apiAwayPoss } : {}),
-                ...(apiHomeXg !== undefined ? { home_xg: apiHomeXg } : {}),
-                ...(apiAwayXg !== undefined ? { away_xg: apiAwayXg } : {}),
-                half_label:
-                  item.fixture.status.short === "HT"
-                    ? "Descanso"
-                    : item.fixture.status.short === "1H"
-                      ? "1° Tiempo"
-                      : "2° Tiempo",
                 is_spotlight: true,
               };
 
@@ -681,7 +656,7 @@ async function handleChampionsSync(request: NextRequest) {
               apiUpdatedIds.add(matchId);
               matchesToSync[existingIdx] = {
                 ...matchesToSync[existingIdx],
-                status: mapApiFootballStatus(item.fixture.status.short),
+                status,
                 elapsed_minute: item.fixture.status.elapsed,
                 extra_minute: item.fixture.status.extra ?? null,
                 home_score: item.goals.home ?? 0,
@@ -693,7 +668,7 @@ async function handleChampionsSync(request: NextRequest) {
               let officialEvents = item.events;
               const previous = storedMatches.find(m => m.id === matchId);
               const scoreChanged = previous?.home_score !== item.goals.home || previous?.away_score !== item.goals.away;
-              const justFinished = mapApiFootballStatus(item.fixture.status.short) === "FINISHED" && previous?.status !== "FINISHED";
+              const justFinished = status === "FINISHED" && previous?.status !== "FINISHED";
               const eventsPending = scoreChanged || justFinished || previous?.live_stats?.events_pending === true;
               liveStatsObj.events_pending = eventsPending;
               if (!officialEvents && eventRequests < 2 && eventsPending && await reserve("api-football-events", 0, 10)) {
@@ -749,7 +724,9 @@ async function handleChampionsSync(request: NextRequest) {
       const checkedAt = previous?.player_stats_checked_at;
       const final = match.status === "FINISHED";
       const live = ["IN_PLAY", "1H", "HT", "2H", "ET", "PEN"].includes(match.status);
-      if (!fixtureId || (!final && !live) || snapshot?.final) return [];
+      if (!fixtureId || (!final && !live)) return [];
+      const hasPossession = previous?.home_possession != null && previous?.away_possession != null;
+      if (snapshot?.final && hasPossession) return [];
       if (snapshot && !final && Date.now() - Date.parse(snapshot.updated_at) < 5 * 60_000) return [];
       return [{ match, fixtureId, checkedAt }];
     }).sort((a, b) =>
@@ -773,6 +750,7 @@ async function handleChampionsSync(request: NextRequest) {
           const candidate = candidates.find(({ fixtureId }) => fixtureId === fixture.fixture.id);
           if (!candidate) continue;
           playerStatsChecked.add(candidate.match.id);
+          if (fixture.teams) teamSnapshots.set(candidate.match.id, readTeamTelemetry(fixture));
           const players = readPlayerStats(fixture.players ?? []);
           if (players.length) playerSnapshots.set(candidate.match.id, {
             updated_at: nowIso,
@@ -849,10 +827,18 @@ async function handleChampionsSync(request: NextRequest) {
       const fixtureId = m.live_stats?.provider_fixture_id ?? previous?.provider_fixture_id;
       const playerStats = playerSnapshots.get(m.id) ?? previous?.player_stats;
       if (!fixtureId) return m;
+      const telemetry = teamSnapshots.get(m.id);
+      const previousTelemetry = previous?.source === "api-football" && previous.provider_fixture_id === fixtureId ? previous : undefined;
       const checkedAt = playerStatsChecked.has(m.id) ? nowIso : previous?.player_stats_checked_at;
       return { ...m, live_stats: {
         ...m.live_stats,
         provider_fixture_id: fixtureId,
+        ...(m.live_stats?.source === "api-football" ? {
+          home_possession: telemetry?.home_possession ?? m.live_stats.home_possession ?? previousTelemetry?.home_possession,
+          away_possession: telemetry?.away_possession ?? m.live_stats.away_possession ?? previousTelemetry?.away_possession,
+          home_xg: telemetry?.home_xg ?? m.live_stats.home_xg ?? previousTelemetry?.home_xg,
+          away_xg: telemetry?.away_xg ?? m.live_stats.away_xg ?? previousTelemetry?.away_xg,
+        } : {}),
         ...(playerStats ? { player_stats: playerStats } : {}),
         ...(checkedAt ? { player_stats_checked_at: checkedAt } : {}),
       } };

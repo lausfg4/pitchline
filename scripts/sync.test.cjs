@@ -12,7 +12,7 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0 } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0 } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
   existing.live_stats.source_updated_at = new Date(Date.parse(now) - snapshotAge).toISOString();
@@ -34,10 +34,10 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
       if (failure) throw Error('offline');
       if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: fdScore, away: 0 } } }] }) };
       if (url.includes('/events?')) return { ok: true, json: async () => ({ response: eventSnapshot }) };
-      if (url.includes('?ids=') && playerGroups) return { ok: true, json: async () => ({
-        response: [{ fixture: { id: 88, status: { short: '1H' } }, players: playerGroups }],
+      if (url.includes('?ids=') && (playerGroups || teamStats)) return { ok: true, json: async () => ({
+        response: [{ fixture: { id: 88, status: { short: apiStatus } }, teams: { home: { id: 10 }, away: { id: 20 } }, players: playerGroups, statistics: teamStats }],
       }) };
-      return { ok: true, json: async () => ({ response: [{ fixture: { id: 88, date: now, status: { short: '1H', elapsed: 21 } }, teams: { home: { id: 10, name: 'Arsenal' }, away: { id: 20, name: 'Bayern' } }, goals: { home: score, away: 0 } }] }) };
+      return { ok: true, json: async () => ({ response: [{ fixture: { id: 88, date: now, status: { short: apiStatus, elapsed: 21 } }, teams: { home: { id: 10, name: 'Arsenal' }, away: { id: 20, name: 'Bayern' } }, goals: { home: score, away: 0 } }] }) };
     },
   };
   const route = load('src/app/api/sync/champions/route.ts', mocks);
@@ -179,4 +179,25 @@ test('a delayed live score can replace a stale API-Football snapshot once it cat
     assert.equal(match.home_score, fdScore === 2 ? 2 : 1);
     assert.equal(match.live_stats.source, fdScore === 2 ? 'football-data' : 'api-football');
   }
+});
+
+test('halftime and possession are persisted from the providers', async () => {
+  const h = harness({
+    apiStatus: 'HT',
+    teamStats: [
+      { team: { id: 20 }, statistics: [{ type: 'Ball Possession', value: '39%' }] },
+      { team: { id: 10 }, statistics: [{ type: 'Ball Possession', value: '61%' }] },
+    ],
+  });
+  await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  const match = h.writes.find(w => w.table === 'matches').rows[0];
+  assert.equal(match.status, 'HT');
+  assert.equal(match.live_stats.home_possession, 61);
+  assert.equal(match.live_stats.away_possession, 39);
+  const { getLiveMatchPhase } = load('src/lib/date-utils.ts');
+  assert.equal(getLiveMatchPhase(match.status), 'Medio tiempo');
+
+  const fd = harness({ existingSource: 'football-data', fdStatus: 'PAUSED', env: { FOOTBALL_DATA_KEY: 'test-fd-key', API_FOOTBALL_KEY: undefined } });
+  await fd.route.POST(fd.request({ authorization: 'Bearer test-secret' }));
+  assert.equal(fd.writes.find(w => w.table === 'matches').rows[0].status, 'HT');
 });

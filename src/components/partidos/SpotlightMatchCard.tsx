@@ -10,6 +10,7 @@ import {
   getVerifiedMatchEvents,
   getStageNameEs,
   isMatchLive,
+  getLiveMatchPhase,
 } from "@/lib/date-utils";
 
 interface SpotlightMatchCardProps {
@@ -46,15 +47,11 @@ export function SpotlightMatchCard({
   const awayWinProb = match.prediction?.away_win_prob ?? 36;
 
   const minuteDisplay =
-    match.status === "HT"
-      ? "Descanso"
-      : match.elapsed_minute
+    match.elapsed_minute != null
         ? match.extra_minute && match.extra_minute > 0
           ? `${match.elapsed_minute}+${match.extra_minute}'`
           : `${match.elapsed_minute}'`
-        : isLive
-          ? "En Juego"
-          : formatLocalKickoffTime(match.kickoff_at);
+        : isLive ? null : formatLocalKickoffTime(match.kickoff_at);
 
   const events = getVerifiedMatchEvents(match);
   const goalEvents = events.filter((e) => e.event_type === "GOAL");
@@ -104,7 +101,7 @@ export function SpotlightMatchCard({
             {isLive ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-mint/15 text-brand-mint border border-brand-mint/30 font-label-sm text-label-sm uppercase font-bold tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-brand-mint animate-pulse"></span>
-                En Vivo
+                {getLiveMatchPhase(match.status)}
               </span>
             ) : isFinished ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-on-surface-variant">
@@ -276,16 +273,14 @@ export function SpotlightMatchCard({
 
             <div className="relative z-10 flex items-center gap-2 mt-1.5">
               <span className="font-label-md text-xs font-bold text-brand-mint">
-                {isLive || isFinished
-                  ? minuteDisplay
-                  : getStageNameEs(match.stage, match.matchday ?? 4)}
+                {isLive && match.status === "HT"
+                  ? "Descanso"
+                  : isLive || isFinished
+                    ? minuteDisplay
+                    : getStageNameEs(match.stage, match.matchday ?? 4)}
               </span>
               <span className="font-label-sm text-[11px] sm:text-label-sm text-on-surface-variant uppercase tracking-wider">
-                {isLive
-                  ? match.live_stats?.half_label ?? "En Vivo"
-                  : isFinished
-                    ? "Tiempo Completo"
-                    : "Programado"}
+                {isFinished ? "Tiempo Completo" : isScheduled ? "Programado" : null}
               </span>
             </div>
 
@@ -293,22 +288,26 @@ export function SpotlightMatchCard({
             {(isLive || isFinished) && (
               <div className="w-full mt-3 space-y-1">
                 <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant text-xs">
-                  <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
+                  <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
                   <span className="font-label-sm text-[10px] sm:text-label-sm uppercase">
                     Posesión
                   </span>
-                  <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
+                  <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
                 </div>
-                <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-primary transition-all duration-500"
-                    style={{ width: `${homePossession ?? 0}%` }}
-                  ></div>
-                  <div
-                    className="h-full bg-brand-mint transition-all duration-500"
-                    style={{ width: `${awayPossession ?? 0}%` }}
-                  ></div>
-                </div>
+                {homePossession != null && awayPossession != null ? (
+                  <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                    <div
+                      className="h-full bg-primary transition-all duration-500"
+                      style={{ width: `${homePossession}%` }}
+                    ></div>
+                    <div
+                      className="h-full bg-brand-mint transition-all duration-500"
+                      style={{ width: `${awayPossession}%` }}
+                    ></div>
+                  </div>
+                ) : (
+                  <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
+                )}
               </div>
             )}
           </div>

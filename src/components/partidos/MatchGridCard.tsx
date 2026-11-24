@@ -8,6 +8,7 @@ import {
   formatMatchDateTimeLabel,
   getVerifiedMatchEvents,
   isMatchLive,
+  getLiveMatchPhase,
 } from "@/lib/date-utils";
 
 interface MatchGridCardProps {
@@ -41,14 +42,11 @@ export function MatchGridCard({
   const drawProb = match.prediction?.draw_prob ?? 25;
   const awayWinProb = match.prediction?.away_win_prob ?? 25;
 
-  const minuteLabel =
-    match.status === "HT"
-      ? "ET • Descanso"
-      : match.elapsed_minute
-        ? match.extra_minute && match.extra_minute > 0
-          ? `${match.elapsed_minute}+${match.extra_minute}'`
-          : `${match.elapsed_minute}' ${match.live_stats?.half_label ?? (match.status === "2H" ? "2T" : "1T")}`
-        : "En Vivo";
+  const phase = getLiveMatchPhase(match.status);
+  const addedTime = match.extra_minute ? `+${match.extra_minute}` : "";
+  const minuteLabel = match.status === "HT" || match.elapsed_minute == null
+    ? phase
+    : `${phase} · ${match.elapsed_minute}${addedTime}'`;
 
   const matchEvents = getVerifiedMatchEvents(match);
   const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
@@ -250,22 +248,26 @@ export function MatchGridCard({
           {/* Barra de Posesión acorde al resultado */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
+              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
               <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
                 Posesión
               </span>
-              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
+              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
             </div>
-            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${homePossession ?? 0}%` }}
-              ></div>
-              <div
-                className="h-full bg-brand-mint transition-all duration-500"
-                style={{ width: `${awayPossession ?? 0}%` }}
-              ></div>
-            </div>
+            {homePossession != null && awayPossession != null ? (
+              <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-primary transition-all duration-500"
+                  style={{ width: `${homePossession}%` }}
+                ></div>
+                <div
+                  className="h-full bg-brand-mint transition-all duration-500"
+                  style={{ width: `${awayPossession}%` }}
+                ></div>
+              </div>
+            ) : (
+              <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-1 border-t border-outline-variant/10">
@@ -283,25 +285,29 @@ export function MatchGridCard({
 
       {isLive && (
         <div className="pt-2 bg-surface-container rounded-lg p-2.5 space-y-2 font-tabular-stats text-tabular-stats">
-          {/* Barra de Posesión en Vivo que evoluciona con el minuto y el marcador */}
+          {/* Posesión reportada por el proveedor */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession ?? 0}%`}</span>
+              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
               <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
                 Posesión en Vivo • xG {homeXg?.toFixed(2) ?? "—"} - {awayXg?.toFixed(2) ?? "—"}
               </span>
-              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession ?? 0}%`}</span>
+              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
             </div>
-            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-              <div
-                className="h-full bg-primary transition-all duration-700"
-                style={{ width: `${homePossession ?? 0}%` }}
-              ></div>
-              <div
-                className="h-full bg-brand-mint transition-all duration-700"
-                style={{ width: `${awayPossession ?? 0}%` }}
-              ></div>
-            </div>
+            {homePossession != null && awayPossession != null ? (
+              <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-primary transition-all duration-700"
+                  style={{ width: `${homePossession}%` }}
+                ></div>
+                <div
+                  className="h-full bg-brand-mint transition-all duration-700"
+                  style={{ width: `${awayPossession}%` }}
+                ></div>
+              </div>
+            ) : (
+              <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
+            )}
           </div>
 
           <div className="flex items-center justify-between pt-1 border-t border-outline-variant/10">
@@ -331,20 +337,24 @@ export function MatchGridCard({
               Visita {awayWinProb}%
             </span>
           </div>
-          <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-            <div
-              className="h-full bg-primary"
-              style={{ width: `${homeWinProb}%` }}
-            ></div>
-            <div
-              className="h-full bg-secondary-container"
-              style={{ width: `${drawProb}%` }}
-            ></div>
-            <div
-              className="h-full bg-brand-mint"
-              style={{ width: `${awayWinProb}%` }}
-            ></div>
-          </div>
+          {homePossession != null && awayPossession != null ? (
+            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${homeWinProb}%` }}
+              ></div>
+              <div
+                className="h-full bg-secondary-container"
+                style={{ width: `${drawProb}%` }}
+              ></div>
+              <div
+                className="h-full bg-brand-mint"
+                style={{ width: `${awayWinProb}%` }}
+              ></div>
+            </div>
+          ) : (
+            <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
+          )}
         </div>
       )}
     </div>
