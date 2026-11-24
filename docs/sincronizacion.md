@@ -16,7 +16,7 @@ En producción ejecuta el worker en un proceso persistente, o programa una llama
 - API-Football: consulta de los partidos de Champions del día cada 5 minutos durante esa ventana, hasta 85 solicitudes diarias. No se consume cuota cuando no hay partidos cercanos.
 - Incidencias: hasta 10 consultas diarias adicionales, cuando cambia un marcador o estado, con un máximo de dos por ciclo. El total de solicitudes configurado es 95/día, dejando margen respecto a las 100 del plan gratuito. Otras aplicaciones que compartan la misma API key también consumen cuota y no están controladas por este contador.
 - Las reservas se guardan en PostgreSQL, con incremento atómico y reinicio diario UTC. Se cuentan también los intentos fallidos; reiniciar el servidor no reinicia el presupuesto. Los límites no garantizan cobertura de la temporada en tu cuenta gratuita.
-- API-Football es la referencia del marcador cuando devuelve el partido. Football-Data no sobrescribe ese marcador con su lectura retrasada. Si API-Football queda atrasado más de 15 minutos, un resultado final de Football-Data puede completar el partido. No se deduce el final por la hora.
+- API-Football tiene prioridad mientras entrega datos. Si su última lectura tiene más de 15 minutos, Football-Data puede actualizar el marcador en juego cuando ha alcanzado ambos tanteos, o publicar un resultado final confirmado. El minuto solo se muestra cuando lo devuelve el proveedor.
 - No se consulta ESPN ni se escribe contenido de demostración como respaldo. La ausencia de incidencias, posesión o xG se muestra como dato no disponible. No se inventan lesiones ni plazos de recuperación.
 - El reloj muestra el minuto recibido. No aumenta por su cuenta. «Consultado hace X min» indica la recepción de datos, no la latencia respecto al estadio.
 - Realtime distribuye las escrituras; el cliente reconcilia con lecturas cada minuto, al reconectar y al volver a la pestaña. Si Realtime falla, esas lecturas permiten recuperar el estado.
@@ -33,4 +33,4 @@ Los antiguos marcadores y estadísticas sintéticas pueden seguir almacenados. U
 
 Ejecuta `npm run test:sync` y `npx tsc --noEmit`. Las pruebas simulan proveedores y cubren autorización, agotamiento de cuota, fallos de red, VAR, eventos estables y datos ausentes. La migración SQL y la entrega real por Realtime deben verificarse en tu proyecto Supabase.
 
-Si el worker informa un error, comprueba primero que aplicaste la migración y configuraste las claves. La respuesta del endpoint incluye `warnings`, `sources` y `upserted`; no imprime credenciales. Si falla un proveedor, se conserva la última lectura y su fecha, sin fabricar una actualización.
+Si el endpoint de Champions devuelve HTTP 401, comprueba que el `CRON_SECRET` del entorno de producción en Vercel coincida con el secreto del programador (GitHub Actions usa `secrets.CRON_SECRET`). La respuesta del endpoint incluye `warnings`, `sources` y `upserted` sin imprimir credenciales.

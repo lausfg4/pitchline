@@ -12,9 +12,10 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, existingSource = 'api-football', env = {}, fdStatus = 'TIMED' } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0 } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
+  existing.live_stats.source_updated_at = new Date(Date.parse(now) - snapshotAge).toISOString();
   const writes = [], calls = [], reservations = [], replacements = [];
   const db = {
     from(table) { return { select: async () => ({ data: [existing] }), upsert: async rows => { writes.push({ table, rows }); return { error: null }; } }; },
@@ -31,7 +32,7 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
     fetch: async url => {
       calls.push(url);
       if (failure) throw Error('offline');
-      if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: 0, away: 0 } } }] }) };
+      if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: fdScore, away: 0 } } }] }) };
       if (url.includes('/events?')) return { ok: true, json: async () => ({ response: eventSnapshot }) };
       if (url.includes('?ids=') && playerGroups) return { ok: true, json: async () => ({
         response: [{ fixture: { id: 88, status: { short: '1H' } }, players: playerGroups }],
@@ -163,4 +164,19 @@ test('delayed Football-Data does not overwrite an API-Football snapshot', async 
 test('unreconciled scorer details are hidden after a VAR score change', () => {
   const utils = load('src/lib/date-utils.ts');
   assert.equal(utils.getVerifiedMatchEvents({ home_team_id: 1, away_team_id: 2, home_score: 0, away_score: 0, events: [{ source: 'api-football', team_id: 1, event_type: 'GOAL', minute: 20 }] }).length, 0);
+});
+
+test('a delayed live score can replace a stale API-Football snapshot once it catches up', async () => {
+  for (const fdScore of [null, 0, 2]) {
+    const h = harness({
+      snapshotAge: 16 * 60_000,
+      fdStatus: 'IN_PLAY',
+      fdScore,
+      env: { FOOTBALL_DATA_KEY: 'test-fd-key', API_FOOTBALL_KEY: undefined },
+    });
+    await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+    const match = h.writes.find(w => w.table === 'matches')?.rows[0] ?? h.existing;
+    assert.equal(match.home_score, fdScore === 2 ? 2 : 1);
+    assert.equal(match.live_stats.source, fdScore === 2 ? 'football-data' : 'api-football');
+  }
 });

@@ -364,7 +364,7 @@ async function handleChampionsSync(request: NextRequest) {
       {
         ok: false,
         error:
-          "No autorizado: se requiere cabecera Authorization: Bearer CRON_SECRET o sesión autenticada.",
+          "No autorizado: comprueba que CRON_SECRET coincida en el programador y en el servidor.",
       },
       { status: 401 }
     );
@@ -391,6 +391,7 @@ async function handleChampionsSync(request: NextRequest) {
 
   let standingsToSync: StandingRow[] = [];
   let matchesToSync: MatchRow[] = [];
+  const footballDataScoreIds = new Set<number>();
   const apiUpdatedIds = new Set<number>();
   const authoritativeEvents = new Set<number>();
   const playerSnapshots = new Map<number, NonNullable<LiveStats["player_stats"]>>();
@@ -500,6 +501,9 @@ async function handleChampionsSync(request: NextRequest) {
 
         // Sincronizar TODOS los 144 partidos de las 8 jornadas de la Fase de Liga 2026/27
         matchesToSync = rawMatchesList.map((m) => {
+          if (m.score?.fullTime?.home != null && m.score?.fullTime?.away != null) {
+            footballDataScoreIds.add(m.id);
+          }
           const homeSt = rankMap.get(m.homeTeam.id);
           const awaySt = rankMap.get(m.awayTeam.id);
 
@@ -577,7 +581,7 @@ async function handleChampionsSync(request: NextRequest) {
 
   if (matchesToSync.length === 0) matchesToSync = [...storedMatches];
   // ============================================================================
-  // 2. API-FOOTBALL: /fixtures?live=all&league=2 (Solo si hay partidos en juego hoy)
+  // 2. API-FOOTBALL: partidos del día, incluidos los que acaban de finalizar.
   // ============================================================================
   const hasMatchesInPlayOrToday = matchesToSync.some(m => Date.now() >= Date.parse(m.kickoff_at) - 15 * 60_000 && Date.now() <= Date.parse(m.kickoff_at) + 240 * 60_000);
 
@@ -732,7 +736,7 @@ async function handleChampionsSync(request: NextRequest) {
             }
           }
         }
-    } catch (error) { console.error("API-Football sync failed", error); warnings.push("api-football: cuota, cobertura o red no disponible; se conserva la última lectura"); }
+    } catch (error) { console.error("API-Football sync failed", error); warnings.push("api-football: cuota, cobertura o red no disponible"); }
   }
 
   // Enrich existing fixtures in batches, using the remaining shared daily budget.
@@ -829,8 +833,16 @@ async function handleChampionsSync(request: NextRequest) {
     matchesToSync = matchesToSync.map(m => {
       const prev = existingById.get(m.id);
       if (apiUpdatedIds.has(m.id)) return m; // Authoritative corrections may lower the score (VAR).
-      if (prev?.live_stats?.source === "api-football" && !(m.status === "FINISHED" && Date.now() - Date.parse(prev.live_stats.source_updated_at ?? prev.updated_at) > 15 * 60_000)) return { ...m, status: prev.status, home_score: prev.home_score, away_score: prev.away_score, elapsed_minute: prev.elapsed_minute, extra_minute: prev.extra_minute, live_stats: prev.live_stats, updated_at: prev.updated_at };
-      return m;
+      if (prev?.live_stats?.source !== "api-football") return m;
+
+      const snapshotAge = Date.now() - Date.parse(prev.live_stats.source_updated_at ?? prev.updated_at);
+      const canUseDelayedScore = snapshotAge > 15 * 60_000 && footballDataScoreIds.has(m.id) && (
+        m.status === "FINISHED" ||
+        (prev.status !== "FINISHED" && ["IN_PLAY", "HT"].includes(m.status) &&
+          m.home_score >= prev.home_score && m.away_score >= prev.away_score)
+      );
+      if (canUseDelayedScore) return m;
+      return { ...m, status: prev.status, home_score: prev.home_score, away_score: prev.away_score, elapsed_minute: prev.elapsed_minute, extra_minute: prev.extra_minute, live_stats: prev.live_stats, updated_at: prev.updated_at };
     });
     matchesToSync = matchesToSync.map(m => {
       const previous = existingById.get(m.id)?.live_stats;
