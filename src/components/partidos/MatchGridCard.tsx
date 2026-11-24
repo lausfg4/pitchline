@@ -3,12 +3,14 @@
 import { MatchFreshness } from "./MatchFreshness";
 import React from "react";
 import type { MatchWithDetails } from "@/types/database";
+import { useClientClock } from "@/lib/use-client-clock";
 import {
   computeMatchTelemetry,
   formatMatchDateTimeLabel,
   getVerifiedMatchEvents,
   isMatchLive,
   getLiveMatchPhase,
+  getMatchMinuteLabel,
 } from "@/lib/date-utils";
 
 interface MatchGridCardProps {
@@ -43,10 +45,8 @@ export function MatchGridCard({
   const awayWinProb = match.prediction?.away_win_prob ?? 25;
 
   const phase = getLiveMatchPhase(match.status);
-  const addedTime = match.extra_minute ? `+${match.extra_minute}` : "";
-  const minuteLabel = match.status === "HT" || match.elapsed_minute == null
-    ? phase
-    : `${phase} · ${match.elapsed_minute}${addedTime}'`;
+  const minute = getMatchMinuteLabel(match, useClientClock());
+  const minuteLabel = minute ? `${phase} · ${minute}` : phase;
 
   const matchEvents = getVerifiedMatchEvents(match);
   const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");

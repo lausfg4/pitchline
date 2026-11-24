@@ -23,7 +23,7 @@ function subscribe(listener: () => void) {
 const snapshot = () => now;
 const serverSnapshot = () => null;
 
-// A shared clock is for age labels and the calendar, never for advancing match minutes.
+// Shared wall clock for age labels, the calendar and provider-supplied clock anchors.
 export function useClientClock() {
   return useSyncExternalStore(subscribe, snapshot, serverSnapshot);
 }

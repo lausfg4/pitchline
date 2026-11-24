@@ -374,7 +374,33 @@ type DataSportsFixture = {
   startTime: string;
   home: { name: string; shortName?: string };
   away: { name: string; shortName?: string };
+  status?: { phase?: string };
+  clock?: {
+    periodStartedAt?: string | null;
+    periodOffsetSeconds?: number | null;
+    periodEndSeconds?: number | null;
+    maxExtraSeconds?: number | null;
+    injuryTimeMinutes?: number | null;
+  } | null;
 };
+
+function readDataSportsClock(fixture: DataSportsFixture, now: string): LiveStats["datasports_clock"] {
+  const clock = fixture.clock;
+  if (fixture.status?.phase !== "inprogress" || !clock?.periodStartedAt) return undefined;
+  const started = Date.parse(clock.periodStartedAt);
+  const offset = clock.periodOffsetSeconds;
+  const end = clock.periodEndSeconds;
+  if (!Number.isFinite(started) || started > Date.parse(now) || offset == null || end == null ||
+      !Number.isInteger(offset) || !Number.isInteger(end) || offset < 0 || end <= offset || end % 60 !== 0) return undefined;
+  const maxExtra = clock.maxExtraSeconds ?? (clock.injuryTimeMinutes ?? 0) * 60;
+  return {
+    period_started_at: clock.periodStartedAt,
+    period_offset_seconds: offset,
+    period_end_seconds: end,
+    max_extra_seconds: Number.isFinite(maxExtra) ? Math.max(0, maxExtra) : 0,
+    observed_at: now,
+  };
+}
 
 type DataSportsStatistics = {
   periods?: {
@@ -450,6 +476,8 @@ async function handleChampionsSync(request: NextRequest) {
   const apiFootballKey = process.env.API_FOOTBALL_KEY;
   const dataSportsKey = process.env.DATASPORTSAPI_API_KEY?.trim();
   const possessionSnapshots = new Map<number, NonNullable<LiveStats["datasports_possession"]>>();
+  const clockSnapshots = new Map<number, NonNullable<LiveStats["datasports_clock"]>>();
+  let dataSportsBoardRead = false;
 
   let standingsToSync: StandingRow[] = [];
   let matchesToSync: MatchRow[] = [];
@@ -760,6 +788,9 @@ async function handleChampionsSync(request: NextRequest) {
     try {
       if (await reserve("datasports-possession-cycle", 900, 24) && await reserve("datasports-requests", 0, 45)) {
         const fixtures = await fetchDataSports<DataSportsFixture[]>("livescores?sport=football", dataSportsKey);
+        if (!Array.isArray(fixtures)) throw new Error("Listado de partidos inválido");
+        dataSportsBoardRead = true;
+        const observedAt = new Date().toISOString();
         const storedById = new Map(storedMatches.map(match => [match.id, match]));
         const candidates = fixtures.flatMap(fixture => {
           if (fixture.league?.name !== "UEFA Champions League" || !Number.isSafeInteger(fixture.id) || fixture.id < 1) return [];
@@ -769,6 +800,8 @@ async function handleChampionsSync(request: NextRequest) {
             (teamsMatch(match.away_team_name, fixture.away.name) || teamsMatch(match.away_team_name, fixture.away.shortName ?? "")));
           if (matching.length !== 1) return [];
           const [match] = matching;
+          const clock = readDataSportsClock(fixture, observedAt);
+          if (clock) clockSnapshots.set(match.id, clock);
           const updatedAt = storedById.get(match.id)?.live_stats?.datasports_possession?.updated_at ?? "";
           if (Date.now() - Date.parse(updatedAt) < 30 * 60_000) return [];
           return [{ fixture, match, updatedAt }];
@@ -904,6 +937,10 @@ async function handleChampionsSync(request: NextRequest) {
       const previous = existingById.get(m.id)?.live_stats;
       const possession = possessionSnapshots.get(m.id) ?? previous?.datasports_possession;
       if (possession) m = { ...m, live_stats: { ...m.live_stats, datasports_possession: possession } };
+      const clock = clockSnapshots.get(m.id) ?? (dataSportsBoardRead ? undefined : previous?.datasports_clock);
+      if (clock || m.live_stats?.datasports_clock) {
+        m = { ...m, live_stats: { ...m.live_stats, datasports_clock: clock } };
+      }
       const fixtureId = m.live_stats?.provider_fixture_id ?? previous?.provider_fixture_id;
       const playerStats = playerSnapshots.get(m.id) ?? previous?.player_stats;
       if (!fixtureId) return m;

@@ -690,6 +690,34 @@ export function getLiveMatchPhase(status: string): string {
   }
 }
 
+export function getMatchMinuteLabel(match: MatchWithDetails, now: number | null): string | null {
+  if (match.status === "HT" || match.status === "PEN") return null;
+  const clock = match.live_stats?.datasports_clock;
+  if (isMatchLive(match.status) && clock && now != null) {
+    const age = now - Date.parse(clock.observed_at);
+    const sincePeriodStart = (now - Date.parse(clock.period_started_at)) / 1000;
+    const offset = clock.period_offset_seconds;
+    const end = clock.period_end_seconds;
+    const elapsed = offset + sincePeriodStart;
+    const phaseMatches = match.status === "IN_PLAY" ||
+      (match.status === "1H" && offset === 0) ||
+      (match.status === "2H" && offset === 45 * 60) ||
+      (match.status === "ET" && offset >= 90 * 60);
+    if (phaseMatches && age >= 0 && age <= 16 * 60_000 && sincePeriodStart >= 0 &&
+        elapsed <= end + clock.max_extra_seconds) {
+      const endMinute = end / 60;
+      if (elapsed >= end) {
+        const added = Math.ceil((elapsed - end) / 60);
+        return added > 0 ? `${endMinute}+${added}'` : `${endMinute}'`;
+      }
+      return `${Math.floor(elapsed / 60) + 1}'`;
+    }
+  }
+  if (match.elapsed_minute == null) return null;
+  const added = match.extra_minute ? `+${match.extra_minute}` : "";
+  return `${match.elapsed_minute}${added}'`;
+}
+
 export function computeMatchTelemetry(match: MatchWithDetails): {
   homePossession: number | null; awayPossession: number | null; homeXg: number | null; awayXg: number | null;
 } {

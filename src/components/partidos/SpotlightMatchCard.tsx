@@ -3,6 +3,7 @@
 import { MatchFreshness } from "./MatchFreshness";
 import React, { useState } from "react";
 import type { MatchWithDetails } from "@/types/database";
+import { useClientClock } from "@/lib/use-client-clock";
 import {
   computeMatchTelemetry,
   formatLocalKickoffTime,
@@ -11,6 +12,7 @@ import {
   getStageNameEs,
   isMatchLive,
   getLiveMatchPhase,
+  getMatchMinuteLabel,
 } from "@/lib/date-utils";
 
 interface SpotlightMatchCardProps {
@@ -46,12 +48,8 @@ export function SpotlightMatchCard({
   const drawProb = match.prediction?.draw_prob ?? 26;
   const awayWinProb = match.prediction?.away_win_prob ?? 36;
 
-  const minuteDisplay =
-    match.elapsed_minute != null
-        ? match.extra_minute && match.extra_minute > 0
-          ? `${match.elapsed_minute}+${match.extra_minute}'`
-          : `${match.elapsed_minute}'`
-        : isLive ? null : formatLocalKickoffTime(match.kickoff_at);
+  const minute = getMatchMinuteLabel(match, useClientClock());
+  const minuteDisplay = minute ?? (isLive ? null : formatLocalKickoffTime(match.kickoff_at));
 
   const events = getVerifiedMatchEvents(match);
   const goalEvents = events.filter((e) => e.event_type === "GOAL");

@@ -37,6 +37,11 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
         const data = url.includes('/livescores') ? [{
           id: 44, league: { name: 'UEFA Champions League' }, startTime: now,
           home: { name: 'Arsenal' }, away: { name: 'Bayern' },
+          status: { phase: 'inprogress' },
+          clock: {
+            periodStartedAt: new Date(Date.parse(now) - 45 * 60_000).toISOString(),
+            periodOffsetSeconds: 2700, periodEndSeconds: 5400, maxExtraSeconds: 300,
+          },
         }] : dataSports;
         return { ok: true, json: async () => ({ data }) };
       }
@@ -256,4 +261,22 @@ test('a rejected DataSportsAPI key does not block score synchronization', async 
   assert.equal(result.status, 200);
   assert.ok(result.body.warnings.some(warning => warning.includes('HTTP 401')));
   assert.equal(h.writes.find(w => w.table === 'matches').rows[0].status, 'IN_PLAY');
+});
+
+test('DataSportsAPI advances the minute from the official period clock and stops when stale', async () => {
+  const h = harness({
+    existingSource: 'football-data',
+    env: { API_FOOTBALL_KEY: undefined, FOOTBALL_DATA_KEY: 'test-fd-key', DATASPORTSAPI_API_KEY: 'test-stats-key' },
+    fdStatus: 'IN_PLAY',
+    fdHalfTime: { home: 0, away: 0 },
+    dataSports: { periods: [] },
+  });
+  await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  const match = h.writes.find(w => w.table === 'matches').rows[0];
+  const { getMatchMinuteLabel } = load('src/lib/date-utils.ts');
+  const start = Date.parse(match.live_stats.datasports_clock.period_started_at);
+  assert.equal(getMatchMinuteLabel(match, start + 46 * 60_000), "90+1'");
+  assert.equal(getMatchMinuteLabel({ ...match, status: 'HT' }, start + 46 * 60_000), null);
+  assert.equal(getMatchMinuteLabel(match, start + 52 * 60_000), null);
+  assert.equal(getMatchMinuteLabel(match, start + 62 * 60_000), null);
 });
