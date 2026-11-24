@@ -905,7 +905,8 @@ async function handleChampionsSync(request: NextRequest) {
             requests.push({ kind: "events", fixture, match, final, updatedAt: events?.updated_at ?? "" });
           }
           return requests;
-        }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) || a.match.id - b.match.id);
+        }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) ||
+          Number(b.kind === "events") - Number(a.kind === "events") || a.match.id - b.match.id);
         for (const { kind, fixture, match, final } of details.slice(0, 6)) {
           if (!(await reserve("datasports-detail-budget", 0, 45)) || !(await reserve("datasports-requests", 0, 90))) break;
           const base = `fixtures/${fixture.id}/${kind}`;
