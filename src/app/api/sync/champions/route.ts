@@ -368,6 +368,44 @@ function teamsMatch(name1: string, name2: string): boolean {
   return false;
 }
 
+type DataSportsFixture = {
+  id: number;
+  league?: { id: number; name: string };
+  startTime: string;
+  home: { name: string; shortName?: string };
+  away: { name: string; shortName?: string };
+};
+
+type DataSportsStatistics = {
+  periods?: {
+    period: string;
+    groups: { items: { key: string; home?: { value?: number }; away?: { value?: number } }[] }[];
+  }[];
+};
+
+async function fetchDataSports<T>(path: string, key: string): Promise<T> {
+  const response = await fetch(`https://api.datasportsapi.com/v2/${path}`, {
+    headers: { authorization: `Bearer ${key}` },
+    redirect: "error",
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const result = await response.json() as { data: T };
+  return result.data;
+}
+
+function readDataSportsPossession(stats: DataSportsStatistics, updatedAt: string): LiveStats["datasports_possession"] {
+  const item = stats.periods?.find(period => period.period === "all")?.groups
+    .flatMap(group => group.items).find(stat => stat.key === "ballPossession");
+  const home = item?.home?.value;
+  const away = item?.away?.value;
+  if (typeof home !== "number" || typeof away !== "number" ||
+      !(home >= 0 && home <= 100 && away >= 0 && away <= 100) ||
+      Math.abs(home + away - 100) > 1) return undefined;
+  return { home, away, updated_at: updatedAt };
+}
+
 let cachedStandingsToSync: StandingRow[] = [];
 async function isAuthorizedSyncRequest(request: NextRequest): Promise<boolean> {
   const secret = process.env.CRON_SECRET;
@@ -410,6 +448,8 @@ async function handleChampionsSync(request: NextRequest) {
   const nowIso = new Date().toISOString();
   const footballDataKey = process.env.FOOTBALL_DATA_KEY;
   const apiFootballKey = process.env.API_FOOTBALL_KEY;
+  const dataSportsKey = process.env.DATASPORTSAPI_API_KEY?.trim();
+  const possessionSnapshots = new Map<number, NonNullable<LiveStats["datasports_possession"]>>();
 
   let standingsToSync: StandingRow[] = [];
   let matchesToSync: MatchRow[] = [];
@@ -716,6 +756,42 @@ async function handleChampionsSync(request: NextRequest) {
     } catch (error) { console.error("API-Football sync failed", error); warnings.push("api-football: cuota, cobertura o red no disponible"); }
   }
 
+  if (dataSportsKey && hasMatchesInPlayOrToday) {
+    try {
+      if (await reserve("datasports-possession-cycle", 900, 24) && await reserve("datasports-requests", 0, 45)) {
+        const fixtures = await fetchDataSports<DataSportsFixture[]>("livescores?sport=football", dataSportsKey);
+        const storedById = new Map(storedMatches.map(match => [match.id, match]));
+        const candidates = fixtures.flatMap(fixture => {
+          if (fixture.league?.name !== "UEFA Champions League" || !Number.isSafeInteger(fixture.id) || fixture.id < 1) return [];
+          const matching = matchesToSync.filter(match => match.status !== "FINISHED" &&
+            Math.abs(Date.parse(match.kickoff_at) - Date.parse(fixture.startTime)) <= 60 * 60_000 &&
+            (teamsMatch(match.home_team_name, fixture.home.name) || teamsMatch(match.home_team_name, fixture.home.shortName ?? "")) &&
+            (teamsMatch(match.away_team_name, fixture.away.name) || teamsMatch(match.away_team_name, fixture.away.shortName ?? "")));
+          if (matching.length !== 1) return [];
+          const [match] = matching;
+          const updatedAt = storedById.get(match.id)?.live_stats?.datasports_possession?.updated_at ?? "";
+          if (Date.now() - Date.parse(updatedAt) < 30 * 60_000) return [];
+          return [{ fixture, match, updatedAt }];
+        }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) || a.match.id - b.match.id);
+
+        const requests = [];
+        for (const { fixture, match } of candidates.slice(0, 6)) {
+          if (!(await reserve("datasports-requests", 0, 45))) break;
+          requests.push(fetchDataSports<DataSportsStatistics>(`fixtures/${fixture.id}/statistics`, dataSportsKey)
+            .then(stats => {
+              const possession = readDataSportsPossession(stats, new Date().toISOString());
+              if (possession) possessionSnapshots.set(match.id, possession);
+            }).catch(() => {
+              warnings.push("datasportsapi: estadísticas del partido no disponibles");
+            }));
+        }
+        await Promise.all(requests);
+      }
+    } catch (error) {
+      warnings.push(`datasportsapi: sin acceso a partidos en vivo${error instanceof Error && /^HTTP \d{3}$/.test(error.message) ? ` (${error.message})` : ""}`);
+    }
+  }
+
   // Enrich existing fixtures in batches, using the remaining shared daily budget.
   if (apiFootballKey) {
     const storedById = new Map(storedMatches.map(m => [m.id, m]));
@@ -826,6 +902,8 @@ async function handleChampionsSync(request: NextRequest) {
     });
     matchesToSync = matchesToSync.map(m => {
       const previous = existingById.get(m.id)?.live_stats;
+      const possession = possessionSnapshots.get(m.id) ?? previous?.datasports_possession;
+      if (possession) m = { ...m, live_stats: { ...m.live_stats, datasports_possession: possession } };
       const fixtureId = m.live_stats?.provider_fixture_id ?? previous?.provider_fixture_id;
       const playerStats = playerSnapshots.get(m.id) ?? previous?.player_stats;
       if (!fixtureId) return m;

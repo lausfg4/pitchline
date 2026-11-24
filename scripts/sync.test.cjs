@@ -12,7 +12,7 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, dataSports, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
   existing.live_stats.source_updated_at = new Date(Date.parse(now) - snapshotAge).toISOString();
@@ -32,6 +32,14 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
     fetch: async url => {
       calls.push(url);
       if (failure) throw Error('offline');
+      if (url.includes('datasportsapi.com')) {
+        if (dataSports === 'unauthorized') return { ok: false, status: 401 };
+        const data = url.includes('/livescores') ? [{
+          id: 44, league: { name: 'UEFA Champions League' }, startTime: now,
+          home: { name: 'Arsenal' }, away: { name: 'Bayern' },
+        }] : dataSports;
+        return { ok: true, json: async () => ({ data }) };
+      }
       if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: fdScore, away: 0 }, halfTime: fdHalfTime } }] }) };
       if (url.includes('/events?')) return { ok: true, json: async () => ({ response: eventSnapshot }) };
       if (url.includes('?ids=') && (playerGroups || teamStats)) return { ok: true, json: async () => ({
@@ -213,4 +221,39 @@ test('Football-Data identifies the second half after a confirmed halftime score'
   const match = h.writes.find(w => w.table === 'matches').rows[0];
   assert.equal(match.status, '2H');
   assert.equal(match.elapsed_minute, null);
+});
+
+test('DataSportsAPI enriches Football-Data possession without changing its match state', async () => {
+  const h = harness({
+    existingSource: 'football-data',
+    env: { API_FOOTBALL_KEY: undefined, FOOTBALL_DATA_KEY: 'test-fd-key', DATASPORTSAPI_API_KEY: 'test-stats-key' },
+    fdStatus: 'PAUSED',
+    fdScore: 1,
+    dataSports: { periods: [{ period: 'all', groups: [{
+      items: [{ key: 'ballPossession', home: { value: 38 }, away: { value: 62 } }],
+    }] }] },
+  });
+  const result = await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  assert.equal(result.status, 200);
+  const match = h.writes.find(w => w.table === 'matches').rows[0];
+  assert.equal(match.status, 'HT');
+  assert.equal(match.home_score, 1);
+  assert.equal(match.live_stats.source, 'football-data');
+  const { computeMatchTelemetry } = load('src/lib/date-utils.ts');
+  assert.equal(computeMatchTelemetry(match).homePossession, 38);
+  assert.equal(computeMatchTelemetry(match).awayPossession, 62);
+  assert.equal(h.reservations.filter(args => args.bucket_name === 'datasports-requests').length, 2);
+});
+
+test('a rejected DataSportsAPI key does not block score synchronization', async () => {
+  const h = harness({
+    existingSource: 'football-data',
+    env: { API_FOOTBALL_KEY: undefined, FOOTBALL_DATA_KEY: 'test-fd-key', DATASPORTSAPI_API_KEY: 'test-stats-key' },
+    fdStatus: 'IN_PLAY',
+    dataSports: 'unauthorized',
+  });
+  const result = await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  assert.equal(result.status, 200);
+  assert.ok(result.body.warnings.some(warning => warning.includes('HTTP 401')));
+  assert.equal(h.writes.find(w => w.table === 'matches').rows[0].status, 'IN_PLAY');
 });

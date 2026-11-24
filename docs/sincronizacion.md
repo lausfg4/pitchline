@@ -20,6 +20,7 @@ En producción ejecuta el worker en un proceso persistente, o programa una llama
 - No se consulta ESPN ni se escribe contenido de demostración como respaldo. La ausencia de incidencias, posesión o xG se muestra como dato no disponible. No se inventan lesiones ni plazos de recuperación.
 - El reloj muestra el minuto recibido. No aumenta por su cuenta. «Consultado hace X min» indica la recepción de datos, no la latencia respecto al estadio.
 - Realtime distribuye las escrituras; el cliente reconcilia con lecturas cada minuto, al reconectar y al volver a la pestaña. Si Realtime falla, esas lecturas permiten recuperar el estado.
+- DataSportsAPI es opcional y aporta posesión acumulada por equipo. Configura `DATASPORTSAPI_API_KEY` en el servidor con una clave que tenga acceso a la API v2 en vivo. Pitchline consulta el listado en vivo como máximo una vez cada 15 minutos y espera 30 minutos antes de refrescar una lectura de posesión exitosa. El límite es de seis partidos por ciclo y 45 solicitudes totales al día UTC. Ante un error conserva la posesión ya recibida y sigue sincronizando el marcador.
 
 Con estas cuotas no se puede garantizar un gol al instante. Puede haber cinco minutos de espera más el retraso del proveedor. Se prioriza que lo mostrado sea coherente y verificable.
 

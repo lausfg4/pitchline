@@ -694,8 +694,14 @@ export function computeMatchTelemetry(match: MatchWithDetails): {
   homePossession: number | null; awayPossession: number | null; homeXg: number | null; awayXg: number | null;
 } {
   const stats = match.live_stats?.source === "api-football" ? match.live_stats : null;
+  const possession = match.live_stats?.datasports_possession;
   const value = (n: unknown, max = Infinity) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= max ? n : null;
-  return { homePossession: value(stats?.home_possession, 100), awayPossession: value(stats?.away_possession, 100), homeXg: value(stats?.home_xg), awayXg: value(stats?.away_xg) };
+  const home = value(possession?.home, 100);
+  const away = value(possession?.away, 100);
+  const useDataSports = home != null && away != null &&
+    (stats?.home_possession == null || stats.away_possession == null ||
+      Date.parse(possession?.updated_at ?? "") >= Date.parse(stats.source_updated_at ?? ""));
+  return { homePossession: useDataSports ? home : value(stats?.home_possession, 100), awayPossession: useDataSports ? away : value(stats?.away_possession, 100), homeXg: value(stats?.home_xg), awayXg: value(stats?.away_xg) };
 }
 
 /** Returns verified provider events only; missing events remain unknown. */

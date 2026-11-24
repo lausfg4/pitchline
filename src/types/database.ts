@@ -15,6 +15,11 @@ export interface LiveStats {
   source?: "football-data" | "api-football";
   source_updated_at?: string;
   provider_fixture_id?: number;
+  datasports_possession?: {
+    home: number;
+    away: number;
+    updated_at: string;
+  };
   events_pending?: boolean;
   player_stats_checked_at?: string;
   player_stats?: {
