@@ -791,6 +791,7 @@ async function handleChampionsSync(request: NextRequest) {
         if (!Array.isArray(fixtures)) throw new Error("Listado de partidos inválido");
         dataSportsBoardRead = true;
         const observedAt = new Date().toISOString();
+        const missingClocks: { matchId: number; fixtureId: number }[] = [];
         const storedById = new Map(storedMatches.map(match => [match.id, match]));
         const candidates = fixtures.flatMap(fixture => {
           if (fixture.league?.name !== "UEFA Champions League" || !Number.isSafeInteger(fixture.id) || fixture.id < 1) return [];
@@ -802,12 +803,26 @@ async function handleChampionsSync(request: NextRequest) {
           const [match] = matching;
           const clock = readDataSportsClock(fixture, observedAt);
           if (clock) clockSnapshots.set(match.id, clock);
+          else if (fixture.status?.phase === "inprogress") {
+            missingClocks.push({ matchId: match.id, fixtureId: fixture.id });
+          }
           const updatedAt = storedById.get(match.id)?.live_stats?.datasports_possession?.updated_at ?? "";
           if (Date.now() - Date.parse(updatedAt) < 30 * 60_000) return [];
           return [{ fixture, match, updatedAt }];
         }).sort((a, b) => a.updatedAt.localeCompare(b.updatedAt) || a.match.id - b.match.id);
 
         const requests = [];
+        for (const { matchId, fixtureId } of missingClocks.slice(0, 2)) {
+          if (!(await reserve("datasports-requests", 0, 45))) break;
+          requests.push(fetchDataSports<DataSportsFixture>(`fixtures/${fixtureId}`, dataSportsKey)
+            .then(fixture => {
+              if (fixture.id !== fixtureId) return;
+              const clock = readDataSportsClock(fixture, new Date().toISOString());
+              if (clock) clockSnapshots.set(matchId, clock);
+            }).catch(() => {
+              warnings.push("datasportsapi: reloj detallado del partido no disponible");
+            }));
+        }
         for (const { fixture, match } of candidates.slice(0, 6)) {
           if (!(await reserve("datasports-requests", 0, 45))) break;
           requests.push(fetchDataSports<DataSportsStatistics>(`fixtures/${fixture.id}/statistics`, dataSportsKey)

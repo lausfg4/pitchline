@@ -12,7 +12,7 @@ function load(file, mocks = {}) {
   return exports;
 }
 
-function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, dataSports, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
+function harness({ grants = true, score = 0, failure = false, eventSnapshot = [], playerGroups, teamStats, dataSports, omitBoardClock = false, apiStatus = '1H', existingSource = 'api-football', snapshotAge = 0, env = {}, fdStatus = 'TIMED', fdScore = 0, fdHalfTime } = {}) {
   const now = new Date().toISOString();
   const existing = { id: 123456, season: 2026, home_team_id: 1, away_team_id: 2, home_team_name: 'Arsenal', away_team_name: 'Bayern', kickoff_at: now, status: '1H', elapsed_minute: 20, home_score: 1, away_score: 0, updated_at: now, live_stats: { source: existingSource, source_updated_at: now } };
   existing.live_stats.source_updated_at = new Date(Date.parse(now) - snapshotAge).toISOString();
@@ -34,7 +34,7 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
       if (failure) throw Error('offline');
       if (url.includes('datasportsapi.com')) {
         if (dataSports === 'unauthorized') return { ok: false, status: 401 };
-        const data = url.includes('/livescores') ? [{
+        const fixture = {
           id: 44, league: { name: 'UEFA Champions League' }, startTime: now,
           home: { name: 'Arsenal' }, away: { name: 'Bayern' },
           status: { phase: 'inprogress' },
@@ -42,7 +42,9 @@ function harness({ grants = true, score = 0, failure = false, eventSnapshot = []
             periodStartedAt: new Date(Date.parse(now) - 45 * 60_000).toISOString(),
             periodOffsetSeconds: 2700, periodEndSeconds: 5400, maxExtraSeconds: 300,
           },
-        }] : dataSports;
+        };
+        const data = url.includes('/livescores') ? [{ ...fixture, clock: omitBoardClock ? null : fixture.clock }]
+          : url.endsWith('/fixtures/44') ? fixture : dataSports;
         return { ok: true, json: async () => ({ data }) };
       }
       if (url.includes('football-data.org')) return { ok: true, json: async () => ({ matches: [{ id: existing.id, utcDate: now, status: fdStatus, homeTeam: { id: 1, name: 'Arsenal' }, awayTeam: { id: 2, name: 'Bayern' }, score: { fullTime: { home: fdScore, away: 0 }, halfTime: fdHalfTime } }] }) };
@@ -279,4 +281,17 @@ test('DataSportsAPI advances the minute from the official period clock and stops
   assert.equal(getMatchMinuteLabel({ ...match, status: 'HT' }, start + 46 * 60_000), null);
   assert.equal(getMatchMinuteLabel(match, start + 52 * 60_000), null);
   assert.equal(getMatchMinuteLabel(match, start + 62 * 60_000), null);
+});
+
+test('DataSportsAPI looks up the detailed clock when the live list omits it', async () => {
+  const h = harness({
+    existingSource: 'football-data',
+    env: { API_FOOTBALL_KEY: undefined, DATASPORTSAPI_API_KEY: 'test-stats-key' },
+    dataSports: { periods: [] },
+    omitBoardClock: true,
+  });
+  await h.route.POST(h.request({ authorization: 'Bearer test-secret' }));
+  const match = h.writes.find(w => w.table === 'matches').rows[0];
+  assert.equal(match.live_stats.datasports_clock.period_offset_seconds, 2700);
+  assert.ok(h.calls.some(url => url.endsWith('/fixtures/44')));
 });
