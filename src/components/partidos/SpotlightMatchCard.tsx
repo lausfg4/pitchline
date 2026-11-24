@@ -287,24 +287,26 @@ export function SpotlightMatchCard({
             {/* Barra de Posesión (Solo en Vivo o Finalizados) */}
             {(isLive || isFinished) && (
               <div className="w-full mt-3 space-y-1">
-                <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant text-xs">
-                  <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
-                  <span className="font-label-sm text-[10px] sm:text-label-sm uppercase">
-                    Posesión
-                  </span>
-                  <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
-                </div>
                 {homePossession != null && awayPossession != null ? (
-                  <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-                    <div
-                      className="h-full bg-primary transition-all duration-500"
-                      style={{ width: `${homePossession}%` }}
-                    ></div>
-                    <div
-                      className="h-full bg-brand-mint transition-all duration-500"
-                      style={{ width: `${awayPossession}%` }}
-                    ></div>
-                  </div>
+                  <>
+                    <div className="flex justify-between font-tabular-stats text-tabular-stats text-on-surface-variant text-xs">
+                      <span className="text-primary font-bold">{`${homePossession}%`}</span>
+                      <span className="font-label-sm text-[10px] sm:text-label-sm uppercase">
+                        Posesión
+                      </span>
+                      <span className="text-brand-mint font-bold">{`${awayPossession}%`}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                      <div
+                        className="h-full bg-primary transition-all duration-500"
+                        style={{ width: `${homePossession}%` }}
+                      ></div>
+                      <div
+                        className="h-full bg-brand-mint transition-all duration-500"
+                        style={{ width: `${awayPossession}%` }}
+                      ></div>
+                    </div>
+                  </>
                 ) : (
                   <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
                 )}

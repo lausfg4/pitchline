@@ -247,24 +247,26 @@ export function MatchGridCard({
         <div className="pt-2 bg-surface-container rounded-lg p-2.5 space-y-2 font-tabular-stats text-tabular-stats">
           {/* Barra de Posesión acorde al resultado */}
           <div className="space-y-1">
-            <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
-              <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
-                Posesión
-              </span>
-              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
-            </div>
             {homePossession != null && awayPossession != null ? (
-              <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${homePossession}%` }}
-                ></div>
-                <div
-                  className="h-full bg-brand-mint transition-all duration-500"
-                  style={{ width: `${awayPossession}%` }}
-                ></div>
-              </div>
+              <>
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-primary font-bold">{`${homePossession}%`}</span>
+                  <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
+                    Posesión
+                  </span>
+                  <span className="text-brand-mint font-bold">{`${awayPossession}%`}</span>
+                </div>
+                <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                  <div
+                    className="h-full bg-primary transition-all duration-500"
+                    style={{ width: `${homePossession}%` }}
+                  ></div>
+                  <div
+                    className="h-full bg-brand-mint transition-all duration-500"
+                    style={{ width: `${awayPossession}%` }}
+                  ></div>
+                </div>
+              </>
             ) : (
               <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
             )}
@@ -287,24 +289,26 @@ export function MatchGridCard({
         <div className="pt-2 bg-surface-container rounded-lg p-2.5 space-y-2 font-tabular-stats text-tabular-stats">
           {/* Posesión reportada por el proveedor */}
           <div className="space-y-1">
-            <div className="flex justify-between items-center text-[11px]">
-              <span className="text-primary font-bold">{homePossession == null ? "—" : `${homePossession}%`}</span>
-              <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
-                Posesión en Vivo • xG {homeXg?.toFixed(2) ?? "—"} - {awayXg?.toFixed(2) ?? "—"}
-              </span>
-              <span className="text-brand-mint font-bold">{awayPossession == null ? "—" : `${awayPossession}%`}</span>
-            </div>
             {homePossession != null && awayPossession != null ? (
-              <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-                <div
-                  className="h-full bg-primary transition-all duration-700"
-                  style={{ width: `${homePossession}%` }}
-                ></div>
-                <div
-                  className="h-full bg-brand-mint transition-all duration-700"
-                  style={{ width: `${awayPossession}%` }}
-                ></div>
-              </div>
+              <>
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-primary font-bold">{`${homePossession}%`}</span>
+                  <span className="font-label-sm text-label-sm uppercase text-on-surface-variant">
+                    Posesión en Vivo • xG {homeXg?.toFixed(2) ?? "—"} - {awayXg?.toFixed(2) ?? "—"}
+                  </span>
+                  <span className="text-brand-mint font-bold">{`${awayPossession}%`}</span>
+                </div>
+                <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+                  <div
+                    className="h-full bg-primary transition-all duration-700"
+                    style={{ width: `${homePossession}%` }}
+                  ></div>
+                  <div
+                    className="h-full bg-brand-mint transition-all duration-700"
+                    style={{ width: `${awayPossession}%` }}
+                  ></div>
+                </div>
+              </>
             ) : (
               <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
             )}
@@ -337,24 +341,20 @@ export function MatchGridCard({
               Visita {awayWinProb}%
             </span>
           </div>
-          {homePossession != null && awayPossession != null ? (
-            <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
-              <div
-                className="h-full bg-primary"
-                style={{ width: `${homeWinProb}%` }}
-              ></div>
-              <div
-                className="h-full bg-secondary-container"
-                style={{ width: `${drawProb}%` }}
-              ></div>
-              <div
-                className="h-full bg-brand-mint"
-                style={{ width: `${awayWinProb}%` }}
-              ></div>
-            </div>
-          ) : (
-            <p className="text-center text-[11px] text-on-surface-variant">Posesión no disponible</p>
-          )}
+          <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden flex">
+            <div
+              className="h-full bg-primary"
+              style={{ width: `${homeWinProb}%` }}
+            ></div>
+            <div
+              className="h-full bg-secondary-container"
+              style={{ width: `${drawProb}%` }}
+            ></div>
+            <div
+              className="h-full bg-brand-mint"
+              style={{ width: `${awayWinProb}%` }}
+            ></div>
+          </div>
         </div>
       )}
     </div>

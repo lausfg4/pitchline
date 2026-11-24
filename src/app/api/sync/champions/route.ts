@@ -71,6 +71,7 @@ interface FootballDataMatchItem {
     crest?: string;
   };
   score?: {
+    duration?: string;
     fullTime?: {
       home?: number | null;
       away?: number | null;
@@ -217,14 +218,16 @@ function readTeamTelemetry(fixture: ApiFootballLiveFixture, teams = fixture.team
 
 function mapFootballDataStatusAndMinute(
   rawStatus: string,
-  utcDate: string,
-  halfTimeHome?: number | null
+  score: FootballDataMatchItem["score"]
 ): { status: MatchStatus; elapsedMinute: number | null; halfLabel: string } {
   const upper = rawStatus.toUpperCase();
-  void utcDate;
-  void halfTimeHome;
   if (["FINISHED", "AWARDED"].includes(upper)) return { status: "FINISHED", elapsedMinute: null, halfLabel: "Finalizado" };
   if (upper === "PAUSED") return { status: "HT", elapsedMinute: 45, halfLabel: "Descanso" };
+  if (upper === "IN_PLAY" && score?.duration === "EXTRA_TIME") return { status: "ET", elapsedMinute: null, halfLabel: "Prórroga" };
+  if (upper === "IN_PLAY" && score?.duration === "PENALTY_SHOOTOUT") return { status: "PEN", elapsedMinute: null, halfLabel: "Penales" };
+  if (upper === "IN_PLAY" && score?.halfTime?.home != null && score.halfTime.away != null) {
+    return { status: "2H", elapsedMinute: null, halfLabel: "Segundo tiempo" };
+  }
   if (["IN_PLAY", "LIVE"].includes(upper)) return { status: "IN_PLAY", elapsedMinute: null, halfLabel: "En juego · minuto no disponible" };
   if (upper === "POSTPONED" || upper === "SUSPENDED") return { status: "POSTPONED", elapsedMinute: null, halfLabel: "Aplazado o suspendido" };
   if (upper === "CANCELLED") return { status: "CANCELLED", elapsedMinute: null, halfLabel: "Cancelado" };
@@ -540,8 +543,7 @@ async function handleChampionsSync(request: NextRequest) {
             halfLabel: fdHalfLabel,
           } = mapFootballDataStatusAndMinute(
             m.status,
-            m.utcDate,
-            m.score?.halfTime?.home
+            m.score
           );
 
           // Destacar el partidazo estelar de cada jornada (ej. Barça vs Aston Villa / Atleti vs Bayern / RB Leipzig vs Man City en J4)
@@ -816,7 +818,7 @@ async function handleChampionsSync(request: NextRequest) {
       const snapshotAge = Date.now() - Date.parse(prev.live_stats.source_updated_at ?? prev.updated_at);
       const canUseDelayedScore = snapshotAge > 15 * 60_000 && footballDataScoreIds.has(m.id) && (
         m.status === "FINISHED" ||
-        (prev.status !== "FINISHED" && ["IN_PLAY", "HT"].includes(m.status) &&
+        (prev.status !== "FINISHED" && ["IN_PLAY", "HT", "2H", "ET", "PEN"].includes(m.status) &&
           m.home_score >= prev.home_score && m.away_score >= prev.away_score)
       );
       if (canUseDelayedScore) return m;
