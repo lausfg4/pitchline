@@ -79,12 +79,13 @@ export function PartidosRealtimeView({
           window.clearTimeout(goalTimeoutByMatchRef.current[match.id]);
         }
         goalTimeoutByMatchRef.current[match.id] = window.setTimeout(() => {
+          delete goalTimeoutByMatchRef.current[match.id];
           setGoalAnimationsByMatchId((prev) => {
             const copy = { ...prev };
             delete copy[match.id];
             return copy;
           });
-        }, 6_000);
+        }, 3_200);
       }
     },
     []
@@ -290,7 +291,7 @@ export function PartidosRealtimeView({
     };
   }, [reloadFromSupabaseClient]);
 
-  // Detector en tiempo real de nuevos goles: se activa únicamente cuando sube el marcador y se quita a los 6 segundos
+  // Celebrate increases in a recently synchronized live score.
   useEffect(() => {
     if (dbMatches.length === 0) return;
 
@@ -298,7 +299,9 @@ export function PartidosRealtimeView({
 
     for (const m of dbMatches) {
       const prev = prevMap[m.id];
-      if (prev && isMatchLive(m.status) && m.live_stats?.source === "api-football" && Date.now() - Date.parse(m.live_stats.source_updated_at ?? "") < 10 * 60_000) {
+      const source = m.live_stats?.source;
+      const age = Date.now() - Date.parse(m.live_stats?.source_updated_at ?? "");
+      if (prev && isMatchLive(m.status) && (source === "api-football" || source === "datasportsapi") && age < 10 * 60_000) {
         if (m.home_score > prev.home) {
           triggerGoalCelebration(m, "HOME");
         } else if (m.away_score > prev.away) {

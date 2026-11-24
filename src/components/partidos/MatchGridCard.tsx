@@ -50,9 +50,6 @@ export function MatchGridCard({
   const minuteLabel = minute ? `${phase} · ${minute}` : phase;
 
   const matchEvents = getVerifiedMatchEvents(match);
-  const goalEvents = matchEvents.filter((e) => e.event_type === "GOAL");
-  const latestGoalEvent =
-    goalEvents.length > 0 ? goalEvents[goalEvents.length - 1] : null;
 
   const activeScoreboardGoalSide = goalAnimationSide;
 
@@ -108,25 +105,11 @@ export function MatchGridCard({
       <div className="space-y-2.5">
         {/* Fila Local */}
         <div
-          className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
-            activeScoreboardGoalSide === "HOME"
-              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 "
-              : "py-0.5"
-          }`}
+          className="flex items-center justify-between py-0.5"
         >
-          {activeScoreboardGoalSide === "HOME" && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
-            </div>
-          )}
-
           <div className="relative z-10 flex items-center gap-3 min-w-0">
             <div
-              className={`w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0 transition-transform ${
-                activeScoreboardGoalSide === "HOME"
-                  ? "border border-brand-mint scale-105"
-                  : ""
-              }`}
+              className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -139,11 +122,7 @@ export function MatchGridCard({
               <span className="font-label-md text-label-md font-bold text-on-surface truncate">
                 {match.home_team_name}
               </span>
-              {activeScoreboardGoalSide === "HOME" && latestGoalEvent && (
-                <span className="font-label-sm text-[10px] text-brand-mint font-bold truncate">
-                  ⚽ {latestGoalEvent.player_name} ({latestGoalEvent.minute}&apos;)
-                </span>
-              )}
+
             </div>
           </div>
 
@@ -153,18 +132,14 @@ export function MatchGridCard({
             </span>
           ) : (
             <div className="relative z-10 flex items-center gap-1.5">
-              {activeScoreboardGoalSide === "HOME" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[10px] font-extrabold uppercase tracking-wider animate-goal-banner shadow">
-                  <span className="material-symbols-outlined text-[12px] animate-spin">
-                    sports_soccer
-                  </span>
-                  ¡GOL!
-                </span>
-              )}
+              <span className="min-w-6 text-right text-[10px] font-semibold uppercase tracking-wider text-brand-mint" role="status">
+                {activeScoreboardGoalSide === "HOME" && <span className="inline-block animate-goal-label">Gol</span>}
+              </span>
               <span
-                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
+                key={match.home_score}
+                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md ${
                   activeScoreboardGoalSide === "HOME"
-                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit "
+                    ? "bg-brand-mint/10 text-brand-mint animate-goal-score"
                     : "text-primary"
                 }`}
               >
@@ -176,25 +151,11 @@ export function MatchGridCard({
 
         {/* Fila Visitante */}
         <div
-          className={`relative overflow-hidden flex items-center justify-between rounded-lg transition-all duration-500 ${
-            activeScoreboardGoalSide === "AWAY"
-              ? "px-2.5 py-1.5 -mx-1 bg-brand-mint/15 border border-brand-mint/50 "
-              : "py-0.5"
-          }`}
+          className="flex items-center justify-between py-0.5"
         >
-          {activeScoreboardGoalSide === "AWAY" && (
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-brand-mint/25 to-transparent animate-goal-shimmer"></div>
-            </div>
-          )}
-
           <div className="relative z-10 flex items-center gap-3 min-w-0">
             <div
-              className={`w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0 transition-transform ${
-                activeScoreboardGoalSide === "AWAY"
-                  ? "border border-brand-mint scale-105"
-                  : ""
-              }`}
+              className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center p-1 shrink-0"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -207,11 +168,7 @@ export function MatchGridCard({
               <span className="font-label-md text-label-md font-medium text-on-surface-variant truncate">
                 {match.away_team_name}
               </span>
-              {activeScoreboardGoalSide === "AWAY" && latestGoalEvent && (
-                <span className="font-label-sm text-[10px] text-brand-mint font-bold truncate">
-                  ⚽ {latestGoalEvent.player_name} ({latestGoalEvent.minute}&apos;)
-                </span>
-              )}
+
             </div>
           </div>
 
@@ -221,18 +178,14 @@ export function MatchGridCard({
             </span>
           ) : (
             <div className="relative z-10 flex items-center gap-1.5">
-              {activeScoreboardGoalSide === "AWAY" && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-mint text-brand-navy font-label-sm text-[10px] font-extrabold uppercase tracking-wider animate-goal-banner shadow">
-                  <span className="material-symbols-outlined text-[12px] animate-spin">
-                    sports_soccer
-                  </span>
-                  ¡GOL!
-                </span>
-              )}
+              <span className="min-w-6 text-right text-[10px] font-semibold uppercase tracking-wider text-brand-mint" role="status">
+                {activeScoreboardGoalSide === "AWAY" && <span className="inline-block animate-goal-label">Gol</span>}
+              </span>
               <span
-                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md transition-all ${
+                key={match.away_score}
+                className={`font-score-display-mobile text-score-display-mobile font-tabular-stats inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-md ${
                   activeScoreboardGoalSide === "AWAY"
-                    ? "bg-brand-mint/25 border border-brand-mint text-brand-mint animate-scoreboard-digit "
+                    ? "bg-brand-mint/10 text-brand-mint animate-goal-score"
                     : "text-on-surface-variant"
                 }`}
               >
